@@ -1,0 +1,12 @@
+.service-card {
+  display: flex;
+}
+
+.icon-wrapper {
+  display: inline-flex;
+  padding: 1rem;
+  background: var(--glass-bg);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--glass-border);
+}
