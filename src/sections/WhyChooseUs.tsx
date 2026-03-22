@@ -1,46 +1,52 @@
-import { CheckCircle2 } from 'lucide-react';
-
-const reasons = [
-  { title: 'Clean, Scalable Code', desc: 'Enterprise-grade architecture that grows with your business.' },
-  { title: 'Lightning Fast Delivery', desc: 'Optimized workflows matching startup speeds without technical debt.' },
-  { title: 'Modern UI/UX', desc: 'Premium, glassmorphic interfaces that captivate users immediately.' },
-  { title: 'AI-Ready Apps', desc: 'Built flexibly to integrate any AI models (OpenAI, Gemini, Anthropic).' },
-  { title: 'Cross-Platform', desc: 'Deploy to both iOS and Android simultaneously with one codebase.' }
-];
+import { Code2, Zap, Palette, Bot, Smartphone } from 'lucide-react';
+import './WhyChooseUs.css';
 
 export const WhyChooseUs = () => {
   return (
-    <section className="py-32 container">
-      <div className="flex items-center justify-between flex-wrap gap-12">
-        <div style={{ flex: '1 1 400px' }}>
-          <h2 className="text-gradient" style={{ fontSize: '3rem', marginBottom: '1.5rem' }}>
-            Why Choose Kuavanta?
+    <section className="py-32 why-choose-section" id="why-choose-us">
+      <div className="container mx-auto">
+        <div className="mb-16" style={{ maxWidth: '800px', margin: '0 auto', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
+          <div className="edge-pill mb-6">OUR COMPETITIVE EDGE</div>
+          <h2 className="font-bold mb-6 why-choose-heading" style={{ lineHeight: '1.1', letterSpacing: '-0.03em' }}>
+            Why Choose <br />
+            <span className="text-gradient hover-glow">Kuavanta?</span>
           </h2>
-          <p className="text-secondary" style={{ fontSize: '1.2rem', marginBottom: '2rem' }}>
+          <p className="text-secondary" style={{ fontSize: '1.15rem', lineHeight: '1.6', fontFamily: 'var(--font-sans)', maxWidth: '600px', margin: '0 auto' }}>
             We don't just write code, we engineer solutions. Our development approach bridges the gap between stunning design, AI innovation, and rock-solid performance.
           </p>
-          
-          <div className="flex flex-col gap-6 mt-8">
-            {reasons.map((reason, idx) => (
-              <div key={idx} className="flex items-start gap-4">
-                <CheckCircle2 className="text-primary mt-1" size={24} />
-                <div>
-                  <h4 style={{ fontSize: '1.2rem', marginBottom: '0.25rem' }}>{reason.title}</h4>
-                  <p className="text-secondary">{reason.desc}</p>
-                </div>
-              </div>
-            ))}
-          </div>
         </div>
-        
-        <div className="glass" style={{ flex: '1 1 400px', height: '500px', borderRadius: '24px', position: 'relative', overflow: 'hidden' }}>
-           <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, background: 'var(--gradient-primary)', opacity: 0.1 }}></div>
-           <div className="flex items-center justify-center p-12 text-center flex-col h-full gap-6 relative z-10">
-             <div style={{ width: 100, height: 100, borderRadius: '50%', background: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-               <span style={{ fontSize: '2.5rem', fontWeight: 700, color: '#fff' }}>100%</span>
-             </div>
-             <h3 style={{ fontSize: '1.5rem' }}>Client Satisfaction Focus</h3>
-             <p className="text-secondary">We communicate constantly and transparently to ensure the final product exceeds your expectations.</p>
+
+        <div className="features-grid">
+           {/* Row 1 */}
+           <div className="feature-card">
+              <div className="icon-box"><Code2 size={22} className="glossy-icon" /></div>
+              <h3>Clean, Scalable Code</h3>
+              <p>Enterprise-grade architecture that grows with your business, ensuring your foundation is built for long-term evolution.</p>
+           </div>
+           
+           <div className="feature-card">
+              <div className="icon-box"><Zap size={22} className="glossy-icon" /></div>
+              <h3>Lightning Fast Delivery</h3>
+              <p>Optimized workflows matching startup speeds without technical debt, getting your product to market when it matters most.</p>
+           </div>
+           
+           <div className="feature-card">
+              <div className="icon-box"><Palette size={22} className="glossy-icon" /></div>
+              <h3>Modern UI/UX</h3>
+              <p>Premium, glassmorphic interfaces that captivate users immediately with editorial-level attention to aesthetic detail.</p>
+           </div>
+
+           {/* Row 2 */}
+           <div className="feature-card">
+              <div className="icon-box"><Bot size={22} className="glossy-icon" /></div>
+              <h3>AI-Ready Apps</h3>
+              <p>Built flexibly to integrate any AI models including OpenAI, Gemini, and Anthropic into the core of your user experience.</p>
+           </div>
+           
+           <div className="feature-card span-2">
+              <div className="icon-box"><Smartphone size={22} className="glossy-icon" /></div>
+              <h3>Cross-Platform Dominance</h3>
+              <p>Deploy to both iOS and Android simultaneously with one high-performance codebase using React Native, maximizing your reach and minimizing maintenance.</p>
            </div>
         </div>
       </div>

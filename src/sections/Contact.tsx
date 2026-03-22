@@ -1,66 +1,67 @@
-import { MessageCircle, Mail, Send } from 'lucide-react';
-import { Button } from '../components/Button';
-import { Card } from '../components/Card';
+import { MessageCircle, Mail } from 'lucide-react';
 import './Contact.css';
 
 export const Contact = () => {
   return (
-    <section id="contact" className="py-32 bg-secondary">
-      <div className="container max-w-4xl mx-auto">
-        <div className="text-center mb-16">
-          <h2 className="text-gradient" style={{ fontSize: '3rem', marginBottom: '1rem' }}>
-            Let's Build Your App
+    <section id="contact" className="py-32 contact-section">
+      <div className="container mx-auto contact-layout">
+        
+        {/* Left Side: Text and Contact Info */}
+        <div className="contact-left">
+          <h2 className="mb-6 font-bold contact-heading" style={{ lineHeight: '1.1', letterSpacing: '-0.03em' }}>
+            Ready to build <br />
+            <span className="text-gradient">the future?</span>
           </h2>
-          <p className="text-secondary" style={{ fontSize: '1.2rem' }}>
-            Ready to transform your idea into reality? Contact us today.
+          <p className="text-secondary mb-12" style={{ fontSize: '1.15rem', lineHeight: '1.6', maxWidth: '420px', fontFamily: 'var(--font-sans)' }}>
+            Join the world's most innovative brands. Let's start architecting your digital ecosystem today.
           </p>
-        </div>
 
-        <div className="flex flex-col md:flex-row gap-12">
-          {/* Direct Contact Links */}
-          <div className="flex flex-col gap-6" style={{ flex: 1 }}>
-            <Card className="flex items-center gap-4 cursor-pointer hover:border-primary border border-transparent transition-colors">
-              <div className="p-3 rounded-full" style={{ background: 'rgba(37, 211, 102, 0.1)', color: '#25D366' }}>
-                <MessageCircle size={32} />
+          <div className="contact-info-row">
+            <div className="contact-detail">
+              <span className="contact-label">EMAIL US</span>
+              <div className="contact-info-item">
+                <Mail size={18} style={{ color: '#a482ff' }} />
+                hello@kuavanta.io
               </div>
-              <div>
-                <h4 style={{ fontSize: '1.2rem', marginBottom: '0.25rem' }}>WhatsApp</h4>
-                <p className="text-secondary">Message us directly for a quick reply.</p>
-              </div>
-            </Card>
+            </div>
 
-            <Card className="flex items-center gap-4 cursor-pointer hover:border-primary border border-transparent transition-colors">
-              <div className="p-3 rounded-full" style={{ background: 'rgba(79, 70, 229, 0.1)', color: 'var(--primary)' }}>
-                <Mail size={32} />
+            <div className="contact-detail">
+              <span className="contact-label">WHATSAPP</span>
+              <div className="contact-info-item">
+                <MessageCircle size={18} style={{ color: '#a482ff' }} />
+                +1 (555) 000-0000
               </div>
-              <div>
-                <h4 style={{ fontSize: '1.2rem', marginBottom: '0.25rem' }}>Email</h4>
-                <p className="text-secondary">hello@kuavanta.dev</p>
-              </div>
-            </Card>
+            </div>
           </div>
-
-          {/* Form */}
-          <Card style={{ flex: 1.5 }} className="contact-form-card">
-            <form className="flex flex-col gap-4">
-              <div className="form-group">
-                <label>Name</label>
-                <input type="text" className="form-control" placeholder="John Doe" />
-              </div>
-              <div className="form-group">
-                <label>Email</label>
-                <input type="email" className="form-control" placeholder="john@company.com" />
-              </div>
-              <div className="form-group">
-                <label>Message</label>
-                <textarea className="form-control" rows={4} placeholder="Tell us about your project..."></textarea>
-              </div>
-              <Button type="button" size="lg" className="mt-2 w-full flex justify-center items-center gap-2">
-                Send Message <Send size={18} />
-              </Button>
-            </form>
-          </Card>
         </div>
+
+        {/* Right Side: Contact Form */}
+        <div className="contact-right">
+          <div className="contact-form-card">
+            <form className="contact-form">
+              <div className="contact-form-row">
+                <div className="form-field">
+                  <label className="contact-label">NAME</label>
+                  <input type="text" className="contact-input" placeholder="John Doe" />
+                </div>
+                <div className="form-field">
+                  <label className="contact-label">COMPANY</label>
+                  <input type="text" className="contact-input" placeholder="Acme Inc" />
+                </div>
+              </div>
+
+              <div className="form-field">
+                <label className="contact-label">PROJECT DETAILS</label>
+                <textarea className="contact-input" rows={4} placeholder="Tell us about your app vision..."></textarea>
+              </div>
+
+              <button type="button" className="contact-submit-btn">
+                Send Inquiry
+              </button>
+            </form>
+          </div>
+        </div>
+
       </div>
     </section>
   );

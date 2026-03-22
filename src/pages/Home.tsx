@@ -5,9 +5,9 @@ import { Portfolio } from '../sections/Portfolio';
 import { TechStack } from '../sections/TechStack';
 import { ShowcaseCarousel } from '../components/ShowcaseCarousel';
 import { WhyChooseUs } from '../sections/WhyChooseUs';
-import { Testimonials } from '../sections/Testimonials';
-import { Pricing } from '../sections/Pricing';
-import { Video } from '../sections/Video';
+// import { Testimonials } from '../sections/Testimonials';
+// import { Pricing } from '../sections/Pricing';
+// import { Video } from '../sections/Video';
 import { Contact } from '../sections/Contact';
 import { motion } from 'framer-motion';
 
@@ -26,9 +26,9 @@ export const Home = () => {
       <TechStack />
       <ShowcaseCarousel />
       <WhyChooseUs />
-      <Testimonials />
-      <Pricing />
-      <Video />
+      {/*<Testimonials />
+             <Pricing />
+      <Video /> */}
       <Contact />
     </motion.main>
   );
