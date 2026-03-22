@@ -1,0 +1,35 @@
+import { Hero } from '../sections/Hero';
+import { Services } from '../sections/Services';
+import { AIFeatures } from '../sections/AIFeatures';
+import { Portfolio } from '../sections/Portfolio';
+import { TechStack } from '../sections/TechStack';
+import { ShowcaseCarousel } from '../components/ShowcaseCarousel';
+import { WhyChooseUs } from '../sections/WhyChooseUs';
+import { Testimonials } from '../sections/Testimonials';
+import { Pricing } from '../sections/Pricing';
+import { Video } from '../sections/Video';
+import { Contact } from '../sections/Contact';
+import { motion } from 'framer-motion';
+
+export const Home = () => {
+  return (
+    <motion.main
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.5 }}
+    >
+      <Hero />
+      <Services />
+      <AIFeatures />
+      <Portfolio />
+      <TechStack />
+      <ShowcaseCarousel />
+      <WhyChooseUs />
+      <Testimonials />
+      <Pricing />
+      <Video />
+      <Contact />
+    </motion.main>
+  );
+};
