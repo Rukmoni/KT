@@ -2,6 +2,13 @@
   min-height: calc(100vh - 70px);
   padding: 4rem 2rem;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.hero-slide {
+  width: 100%;
 }
 
 .hero-content {
@@ -110,6 +117,26 @@
   margin-bottom: 12px;
 }
 
+/* Desk Mockup Styles */
+.desktop-mockup-container {
+  width: 600px;
+  height: 400px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.desktop-image-mockup {
+  width: 100%;
+  max-width: 600px;
+  border-radius: 16px;
+  z-index: 2;
+  position: relative;
+  object-fit: contain;
+}
+
+/* Base Orb */
 .ai-orb {
   position: absolute;
   top: 50%;
@@ -123,17 +150,40 @@
   animation: pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
+/* Carousel Nav */
+.carousel-nav {
+  position: absolute;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 20;
+}
+
+.dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--glass-border);
+  border: none;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.dot.active {
+  background: var(--primary);
+  transform: scale(1.3);
+}
+
 @keyframes pulse {
   0%, 100% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
   50% { opacity: 0.5; transform: translate(-50%, -50%) scale(1.1); }
 }
 
 @media (max-width: 1024px) {
-  .hero-section {
+  .hero-slide {
     flex-direction: column;
     justify-content: center;
     text-align: center;
-    padding-top: 6rem;
   }
   
   .hero-content {
