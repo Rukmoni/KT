@@ -186,8 +186,8 @@ export default function AppShowcaseCarousel() {
           </motion.p> 
         </div> */}
 
-        <div className="w-full flex justify-center mt-16 md:mt-22">
-          <div className="relative w-full max-w-6xl h-[650px] md:h-[750px] flex items-center justify-center">
+        <div className="w-full flex justify-center mt-12 md:mt-48">
+          <div className="relative w-full max-w-6xl h-[450px] md:h-[550px] flex items-center justify-center">
             <AnimatePresence mode="sync">
               {screens.map((screen, index) => {
                 const style = getCardStyle(index);
@@ -232,15 +232,15 @@ export default function AppShowcaseCarousel() {
                         : undefined
                     }
                   >
-                    <div className="relative">
+                    <div className="relative flex flex-col items-center">
                       {index === activeIndex && (
-                        <div className="absolute inset-0 rounded-[3rem] bg-gradient-to-r from-emerald-500/40 via-violet-500/40 to-emerald-500/40 blur-[60px] -z-10 animate-pulse" />
+                        <div className="absolute top-0 w-[240px] md:w-[300px] h-[480px] md:h-[600px] rounded-[3rem] bg-gradient-to-r from-emerald-500/40 via-violet-500/40 to-emerald-500/40 blur-[60px] -z-10 animate-pulse" />
                       )}
-                      <div className="relative w-[280px] md:w-[340px] h-[560px] md:h-[680px] bg-gradient-to-br from-white/10 via-white/5 to-transparent backdrop-blur-xl rounded-[3rem] p-3 shadow-2xl border border-white/10">
-                        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 bg-black/80 backdrop-blur-sm rounded-b-2xl z-10" />
+                      <div className="relative w-[240px] md:w-[300px] h-[480px] md:h-[600px] bg-gradient-to-br from-white/10 via-white/5 to-transparent backdrop-blur-xl rounded-[3rem] p-3 shadow-2xl border border-white/10">
+                        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-24 md:w-32 h-5 md:h-6 bg-black/80 backdrop-blur-sm rounded-b-2xl z-10" />
 
                         <div className="relative w-full h-full bg-gradient-to-br from-gray-900/90 via-gray-950/90 to-black/90 backdrop-blur-sm rounded-[2.5rem] overflow-hidden">
-                          <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/20 via-transparent to-violet-500/20 pointer-events-none" />
+                          <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/10 via-transparent to-violet-500/10 pointer-events-none" />
 
                           <img
                             src={screen.imageUrl}
@@ -249,7 +249,10 @@ export default function AppShowcaseCarousel() {
                             loading="lazy"
                           />
 
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                          {/* Only darken non-active slides to make the center one pop more clearly */}
+                          {index !== activeIndex && (
+                            <div className="absolute inset-0 bg-black/40 pointer-events-none transition-opacity duration-300" />
+                          )}
                         </div>
                       </div>
 
