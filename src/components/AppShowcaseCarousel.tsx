@@ -40,6 +40,13 @@ const screens: AppScreen[] = [
     category: 'Analytics',
   },
   {
+    id: 2,
+    title: 'AI Invoice Generator',
+    description: 'Create professional invoices instantly with AI assistance',
+    imageUrl: '/invoice.png',
+    category: 'Invoicing',
+  },
+  {
     id: 5,
     title: 'Payment Reminders',
     description: 'Never miss a due date with smart scheduling',
@@ -186,8 +193,8 @@ export default function AppShowcaseCarousel() {
           </motion.p> 
         </div> */}
 
-        <div className="w-full flex justify-center mt-12 md:mt-48">
-          <div className="relative w-full max-w-6xl h-[450px] md:h-[550px] flex items-center justify-center">
+        <div className="w-full flex justify-center mt-12 md:mt-18">
+          <div className="relative w-full max-w-6xl h-[550px] md:h-[650px] flex items-center justify-center">
             <AnimatePresence mode="sync">
               {screens.map((screen, index) => {
                 const style = getCardStyle(index);
@@ -206,16 +213,17 @@ export default function AppShowcaseCarousel() {
                 return (
                   <motion.div
                     key={screen.id}
-                    className="absolute cursor-pointer"
-                    initial={{ opacity: 0, scale: 0.8 }}
+                    className="absolute cursor-pointer top-1/2"
+                    initial={{ opacity: 0, scale: 0.8, y: '-50%' }}
                     animate={{
                       scale: style.scale,
                       opacity: style.opacity,
                       zIndex: style.zIndex,
                       x: style.x + '%',
+                      y: '-50%',
                       filter: style.filter,
                     }}
-                    exit={{ opacity: 0, scale: 0.8 }}
+                    exit={{ opacity: 0, scale: 0.8, y: '-50%' }}
                     transition={{
                       duration: 0.5,
                       ease: [0.32, 0.72, 0, 1],
@@ -245,8 +253,9 @@ export default function AppShowcaseCarousel() {
                           <img
                             src={screen.imageUrl}
                             alt={screen.title}
-                            className="w-full h-full object-cover"
+                            className={`w-full h-full ${index === activeIndex ? 'object-contain scale-100' : 'object-cover'} transition-transform duration-500`}
                             loading="lazy"
+                            style={{ imageRendering: 'high-quality' }}
                           />
 
                           {/* Only darken non-active slides to make the center one pop more clearly */}
@@ -257,24 +266,26 @@ export default function AppShowcaseCarousel() {
                       </div>
 
                       {index === activeIndex && (
-                        <motion.div
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: 0.2 }}
-                          className="mt-8 text-center"
-                        >
-                          <div className="inline-block mb-3 px-4 py-1.5 bg-gradient-to-r from-emerald-500/20 to-violet-500/20 backdrop-blur-sm border border-emerald-400/30 rounded-full">
-                            <span className="text-sm font-medium text-emerald-300 uppercase tracking-wider">
-                              {screen.category}
-                            </span>
-                          </div>
-                          <h3 className="text-2xl md:text-3xl font-bold text-white mb-2">
-                            {screen.title}
-                          </h3>
-                          <p className="text-gray-300/70 max-w-md mx-auto px-4">
-                            {screen.description}
-                          </p>
-                        </motion.div>
+                        <div className="absolute top-full left-1/2 -translate-x-1/2 mt-8 w-[320px] md:w-[450px] flex justify-center pointer-events-none z-20">
+                          <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.2 }}
+                            className="text-center pointer-events-auto"
+                          >
+                            <div className="inline-block mb-3 px-4 py-1.5 bg-gradient-to-r from-emerald-500/20 to-violet-500/20 backdrop-blur-sm border border-emerald-400/30 rounded-full">
+                              <span className="text-sm font-medium text-emerald-300 uppercase tracking-wider">
+                                {screen.category}
+                              </span>
+                            </div>
+                            <h3 className="text-2xl md:text-3xl font-bold text-white mb-2">
+                              {screen.title}
+                            </h3>
+                            <p className="text-gray-300/70 max-w-md mx-auto px-4">
+                              {screen.description}
+                            </p>
+                          </motion.div>
+                        </div>
                       )}
                     </div>
                   </motion.div>
@@ -300,7 +311,7 @@ export default function AppShowcaseCarousel() {
           </button>
         </div>
 
-        <div className="flex justify-center items-center gap-2 mt-14">
+        <div className="flex justify-center items-center gap-2 mt-40">
           {screens.map((_, index) => (
             <button
               key={index}
