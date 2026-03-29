@@ -22,14 +22,14 @@ export const Home = () => {
       transition={{ duration: 0.5 }}
     >
       <AppShowcaseCarousel />
-      <ShowcaseCarousel />
+      {/*  <ShowcaseCarousel /> */}
       {/*   <Hero /> */}
-      <Services />
+      {/* <Services /> */}
       <AIFeatures />
-      <Portfolio />
-      <TechStack />
+      {/*  <Portfolio /> */}
+      {/* <TechStack /> */}
 
-      <HighLights />
+      {/*  <HighLights /> */}
       <WhyChooseUs />
       {/*<Testimonials />
              <Pricing />
