@@ -4,6 +4,7 @@ import { AIFeatures } from '../sections/AIFeatures';
 import { Portfolio } from '../sections/Portfolio';
 import { TechStack } from '../sections/TechStack';
 import { ShowcaseCarousel } from '../components/ShowcaseCarousel';
+import { HighLights } from '../sections/HighLights';
 import { WhyChooseUs } from '../sections/WhyChooseUs';
 // import { Testimonials } from '../sections/Testimonials';
 // import { Pricing } from '../sections/Pricing';
@@ -19,12 +20,14 @@ export const Home = () => {
       exit={{ opacity: 0 }}
       transition={{ duration: 0.5 }}
     >
-      <Hero />
+      <ShowcaseCarousel />
+      {/*   <Hero /> */}
       <Services />
       <AIFeatures />
       <Portfolio />
       <TechStack />
-      <ShowcaseCarousel />
+
+      <HighLights />
       <WhyChooseUs />
       {/*<Testimonials />
              <Pricing />
