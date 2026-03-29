@@ -1,6 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, type PanInfo } from 'framer-motion';
 import { ChevronLeft, ChevronRight, Wallet, CreditCard, PieChart, Calendar, FileText, ArrowUpRight, Clock, Activity } from 'lucide-react';
+
+type HighlightItemType = {
+  id: number;
+  title: string;
+  desc: string;
+  bgClass: string;
+  glowClass: string;
+  mainStat: string;
+  stats: { label: string; value: string; icon: React.ElementType; colorClass: string }[];
+  chartTitle: string;
+};
 
 const HIGHLIGHTS = [
   {
@@ -75,7 +86,7 @@ const HIGHLIGHTS = [
   },
 ];
 
-const PhoneMockup = ({ item }: { item: any }) => (
+const PhoneMockup = ({ item }: { item: HighlightItemType }) => (
   <div className={`w-full h-full rounded-[2.5rem] overflow-hidden relative ${item.bgClass} flex flex-col p-5 font-sans text-white border border-white/5`}>
     {/* Status Bar */}
     <div className="flex justify-between items-center px-2 text-[10px] font-medium opacity-80 mb-4 mt-1">
@@ -110,7 +121,7 @@ const PhoneMockup = ({ item }: { item: any }) => (
 
     {/* Stats row */}
     <div className="space-y-2 z-10">
-      {item.stats.map((stat: any, i: number) => (
+      {item.stats.map((stat, i: number) => (
         <div key={i} className="bg-white/[0.03] backdrop-blur-md rounded-xl p-3.5 flex items-center justify-between border border-white/5 hover:bg-white/5 transition-colors">
           <div className="flex items-center gap-3">
             <div className={`p-2 rounded-lg ${stat.colorClass} bg-white/5 shadow-inner`}>
@@ -155,7 +166,7 @@ export const HighLights = () => {
   const prevSlide = () => setActiveIndex((prev) => (prev - 1 + HIGHLIGHTS.length) % HIGHLIGHTS.length);
   const setSlide = (index: number) => setActiveIndex(index);
 
-  const handleDragEnd = (event: any, info: any) => {
+  const handleDragEnd = (_: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
     const swipeThreshold = 50;
     if (info.offset.x > swipeThreshold) {
       prevSlide();

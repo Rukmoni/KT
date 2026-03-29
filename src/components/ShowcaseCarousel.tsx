@@ -2,8 +2,7 @@ import { Swiper, SwiperSlide } from 'swiper/react';
 import { EffectCoverflow, Pagination, Navigation, Autoplay } from 'swiper/modules';
 import { useNavigate } from 'react-router-dom';
 import { motion, useMotionValue, useTransform } from 'framer-motion';
-import { Bot, ChevronRight, Smartphone } from 'lucide-react';
-import { Button } from './Button';
+import { Bot } from 'lucide-react';
 
 import 'swiper/css';
 import 'swiper/css/effect-coverflow';
@@ -50,7 +49,7 @@ const screens = [
   },
 ];
 
-const TiltCard = ({ children, isActive, title, description, category }: any) => {
+const TiltCard = ({ children, isActive, title, description, category }: { children: string, isActive: boolean, title: string, description: string, category: string }) => {
   const x = useMotionValue(0);
   const y = useMotionValue(0);
 

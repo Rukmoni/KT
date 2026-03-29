@@ -1,4 +1,4 @@
-import { Hero } from '../sections/Hero';
+
 import { Services } from '../sections/Services';
 import { AIFeatures } from '../sections/AIFeatures';
 import { Portfolio } from '../sections/Portfolio';
@@ -6,6 +6,7 @@ import { TechStack } from '../sections/TechStack';
 import { ShowcaseCarousel } from '../components/ShowcaseCarousel';
 import { HighLights } from '../sections/HighLights';
 import { WhyChooseUs } from '../sections/WhyChooseUs';
+import AppShowcaseCarousel from '../components/AppShowcaseCarousel';
 // import { Testimonials } from '../sections/Testimonials';
 // import { Pricing } from '../sections/Pricing';
 // import { Video } from '../sections/Video';
@@ -20,6 +21,7 @@ export const Home = () => {
       exit={{ opacity: 0 }}
       transition={{ duration: 0.5 }}
     >
+      <AppShowcaseCarousel />
       <ShowcaseCarousel />
       {/*   <Hero /> */}
       <Services />
