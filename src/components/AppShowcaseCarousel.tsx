@@ -15,35 +15,35 @@ const screens: AppScreen[] = [
     id: 1,
     title: 'Smart Dashboard',
     description: 'Track revenue, pending payments & insights in real-time',
-    imageUrl: 'https://images.pexels.com/photos/7688336/pexels-photo-7688336.jpeg?auto=compress&cs=tinysrgb&w=400&h=800&fit=crop',
+    imageUrl: '/dashboard.png',
     category: 'Dashboard',
   },
   {
     id: 2,
     title: 'AI Invoice Generator',
     description: 'Create professional invoices instantly with AI assistance',
-    imageUrl: 'https://images.pexels.com/photos/6963944/pexels-photo-6963944.jpeg?auto=compress&cs=tinysrgb&w=400&h=800&fit=crop',
+    imageUrl: '/invoice.png',
     category: 'Invoicing',
   },
   {
     id: 3,
     title: 'Seamless Payments',
     description: 'Accept payments via Stripe, Razorpay & more',
-    imageUrl: 'https://images.pexels.com/photos/4968630/pexels-photo-4968630.jpeg?auto=compress&cs=tinysrgb&w=400&h=800&fit=crop',
+    imageUrl: '/payment.png',
     category: 'Payments',
   },
   {
     id: 4,
     title: 'Advanced Analytics',
     description: 'Visual charts for growth, cashflow & client behavior',
-    imageUrl: 'https://images.pexels.com/photos/7567443/pexels-photo-7567443.jpeg?auto=compress&cs=tinysrgb&w=400&h=800&fit=crop',
+    imageUrl: '/analytics.png',
     category: 'Analytics',
   },
   {
     id: 5,
     title: 'Payment Reminders',
     description: 'Never miss a due date with smart scheduling',
-    imageUrl: 'https://images.pexels.com/photos/5716001/pexels-photo-5716001.jpeg?auto=compress&cs=tinysrgb&w=400&h=800&fit=crop',
+    imageUrl: '/calendar.png',
     category: 'Calendar',
   },
 ];
@@ -131,25 +131,51 @@ export default function AppShowcaseCarousel() {
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,_var(--tw-gradient-stops))] from-emerald-500/10 via-transparent to-transparent pointer-events-none" />
 
       <div className="max-w-7xl mx-auto relative z-10 gap-6">
-        <div className="text-center mb-16">
-          <div className="hero-content flex-col gap-6">
-            <div className="tagline flex items-center gap-2">
+        <div className="relative z-10 w-full flex flex-col items-center justify-center px-6 md:px-10 lg:px-16 pt-12 md:pt-20">
 
-              <span className="text-secondary font-semibold">AI-Powered Mobile App Experiences</span>
+          <div className="w-full max-w-5xl flex flex-col items-center text-center gap-6">
+
+            {/* Tagline */}
+            <div className="flex items-center justify-center">
+              <span className="text-sm md:text-base font-semibold text-emerald-300 tracking-wide">
+                AI-Powered Mobile App Experiences
+              </span>
             </div>
 
-            <h1 className="hero-title">
+            {/* Heading */}
+            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold leading-tight text-white">
+              Build Stunning <br />
+              <span className="bg-gradient-to-r from-emerald-400 via-violet-400 to-purple-500 bg-clip-text text-transparent">
+                AI-Powered
+              </span>{" "}
+              Mobile Apps
+            </h1>
+
+            {/* Subtitle */}
+            <p className="text-gray-300/80 text-base md:text-lg lg:text-xl max-w-2xl">
+              Convert your ideas into high-converting mobile experiences with
+              premium UI, seamless performance, and AI-driven features.
+            </p>
+
+          </div>
+        </div>
+        {/*    <div className="text-center mb-16">
+          <div className="hero-content flex flex-col items-center justify-center gap-6 text-center">
+            <div className="tagline flex items-center justify-center gap-2">
+              <span className="text-secondary font-semibold text-center">AI-Powered Mobile App Experiences</span>
+            </div>
+
+            <h1 className="hero-title text-center">
               Build Stunning <br />
               <span className="text-gradient">AI-Powered</span> <br />
               Mobile Apps
             </h1>
 
-            <p className="hero-subtitle text-secondary">
+            <p className="hero-subtitle text-secondary text-center">
               Convert your ideas into high-converting mobile experiences.
             </p>
-
           </div>
-          {/*       <motion.p
+                <motion.p
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
@@ -157,11 +183,11 @@ export default function AppShowcaseCarousel() {
             className="text-lg md:text-xl text-gray-300/80 max-w-3xl mx-auto"
           >
             Designed for freelancers & SMEs to manage invoices, payments, and analytics
-          </motion.p> */}
-        </div>
+          </motion.p> 
+        </div> */}
 
-        <div className="relative h-[700px] md:h-[750px] flex items-center justify-center mb-12">
-          <div className="absolute inset-0 flex items-center justify-center">
+        <div className="w-full flex justify-center mt-16 md:mt-22">
+          <div className="relative w-full max-w-6xl h-[650px] md:h-[750px] flex items-center justify-center">
             <AnimatePresence mode="sync">
               {screens.map((screen, index) => {
                 const style = getCardStyle(index);
@@ -271,7 +297,7 @@ export default function AppShowcaseCarousel() {
           </button>
         </div>
 
-        <div className="flex justify-center items-center gap-2 mt-8">
+        <div className="flex justify-center items-center gap-2 mt-14">
           {screens.map((_, index) => (
             <button
               key={index}
@@ -286,7 +312,7 @@ export default function AppShowcaseCarousel() {
         </div>
       </div>
 
-      <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-[#0a0f1e] to-transparent pointer-events-none" />
+
     </section>
   );
 }
