@@ -137,21 +137,21 @@ export default function AppShowcaseCarousel() {
   };
 
   return (
-    <section className="relative w-full min-h-screen bg-gradient-to-b from-[#0a0f1e] via-[#1a1332] to-[#0a0f1e] py-20 px-4 overflow-hidden">
+    <section className="relative w-full min-h-screen bg-gradient-to-b from-[#0a0f1e] via-[#1a1332] to-[#0a0f1e] pt-6 pb-20 px-4 overflow-hidden">
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-violet-900/30 via-transparent to-transparent pointer-events-none" />
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,_var(--tw-gradient-stops))] from-emerald-500/10 via-transparent to-transparent pointer-events-none" />
 
       <div className="max-w-7xl mx-auto relative z-10 gap-6">
-        <div className="relative z-10 w-full flex flex-col items-center justify-center px-6 md:px-10 lg:px-16 pt-12 md:pt-20">
+        <div className="relative z-10 w-full flex flex-col items-center justify-center px-6 md:px-10 lg:px-16 pt-2 md:pt-20">
 
           <div className="w-full max-w-5xl flex flex-col items-center text-center gap-6">
 
             {/* Tagline */}
-            <div className="flex items-center justify-center">
+            {/*     <div className="flex items-center justify-center">
               <span className="text-sm md:text-base font-semibold text-emerald-300 tracking-wide">
                 AI-Powered Mobile App Experiences
               </span>
-            </div>
+            </div> */}
 
             {/* Heading */}
             <h1 className="text-4xl sm:text-5xl md:text-4xl lg:text-7xl font-bold leading-tight text-white">
@@ -197,7 +197,7 @@ export default function AppShowcaseCarousel() {
           </motion.p> 
         </div> */}
 
-        <div className="w-full flex justify-center mt-12 md:mt-18">
+        <div className="w-full flex justify-center mt-6 md:mt-18">
           <div className="relative w-full max-w-6xl h-[550px] md:h-[650px] flex items-center justify-center">
             <AnimatePresence mode="sync">
               {screens.map((screen, index) => {
