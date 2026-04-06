@@ -7,6 +7,7 @@ interface AppScreen {
   title: string;
   description: string;
   imageUrl: string;
+  videoUrl?: string;
   category: string;
 }
 
@@ -16,6 +17,7 @@ const screens: AppScreen[] = [
     title: 'Smart Dashboard',
     description: 'Track revenue, pending payments & insights in real-time',
     imageUrl: '/dashboard.png',
+    videoUrl: '/paymentVideo.mov',
     category: 'Dashboard',
   },
   {
@@ -30,6 +32,7 @@ const screens: AppScreen[] = [
     title: 'Seamless Payments',
     description: 'Accept payments via Stripe, Razorpay & more',
     imageUrl: '/payment.png',
+    videoUrl: '/paymentVideo.mov',
     category: 'Payments',
   },
   {
@@ -44,6 +47,7 @@ const screens: AppScreen[] = [
     title: 'AI Invoice Generator',
     description: 'Create professional invoices instantly with AI assistance',
     imageUrl: '/invoice.png',
+    videoUrl: '/demoVideo1.mov',
     category: 'Invoicing',
   },
   {
@@ -150,7 +154,7 @@ export default function AppShowcaseCarousel() {
             </div>
 
             {/* Heading */}
-            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold leading-tight text-white">
+            <h1 className="text-4xl sm:text-5xl md:text-4xl lg:text-7xl font-bold leading-tight text-white">
               Build Stunning <br />
               <span className="bg-gradient-to-r from-emerald-400 via-violet-400 to-purple-500 bg-clip-text text-transparent">
                 AI-Powered
@@ -159,10 +163,10 @@ export default function AppShowcaseCarousel() {
             </h1>
 
             {/* Subtitle */}
-            <p className="text-gray-300/80 text-base md:text-lg lg:text-xl max-w-2xl">
+            {/*     <p className="text-gray-300/80 text-base md:text-lg lg:text-xl max-w-2xl">
               Convert your ideas into high-converting mobile experiences with
               premium UI, seamless performance, and AI-driven features.
-            </p>
+            </p> */}
 
           </div>
         </div>
@@ -250,13 +254,24 @@ export default function AppShowcaseCarousel() {
                         <div className="relative w-full h-full bg-gradient-to-br from-gray-900/90 via-gray-950/90 to-black/90 backdrop-blur-sm rounded-[2.5rem] overflow-hidden">
                           <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/10 via-transparent to-violet-500/10 pointer-events-none" />
 
-                          <img
-                            src={screen.imageUrl}
-                            alt={screen.title}
-                            className={`w-full h-full ${index === activeIndex ? 'object-contain scale-100' : 'object-cover'} transition-transform duration-500`}
-                            loading="lazy"
-                            style={{ imageRendering: 'high-quality' }}
-                          />
+                          {index === activeIndex && screen.videoUrl ? (
+                            <video
+                              src={screen.videoUrl}
+                              autoPlay
+                              muted
+                              loop
+                              playsInline
+                              className="w-full h-full object-contain scale-100 transition-transform duration-500"
+                            />
+                          ) : (
+                            <img
+                              src={screen.imageUrl}
+                              alt={screen.title}
+                              className={`w-full h-full ${index === activeIndex ? 'object-contain scale-100' : 'object-cover'} transition-transform duration-500`}
+                              loading="lazy"
+                              style={{ imageRendering: 'high-quality' }}
+                            />
+                          )}
 
                           {/* Only darken non-active slides to make the center one pop more clearly */}
                           {index !== activeIndex && (
