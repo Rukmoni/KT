@@ -29,9 +29,9 @@ export const Home = () => {
       <AIFeatures />
       <HowWeWork />
       {/*  <Portfolio /> */}
-      <TechStack />
+      {/*    <TechStack /> */}
 
-      <HighLights />
+      {/* <HighLights /> */}
       <WhyChooseUs />
       {/*<Testimonials />
              <Pricing />
