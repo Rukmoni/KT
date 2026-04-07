@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence, type PanInfo } from 'framer-motion';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
@@ -47,7 +47,7 @@ const screens: AppScreen[] = [
     title: 'AI Invoice Generator',
     description: 'Create professional invoices instantly with AI assistance',
     imageUrl: '/invoice.png',
-    videoUrl: '/demoVideo1.mov',
+    videoUrl: '/demovideo1.mov',
     category: 'Invoicing',
   },
   {
@@ -58,6 +58,41 @@ const screens: AppScreen[] = [
     category: 'Calendar',
   },
 ];
+
+const CarouselMedia = ({ screen, isActive }: { screen: AppScreen; isActive: boolean }) => {
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  useEffect(() => {
+    if (isActive && videoRef.current) {
+      videoRef.current.play().catch((e) => console.log('Video playback prevented:', e));
+    } else if (!isActive && videoRef.current) {
+      videoRef.current.pause();
+    }
+  }, [isActive]);
+
+  return (
+    <>
+      <img
+        src={screen.imageUrl}
+        alt={screen.title}
+        className={`absolute inset-0 w-full h-full ${isActive ? 'object-contain scale-100' : 'object-cover'} transition-all duration-500 z-0 ${screen.videoUrl && isActive ? 'opacity-0' : 'opacity-100'}`}
+        loading="lazy"
+        style={{ imageRendering: 'high-quality' }}
+      />
+      {screen.videoUrl && (
+        <video
+          ref={videoRef}
+          src={screen.videoUrl}
+          muted
+          loop
+          playsInline
+          className={`absolute inset-0 w-full h-full ${isActive ? 'object-contain scale-100 opacity-100' : 'object-cover opacity-0'} transition-all duration-500 z-10`}
+          style={{ pointerEvents: isActive ? 'auto' : 'none' }}
+        />
+      )}
+    </>
+  );
+};
 
 export default function AppShowcaseCarousel() {
   const [activeIndex, setActiveIndex] = useState(2);
@@ -154,8 +189,8 @@ export default function AppShowcaseCarousel() {
             </div> */}
 
             {/* Heading */}
-            <h1 className="text-4xl sm:text-5xl md:text-4xl lg:text-7xl font-bold leading-tight text-white">
-              Build Stunning <br />
+            <h1 className="text-4xl sm:text-5xl md:text-4xl lg:text-5xl font-bold leading-tight text-white">
+              Build Stunning {" "}
               <span className="bg-gradient-to-r from-emerald-400 via-violet-400 to-purple-500 bg-clip-text text-transparent">
                 AI-Powered
               </span>{" "}
@@ -254,24 +289,7 @@ export default function AppShowcaseCarousel() {
                         <div className="relative w-full h-full bg-gradient-to-br from-gray-900/90 via-gray-950/90 to-black/90 backdrop-blur-sm rounded-[2.5rem] overflow-hidden">
                           <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/10 via-transparent to-violet-500/10 pointer-events-none" />
 
-                          {index === activeIndex && screen.videoUrl ? (
-                            <video
-                              src={screen.videoUrl}
-                              autoPlay
-                              muted
-                              loop
-                              playsInline
-                              className="w-full h-full object-contain scale-100 transition-transform duration-500"
-                            />
-                          ) : (
-                            <img
-                              src={screen.imageUrl}
-                              alt={screen.title}
-                              className={`w-full h-full ${index === activeIndex ? 'object-contain scale-100' : 'object-cover'} transition-transform duration-500`}
-                              loading="lazy"
-                              style={{ imageRendering: 'high-quality' }}
-                            />
-                          )}
+                          <CarouselMedia screen={screen} isActive={index === activeIndex} />
 
                           {/* Only darken non-active slides to make the center one pop more clearly */}
                           {index !== activeIndex && (
