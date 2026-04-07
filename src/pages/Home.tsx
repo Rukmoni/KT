@@ -3,6 +3,7 @@ import { Services } from '../sections/Services';
 import { AIFeatures } from '../sections/AIFeatures';
 import { Portfolio } from '../sections/Portfolio';
 import { TechStack } from '../sections/TechStack';
+import { HowWeWork } from '../sections/HowWeWork';
 import { ShowcaseCarousel } from '../components/ShowcaseCarousel';
 import { HighLights } from '../sections/HighLights';
 import { WhyChooseUs } from '../sections/WhyChooseUs';
@@ -24,12 +25,13 @@ export const Home = () => {
       <AppShowcaseCarousel />
       {/*  <ShowcaseCarousel /> */}
       {/*   <Hero /> */}
-      {/* <Services /> */}
+      <Services />
       <AIFeatures />
+      <HowWeWork />
       {/*  <Portfolio /> */}
-      {/* <TechStack /> */}
+      <TechStack />
 
-      {/*  <HighLights /> */}
+      <HighLights />
       <WhyChooseUs />
       {/*<Testimonials />
              <Pricing />
