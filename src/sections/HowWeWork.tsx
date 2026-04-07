@@ -33,7 +33,7 @@ const steps = [
 
 export const HowWeWork = () => {
   return (
-    <section className="relative w-full bg-[#0a0f1e] py-24 px-4 overflow-hidden font-sans border-y border-white/5">
+    <section id="how-we-work" className="relative w-full bg-[#0a0f1e] py-24 px-4 overflow-hidden font-sans border-y border-white/5">
       <div className="max-w-7xl mx-auto relative z-10">
         
         {/* Header */}
