@@ -30,12 +30,12 @@ function App() {
 
             <div className="navbar-links">
               <a href="/#services">Services</a>
-              <a href="/#portfolio">Portfolio</a>
-              <a href="/#pricing">Pricing</a>
+              <a href="/#HowWeWork">How we work?</a>
+              <a href="/#pricing">Why us?</a>
             </div>
 
             <div className="navbar-actions">
-              <ThemeToggle />
+              {/*    <ThemeToggle /> */}
               <button className="nav-btn-primary hidden md:block">Get Started</button>
             </div>
           </div>
