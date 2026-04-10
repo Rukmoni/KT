@@ -1,9 +1,9 @@
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
-import { ThemeToggle } from './components/ThemeToggle';
 import { Footer } from './sections/Footer';
 import { Home } from './pages/Home';
 import { DemoPage } from './pages/DemoPage';
+import { AdminLeads } from './pages/AdminLeads';
 
 const AnimatedRoutes = () => {
   const location = useLocation();
@@ -12,10 +12,13 @@ const AnimatedRoutes = () => {
       <Routes location={location} key={location.pathname}>
         <Route path="/" element={<Home />} />
         <Route path="/demo/:screenName" element={<DemoPage />} />
+        <Route path="/admin" element={<AdminLeads />} />
       </Routes>
     </AnimatePresence>
   );
 };
+
+import { ChatbotWidget } from './components/ChatbotWidget';
 
 function App() {
   return (
@@ -44,6 +47,7 @@ function App() {
         <AnimatedRoutes />
 
         <Footer />
+        <ChatbotWidget />
 
         <style>{`
           .navbar-container {

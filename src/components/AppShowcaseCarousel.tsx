@@ -77,7 +77,7 @@ const CarouselMedia = ({ screen, isActive }: { screen: AppScreen; isActive: bool
         alt={screen.title}
         className={`absolute inset-0 w-full h-full ${isActive ? 'object-contain scale-100' : 'object-cover'} transition-all duration-500 z-0 ${screen.videoUrl && isActive ? 'opacity-0' : 'opacity-100'}`}
         loading="lazy"
-        style={{ imageRendering: 'high-quality' }}
+        style={{ imageRendering: 'auto' }}
       />
       {screen.videoUrl && (
         <video
