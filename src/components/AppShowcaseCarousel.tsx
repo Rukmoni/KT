@@ -1,6 +1,8 @@
-import { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence, type PanInfo } from 'framer-motion';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ChevronLeft, ChevronRight, Smartphone } from 'lucide-react';
+import { Button } from './Button';
+import './AppShowcaseCarousel.css';
 
 interface AppScreen {
   id: number;
@@ -25,6 +27,7 @@ const screens: AppScreen[] = [
     title: 'AI Invoice Generator',
     description: 'Create professional invoices instantly with AI assistance',
     imageUrl: '/invoice.png',
+    videoUrl: '/demovideo1.mov',
     category: 'Invoicing',
   },
   {
@@ -43,14 +46,6 @@ const screens: AppScreen[] = [
     category: 'Analytics',
   },
   {
-    id: 2,
-    title: 'AI Invoice Generator',
-    description: 'Create professional invoices instantly with AI assistance',
-    imageUrl: '/invoice.png',
-    videoUrl: '/demovideo1.mov',
-    category: 'Invoicing',
-  },
-  {
     id: 5,
     title: 'Payment Reminders',
     description: 'Never miss a due date with smart scheduling',
@@ -59,14 +54,18 @@ const screens: AppScreen[] = [
   },
 ];
 
+const SLIDE_INTERVAL = 5000;
+
 const CarouselMedia = ({ screen, isActive }: { screen: AppScreen; isActive: boolean }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
-    if (isActive && videoRef.current) {
-      videoRef.current.play().catch((e) => console.log('Video playback prevented:', e));
-    } else if (!isActive && videoRef.current) {
+    if (!videoRef.current) return;
+    if (isActive) {
+      videoRef.current.play().catch(() => {});
+    } else {
       videoRef.current.pause();
+      videoRef.current.currentTime = 0;
     }
   }, [isActive]);
 
@@ -75,9 +74,10 @@ const CarouselMedia = ({ screen, isActive }: { screen: AppScreen; isActive: bool
       <img
         src={screen.imageUrl}
         alt={screen.title}
-        className={`absolute inset-0 w-full h-full ${isActive ? 'object-contain scale-100' : 'object-cover'} transition-all duration-500 z-0 ${screen.videoUrl && isActive ? 'opacity-0' : 'opacity-100'}`}
+        className={`absolute inset-0 w-full h-full object-contain transition-opacity duration-500 z-0 ${
+          screen.videoUrl && isActive ? 'opacity-0' : 'opacity-100'
+        }`}
         loading="lazy"
-        style={{ imageRendering: 'auto' }}
       />
       {screen.videoUrl && (
         <video
@@ -86,8 +86,9 @@ const CarouselMedia = ({ screen, isActive }: { screen: AppScreen; isActive: bool
           muted
           loop
           playsInline
-          className={`absolute inset-0 w-full h-full ${isActive ? 'object-contain scale-100 opacity-100' : 'object-cover opacity-0'} transition-all duration-500 z-10`}
-          style={{ pointerEvents: isActive ? 'auto' : 'none' }}
+          className={`absolute inset-0 w-full h-full object-contain transition-opacity duration-500 z-10 ${
+            isActive ? 'opacity-100' : 'opacity-0'
+          }`}
         />
       )}
     </>
@@ -95,271 +96,191 @@ const CarouselMedia = ({ screen, isActive }: { screen: AppScreen; isActive: bool
 };
 
 export default function AppShowcaseCarousel() {
-  const [activeIndex, setActiveIndex] = useState(2);
-  const [dragStartX, setDragStartX] = useState(0);
+  const [activeIndex, setActiveIndex] = useState(0);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const handleDragStart = (_: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
-    setDragStartX(info.point.x);
-  };
+  const goToNext = useCallback(() => {
+    setActiveIndex((prev) => (prev + 1) % screens.length);
+  }, []);
 
-  const handleDragEnd = (_: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
-    const dragDistance = info.point.x - dragStartX;
-    const threshold = 50;
+  const goToPrevious = useCallback(() => {
+    setActiveIndex((prev) => (prev - 1 + screens.length) % screens.length);
+  }, []);
 
-    if (dragDistance > threshold) {
-      goToPrevious();
-    } else if (dragDistance < -threshold) {
-      goToNext();
-    }
-  };
-
-  const goToSlide = (index: number) => {
+  const goToSlide = useCallback((index: number) => {
     setActiveIndex(index);
-  };
+  }, []);
 
-  const goToPrevious = () => {
-    setActiveIndex((prev) => (prev === 0 ? screens.length - 1 : prev - 1));
-  };
-
-  const goToNext = () => {
-    setActiveIndex((prev) => (prev === screens.length - 1 ? 0 : prev + 1));
-  };
+  const resetTimer = useCallback(() => {
+    if (timerRef.current) clearInterval(timerRef.current);
+    timerRef.current = setInterval(goToNext, SLIDE_INTERVAL);
+  }, [goToNext]);
 
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'ArrowLeft') goToPrevious();
-      if (e.key === 'ArrowRight') goToNext();
+    resetTimer();
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
     };
+  }, [resetTimer]);
 
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [activeIndex]);
+  const handleManualNav = useCallback((fn: () => void) => {
+    fn();
+    resetTimer();
+  }, [resetTimer]);
 
-  const getCardStyle = (index: number) => {
-    let diff = index - activeIndex;
+  const activeScreen = screens[activeIndex];
 
-    if (diff > screens.length / 2) {
-      diff -= screens.length;
-    } else if (diff < -screens.length / 2) {
-      diff += screens.length;
-    }
+  const getSideStyle = (index: number) => {
+    const diff = ((index - activeIndex) + screens.length) % screens.length;
+    const normalizedDiff = diff > screens.length / 2 ? diff - screens.length : diff;
 
-    if (diff === 0) {
-      return {
-        scale: 1,
-        opacity: 1,
-        zIndex: 30,
-        x: 0,
-        filter: 'blur(0px)',
-      };
-    } else if (Math.abs(diff) === 1) {
-      return {
-        scale: 0.75,
-        opacity: 0.4,
-        zIndex: 20,
-        x: diff * 60,
-        filter: 'blur(2px)',
-      };
-    } else {
-      return {
-        scale: 0.6,
-        opacity: 0.2,
-        zIndex: 10,
-        x: diff * 80,
-        filter: 'blur(4px)',
-      };
-    }
+    if (normalizedDiff === 0) return { scale: 1, opacity: 1, zIndex: 30, x: 0, filter: 'blur(0px)' };
+    if (Math.abs(normalizedDiff) === 1) return { scale: 0.78, opacity: 0.45, zIndex: 20, x: normalizedDiff * 55, filter: 'blur(1.5px)' };
+    return { scale: 0.62, opacity: 0.2, zIndex: 10, x: normalizedDiff * 75, filter: 'blur(3px)' };
   };
 
   return (
-    <section className="relative w-full min-h-screen bg-gradient-to-b from-[#0a0f1e] via-[#1a1332] to-[#0a0f1e] pt-6 pb-20 px-4 overflow-hidden">
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-violet-900/30 via-transparent to-transparent pointer-events-none" />
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,_var(--tw-gradient-stops))] from-emerald-500/10 via-transparent to-transparent pointer-events-none" />
+    <section className="hero-showcase-section">
+      <div className="hero-showcase-inner">
 
-      <div className="max-w-7xl mx-auto relative z-10 gap-6">
-        <div className="relative z-10 w-full flex flex-col items-center justify-center px-6 md:px-10 lg:px-16 pt-2 md:pt-20">
+        {/* LEFT — 30% hero text */}
+        <div className="hero-left-panel">
+          <div className="hero-badge">
+            <span className="hero-badge-dot" />
+            <span>THE NEURAL PULSE IS ACTIVE</span>
+          </div>
 
-          <div className="w-full max-w-5xl flex flex-col items-center text-center gap-6">
+          <h1 className="hero-showcase-title">
+            Building Stunning{' '}
+            <span className="hero-title-gradient">AI-Powered</span>{' '}
+            Mobile Apps
+          </h1>
 
-            {/* Tagline */}
-            {/*     <div className="flex items-center justify-center">
-              <span className="text-sm md:text-base font-semibold text-emerald-300 tracking-wide">
-                AI-Powered Mobile App Experiences
-              </span>
-            </div> */}
+          <p className="hero-showcase-subtitle">
+            Create professional apps instantly with AI assistance. Our neural engine transforms
+            your ideas into production-ready interfaces in seconds.
+          </p>
 
-            {/* Heading */}
-            <h1 className="text-4xl sm:text-5xl md:text-4xl lg:text-5xl font-bold leading-tight text-white">
-              Build Stunning {" "}
-              <span className="bg-gradient-to-r from-emerald-400 via-violet-400 to-purple-500 bg-clip-text text-transparent">
-                AI-Powered
-              </span>{" "}
-              Mobile Apps
-            </h1>
+          <div className="hero-showcase-actions">
+            <Button size="lg" className="shadow-glow">
+              Start Building <Smartphone size={18} />
+            </Button>
+            <button className="hero-demo-link" onClick={() => {}}>
+              View Demo <ChevronRight size={16} />
+            </button>
+          </div>
 
-            {/* Subtitle */}
-            {/*     <p className="text-gray-300/80 text-base md:text-lg lg:text-xl max-w-2xl">
-              Convert your ideas into high-converting mobile experiences with
-              premium UI, seamless performance, and AI-driven features.
-            </p> */}
+          {/* Active slide info (below CTA) */}
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={activeIndex}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.35 }}
+              className="hero-slide-info"
+            >
+              <span className="hero-slide-category">{activeScreen.category}</span>
+              <p className="hero-slide-title">{activeScreen.title}</p>
+              <p className="hero-slide-desc">{activeScreen.description}</p>
+            </motion.div>
+          </AnimatePresence>
 
+          {/* Progress dots */}
+          <div className="hero-dots">
+            {screens.map((_, i) => (
+              <button
+                key={i}
+                onClick={() => handleManualNav(() => goToSlide(i))}
+                className={`hero-dot ${i === activeIndex ? 'hero-dot-active' : ''}`}
+                aria-label={`Go to slide ${i + 1}`}
+              />
+            ))}
           </div>
         </div>
-        {/*    <div className="text-center mb-16">
-          <div className="hero-content flex flex-col items-center justify-center gap-6 text-center">
-            <div className="tagline flex items-center justify-center gap-2">
-              <span className="text-secondary font-semibold text-center">AI-Powered Mobile App Experiences</span>
-            </div>
 
-            <h1 className="hero-title text-center">
-              Build Stunning <br />
-              <span className="text-gradient">AI-Powered</span> <br />
-              Mobile Apps
-            </h1>
+        {/* RIGHT — 70% carousel */}
+        <div className="hero-right-panel">
+          <div className="hero-carousel-stage">
 
-            <p className="hero-subtitle text-secondary text-center">
-              Convert your ideas into high-converting mobile experiences.
-            </p>
-          </div>
-                <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.1 }}
-            className="text-lg md:text-xl text-gray-300/80 max-w-3xl mx-auto"
-          >
-            Designed for freelancers & SMEs to manage invoices, payments, and analytics
-          </motion.p> 
-        </div> */}
+            {/* Glow orb behind active phone */}
+            <div className="hero-carousel-orb" />
 
-        <div className="w-full flex justify-center mt-6 md:mt-18">
-          <div className="relative w-full max-w-6xl h-[550px] md:h-[650px] flex items-center justify-center">
-            <AnimatePresence mode="sync">
+            {/* Phone cards */}
+            <div className="hero-carousel-track">
               {screens.map((screen, index) => {
-                const style = getCardStyle(index);
-                let diff = index - activeIndex;
-
-                if (diff > screens.length / 2) {
-                  diff -= screens.length;
-                } else if (diff < -screens.length / 2) {
-                  diff += screens.length;
-                }
-
-                const isVisible = Math.abs(diff) <= 2;
-
+                const style = getSideStyle(index);
+                const diff = ((index - activeIndex) + screens.length) % screens.length;
+                const normalizedDiff = diff > screens.length / 2 ? diff - screens.length : diff;
+                const isVisible = Math.abs(normalizedDiff) <= 2;
                 if (!isVisible) return null;
 
                 return (
                   <motion.div
-                    key={screen.id}
-                    className="absolute cursor-pointer top-1/2"
-                    initial={{ opacity: 0, scale: 0.8, y: '-50%' }}
+                    key={screen.id + '-' + index}
+                    className="hero-phone-card-wrapper"
                     animate={{
                       scale: style.scale,
                       opacity: style.opacity,
                       zIndex: style.zIndex,
-                      x: style.x + '%',
-                      y: '-50%',
+                      x: `${style.x}%`,
                       filter: style.filter,
                     }}
-                    exit={{ opacity: 0, scale: 0.8, y: '-50%' }}
-                    transition={{
-                      duration: 0.5,
-                      ease: [0.32, 0.72, 0, 1],
-                    }}
-                    drag={index === activeIndex ? 'x' : false}
-                    dragConstraints={{ left: 0, right: 0 }}
-                    dragElastic={0.1}
-                    onDragStart={handleDragStart}
-                    onDragEnd={handleDragEnd}
-                    onClick={() => index !== activeIndex && goToSlide(index)}
-                    whileHover={
-                      index !== activeIndex
-                        ? { scale: style.scale * 1.05 }
-                        : undefined
-                    }
+                    transition={{ duration: 0.5, ease: [0.32, 0.72, 0, 1] }}
+                    onClick={() => normalizedDiff !== 0 && handleManualNav(() => goToSlide(index))}
+                    style={{ cursor: normalizedDiff !== 0 ? 'pointer' : 'default' }}
                   >
-                    <div className="relative flex flex-col items-center">
-                      {index === activeIndex && (
-                        <div className="absolute top-0 w-[240px] md:w-[300px] h-[480px] md:h-[600px] rounded-[3rem] bg-gradient-to-r from-emerald-500/40 via-violet-500/40 to-emerald-500/40 blur-[60px] -z-10 animate-pulse" />
-                      )}
-                      <div className="relative w-[240px] md:w-[300px] h-[480px] md:h-[600px] bg-gradient-to-br from-white/10 via-white/5 to-transparent backdrop-blur-xl rounded-[3rem] p-3 shadow-2xl border border-white/10">
-                        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-24 md:w-32 h-5 md:h-6 bg-black/80 backdrop-blur-sm rounded-b-2xl z-10" />
+                    {/* Glow ring on active */}
+                    {index === activeIndex && (
+                      <div className="hero-phone-glow" />
+                    )}
 
-                        <div className="relative w-full h-full bg-gradient-to-br from-gray-900/90 via-gray-950/90 to-black/90 backdrop-blur-sm rounded-[2.5rem] overflow-hidden">
-                          <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/10 via-transparent to-violet-500/10 pointer-events-none" />
-
-                          <CarouselMedia screen={screen} isActive={index === activeIndex} />
-
-                          {/* Only darken non-active slides to make the center one pop more clearly */}
-                          {index !== activeIndex && (
-                            <div className="absolute inset-0 bg-black/40 pointer-events-none transition-opacity duration-300" />
-                          )}
-                        </div>
+                    {/* Phone frame */}
+                    <div className="hero-phone-frame">
+                      <div className="hero-phone-notch" />
+                      <div className="hero-phone-screen">
+                        <div className="hero-phone-inner-glow" />
+                        <CarouselMedia screen={screen} isActive={index === activeIndex} />
+                        {index !== activeIndex && (
+                          <div className="hero-phone-overlay" />
+                        )}
                       </div>
-
-                      {index === activeIndex && (
-                        <div className="absolute top-full left-1/2 -translate-x-1/2 mt-8 w-[320px] md:w-[450px] flex justify-center pointer-events-none z-20">
-                          <motion.div
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.2 }}
-                            className="text-center pointer-events-auto"
-                          >
-                            <div className="inline-block mb-3 px-4 py-1.5 bg-gradient-to-r from-emerald-500/20 to-violet-500/20 backdrop-blur-sm border border-emerald-400/30 rounded-full">
-                              <span className="text-sm font-medium text-emerald-300 uppercase tracking-wider">
-                                {screen.category}
-                              </span>
-                            </div>
-                            <h3 className="text-2xl md:text-3xl font-bold text-white mb-2">
-                              {screen.title}
-                            </h3>
-                            <p className="text-gray-300/70 max-w-md mx-auto px-4">
-                              {screen.description}
-                            </p>
-                          </motion.div>
-                        </div>
-                      )}
                     </div>
                   </motion.div>
                 );
               })}
-            </AnimatePresence>
-          </div>
+            </div>
 
-          <button
-            onClick={goToPrevious}
-            className="absolute left-4 top-1/2 -translate-y-1/2 z-40 w-12 h-12 rounded-full bg-white/5 backdrop-blur-xl border border-white/10 flex items-center justify-center text-white hover:bg-emerald-500/20 hover:border-emerald-400/30 transition-all group shadow-lg"
-            aria-label="Previous slide"
-          >
-            <ChevronLeft className="w-6 h-6 group-hover:scale-110 transition-transform" />
-          </button>
-
-          <button
-            onClick={goToNext}
-            className="absolute right-4 top-1/2 -translate-y-1/2 z-40 w-12 h-12 rounded-full bg-white/5 backdrop-blur-xl border border-white/10 flex items-center justify-center text-white hover:bg-emerald-500/20 hover:border-emerald-400/30 transition-all group shadow-lg"
-            aria-label="Next slide"
-          >
-            <ChevronRight className="w-6 h-6 group-hover:scale-110 transition-transform" />
-          </button>
-        </div>
-
-        <div className="flex justify-center items-center gap-2 mt-40">
-          {screens.map((_, index) => (
+            {/* Prev / Next arrows */}
             <button
-              key={index}
-              onClick={() => goToSlide(index)}
-              className={`h-2 rounded-full transition-all duration-300 ${index === activeIndex
-                ? 'w-8 bg-gradient-to-r from-emerald-500 to-violet-500 shadow-lg shadow-emerald-500/50'
-                : 'w-2 bg-white/20 hover:bg-white/30'
-                }`}
-              aria-label={`Go to slide ${index + 1}`}
-            />
-          ))}
+              className="hero-arrow hero-arrow-left"
+              onClick={() => handleManualNav(goToPrevious)}
+              aria-label="Previous"
+            >
+              <ChevronLeft size={22} />
+            </button>
+            <button
+              className="hero-arrow hero-arrow-right"
+              onClick={() => handleManualNav(goToNext)}
+              aria-label="Next"
+            >
+              <ChevronRight size={22} />
+            </button>
+
+            {/* Auto-progress bar */}
+            <div className="hero-progress-bar-wrap">
+              <motion.div
+                className="hero-progress-bar"
+                key={activeIndex}
+                initial={{ scaleX: 0 }}
+                animate={{ scaleX: 1 }}
+                transition={{ duration: SLIDE_INTERVAL / 1000, ease: 'linear' }}
+                style={{ transformOrigin: 'left' }}
+              />
+            </div>
+          </div>
         </div>
       </div>
-
-
     </section>
   );
 }
