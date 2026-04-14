@@ -133,8 +133,8 @@ export default function AppShowcaseCarousel() {
     const normalizedDiff = diff > screens.length / 2 ? diff - screens.length : diff;
 
     if (normalizedDiff === 0) return { scale: 1, opacity: 1, zIndex: 30, x: 0, filter: 'blur(0px)' };
-    if (Math.abs(normalizedDiff) === 1) return { scale: 0.78, opacity: 0.45, zIndex: 20, x: normalizedDiff * 55, filter: 'blur(1.5px)' };
-    return { scale: 0.62, opacity: 0.2, zIndex: 10, x: normalizedDiff * 75, filter: 'blur(3px)' };
+    if (Math.abs(normalizedDiff) === 1) return { scale: 0.78, opacity: 0.45, zIndex: 20, x: normalizedDiff * 200, filter: 'blur(1.5px)' };
+    return { scale: 0.62, opacity: 0.2, zIndex: 10, x: normalizedDiff * 300, filter: 'blur(3px)' };
   };
 
   return (
@@ -168,17 +168,6 @@ export default function AppShowcaseCarousel() {
             </button>
           </div>
 
-          {/* Progress dots */}
-          <div className="hero-dots">
-            {screens.map((_, i) => (
-              <button
-                key={i}
-                onClick={() => handleManualNav(() => goToSlide(i))}
-                className={`hero-dot ${i === activeIndex ? 'hero-dot-active' : ''}`}
-                aria-label={`Go to slide ${i + 1}`}
-              />
-            ))}
-          </div>
         </div>
 
         {/* RIGHT — 70% carousel */}
@@ -205,7 +194,7 @@ export default function AppShowcaseCarousel() {
                       scale: style.scale,
                       opacity: style.opacity,
                       zIndex: style.zIndex,
-                      x: `${style.x}%`,
+                      x: style.x,
                       filter: style.filter,
                     }}
                     transition={{ duration: 0.5, ease: [0.32, 0.72, 0, 1] }}
