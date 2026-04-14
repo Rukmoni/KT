@@ -93,11 +93,6 @@
   z-index: 10;
 }
 
-[data-theme='light'] .contact-form-card {
-  background: rgba(255, 255, 255, 0.6);
-  border: 1px solid rgba(0, 0, 0, 0.05);
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.05);
-}
 
 .contact-form {
   display: flex;
@@ -142,13 +137,6 @@
   font-family: var(--font-sans);
 }
 
-[data-theme='light'] .contact-input {
-  background: rgba(0, 0, 0, 0.03);
-  color: #000;
-}
-[data-theme='light'] .contact-input::placeholder {
-  color: rgba(0, 0, 0, 0.4);
-}
 
 .contact-input:focus {
   border-color: rgba(147, 51, 234, 0.5);
@@ -192,9 +180,6 @@
   pointer-events: none;
 }
 
-[data-theme='light'] .contact-section::after {
-  display: none;
-}
 
 /* Responsive Padding Alignment */
 @media (max-width: 768px) {

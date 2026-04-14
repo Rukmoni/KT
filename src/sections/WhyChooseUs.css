@@ -23,11 +23,6 @@
   background: rgba(255, 255, 255, 0.02);
 }
 
-[data-theme='light'] .edge-pill {
-  border: 1px solid rgba(0, 0, 0, 0.1);
-  background: rgba(0, 0, 0, 0.02);
-}
-
 .features-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -66,22 +61,11 @@
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
 }
 
-[data-theme='light'] .feature-card {
-  background: rgba(255, 255, 255, 0.6);
-  border: 1px solid rgba(0, 0, 0, 0.05);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
-}
-
 .feature-card:hover {
   transform: translateY(-5px);
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
   background: rgba(25, 25, 25, 0.6);
   border-color: rgba(255, 255, 255, 0.08);
-}
-
-[data-theme='light'] .feature-card:hover {
-  background: rgba(255, 255, 255, 0.8);
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.1);
 }
 
 .span-2 {
@@ -100,12 +84,6 @@
   border: 1px solid rgba(255, 255, 255, 0.04);
   box-shadow: inset 0 2px 4px rgba(255, 255, 255, 0.08); /* Glossy inner top edge */
   transition: transform 0.3s ease;
-}
-
-[data-theme='light'] .icon-box {
-  background: rgba(0, 0, 0, 0.03);
-  border: 1px solid rgba(0, 0, 0, 0.05);
-  box-shadow: inset 0 2px 4px rgba(255, 255, 255, 0.6);
 }
 
 .feature-card:hover .icon-box {
