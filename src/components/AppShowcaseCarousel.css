@@ -123,35 +123,6 @@
   gap: 0.55rem;
 }
 
-.hero-slide-info {
-  border-left: 2px solid rgba(99, 102, 241, 0.4);
-  padding-left: 1rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.3rem;
-}
-
-.hero-slide-category {
-  font-size: 0.65rem;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: #6366f1;
-}
-
-.hero-slide-title {
-  font-size: 1rem;
-  font-weight: 700;
-  color: #f1f5f9;
-  margin: 0;
-}
-
-.hero-slide-desc {
-  font-size: 0.82rem;
-  color: #64748b;
-  margin: 0;
-  line-height: 1.5;
-}
 
 .hero-dots {
   display: flex;
@@ -191,7 +162,7 @@
 .hero-carousel-stage {
   position: relative;
   width: 100%;
-  height: 680px;
+  height: 720px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -235,6 +206,46 @@
   flex-direction: column;
   align-items: center;
   will-change: transform, opacity, filter;
+  padding-top: 5rem;
+}
+
+/* ─── Card top label ─── */
+
+.hero-card-label {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 280px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+  pointer-events: none;
+}
+
+.hero-card-category {
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #10b981;
+}
+
+.hero-card-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #f1f5f9;
+  margin: 0;
+  line-height: 1.2;
+}
+
+.hero-card-desc {
+  font-size: 0.78rem;
+  color: #94a3b8;
+  margin: 0;
+  line-height: 1.4;
 }
 
 .hero-phone-glow {
@@ -386,16 +397,7 @@
     font-size: clamp(2rem, 6vw, 3rem);
   }
 
-  .hero-slide-info {
-    border-left: none;
-    border-top: 2px solid rgba(99, 102, 241, 0.4);
-    padding-left: 0;
-    padding-top: 0.75rem;
-    align-items: center;
-    text-align: center;
-  }
-
-  .hero-dots {
+.hero-dots {
     justify-content: center;
   }
 

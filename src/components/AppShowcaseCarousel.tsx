@@ -128,8 +128,6 @@ export default function AppShowcaseCarousel() {
     resetTimer();
   }, [resetTimer]);
 
-  const activeScreen = screens[activeIndex];
-
   const getSideStyle = (index: number) => {
     const diff = ((index - activeIndex) + screens.length) % screens.length;
     const normalizedDiff = diff > screens.length / 2 ? diff - screens.length : diff;
@@ -169,22 +167,6 @@ export default function AppShowcaseCarousel() {
               View Demo <ChevronRight size={16} />
             </button>
           </div>
-
-          {/* Active slide info (below CTA) */}
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={activeIndex}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.35 }}
-              className="hero-slide-info"
-            >
-              <span className="hero-slide-category">{activeScreen.category}</span>
-              <p className="hero-slide-title">{activeScreen.title}</p>
-              <p className="hero-slide-desc">{activeScreen.description}</p>
-            </motion.div>
-          </AnimatePresence>
 
           {/* Progress dots */}
           <div className="hero-dots">
@@ -230,6 +212,24 @@ export default function AppShowcaseCarousel() {
                     onClick={() => normalizedDiff !== 0 && handleManualNav(() => goToSlide(index))}
                     style={{ cursor: normalizedDiff !== 0 ? 'pointer' : 'default' }}
                   >
+                    {/* Card top label — category + title + description */}
+                    <AnimatePresence mode="wait">
+                      {index === activeIndex && (
+                        <motion.div
+                          key={activeIndex}
+                          initial={{ opacity: 0, y: -8 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -8 }}
+                          transition={{ duration: 0.35 }}
+                          className="hero-card-label"
+                        >
+                          <span className="hero-card-category">{screen.category}</span>
+                          <p className="hero-card-title">{screen.title}</p>
+                          <p className="hero-card-desc">{screen.description}</p>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+
                     {/* Glow ring on active */}
                     {index === activeIndex && (
                       <div className="hero-phone-glow" />
