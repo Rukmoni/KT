@@ -65,41 +65,43 @@ export const Navbar = () => {
   };
 
   return (
-    <nav className={`kv-nav${scrolled ? ' kv-nav--scrolled' : ''}`}>
-      <div className="kv-nav__inner">
-        <a href="/" className="kv-nav__logo" onClick={e => { e.preventDefault(); navigate('/'); }}>
-          KUVANTA
-        </a>
+    <div className="kv-nav-wrapper">
+      <nav className={`kv-nav${scrolled ? ' kv-nav--scrolled' : ''}`}>
+        <div className="kv-nav__inner">
+          <a href="/" className="kv-nav__logo" onClick={e => { e.preventDefault(); navigate('/'); }}>
+            KUVANTA
+          </a>
 
-        <div className="kv-nav__links">
-          {NAV_LINKS.map(link => (
-            <a
-              key={link.label}
-              href={link.href}
-              className={`kv-nav__link${link.isAI ? ' kv-nav__link--ai' : ''}${isActive(link.href) ? ' kv-nav__link--active' : ''}`}
-              onClick={e => handleNavClick(e, link.href)}
+          <div className="kv-nav__links">
+            {NAV_LINKS.map(link => (
+              <a
+                key={link.label}
+                href={link.href}
+                className={`kv-nav__link${link.isAI ? ' kv-nav__link--ai' : ''}${isActive(link.href) ? ' kv-nav__link--active' : ''}`}
+                onClick={e => handleNavClick(e, link.href)}
+              >
+                {link.isAI && <span className="kv-nav__ai-dot" />}
+                {link.label}
+              </a>
+            ))}
+          </div>
+
+          <div className="kv-nav__actions">
+            <button className="kv-nav__cta" onClick={handleGetStarted}>
+              Get Started
+            </button>
+            <button
+              className={`kv-nav__hamburger${menuOpen ? ' kv-nav__hamburger--open' : ''}`}
+              onClick={() => setMenuOpen(o => !o)}
+              aria-label="Toggle menu"
             >
-              {link.isAI && <span className="kv-nav__ai-dot" />}
-              {link.label}
-            </a>
-          ))}
+              <span />
+              <span />
+              <span />
+            </button>
+          </div>
         </div>
-
-        <div className="kv-nav__actions">
-          <button className="kv-nav__cta" onClick={handleGetStarted}>
-            Get Started
-          </button>
-          <button
-            className={`kv-nav__hamburger${menuOpen ? ' kv-nav__hamburger--open' : ''}`}
-            onClick={() => setMenuOpen(o => !o)}
-            aria-label="Toggle menu"
-          >
-            <span />
-            <span />
-            <span />
-          </button>
-        </div>
-      </div>
+      </nav>
 
       <div className={`kv-nav__mobile-menu${menuOpen ? ' kv-nav__mobile-menu--open' : ''}`}>
         {NAV_LINKS.map(link => (
@@ -119,6 +121,6 @@ export const Navbar = () => {
           </button>
         </div>
       </div>
-    </nav>
+    </div>
   );
 };
