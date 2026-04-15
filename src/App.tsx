@@ -4,6 +4,7 @@ import { Footer } from './sections/Footer';
 import { Home } from './pages/Home';
 import { DemoPage } from './pages/DemoPage';
 import { AdminLeads } from './pages/AdminLeads';
+import { ChatbotDemoPage } from './pages/ChatbotDemoPage';
 
 const AnimatedRoutes = () => {
   const location = useLocation();
@@ -12,6 +13,7 @@ const AnimatedRoutes = () => {
       <Routes location={location} key={location.pathname}>
         <Route path="/" element={<Home />} />
         <Route path="/demo/:screenName" element={<DemoPage />} />
+        <Route path="/chatbot-demo" element={<ChatbotDemoPage />} />
         <Route path="/admin" element={<AdminLeads />} />
       </Routes>
     </AnimatePresence>
@@ -35,6 +37,7 @@ function App() {
               <a href="/#services">Services</a>
               <a href="/#how-we-work">How we work?</a>
               <a href="/#why-choose-us">Why us?</a>
+              <a href="/chatbot-demo">AI Demo</a>
             </div>
 
             <div className="navbar-actions">
