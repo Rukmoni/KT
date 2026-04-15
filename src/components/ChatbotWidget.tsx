@@ -4,6 +4,9 @@ import { useLeadStore } from '../store/leadStore';
 import { sendEmail } from '../services/emailService';
 import './ChatbotWidget.css';
 
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY as string;
+
 interface Message {
   sender: 'bot' | 'user';
   text: string;
@@ -17,6 +20,7 @@ export const ChatbotWidget = () => {
   const [inputValue, setInputValue] = useState('');
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [isListening, setIsListening] = useState(false);
+  const [isThinking, setIsThinking] = useState(false);
   const [customerDetailsSet, setCustomerDetailsSet] = useState(false);
   const [customerName, setCustomerName] = useState('');
   const [customerEmail, setCustomerEmail] = useState('');
@@ -24,25 +28,37 @@ export const ChatbotWidget = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const recognitionRef = useRef<any>(null);
   const pauseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const conversationHistoryRef = useRef<{ role: 'user' | 'assistant'; content: string }[]>([]);
 
-  const generateAIResponse = (input: string, historyLength: number) => {
-    const lowerInput = input.toLowerCase();
-    if (historyLength <= 2) {
-      if (lowerInput.includes('app') || lowerInput.includes('mobile')) {
-        return "Mobile applications are a fantastic avenue. As a solution architect, I'd suggest a robust cross-platform stack to maximize your reach while minimizing costs. Which platforms are your primary focus: iOS, Android, or both?";
-      } else if (lowerInput.includes('web') || lowerInput.includes('portal')) {
-        return "A scalable web portal can truly modernize your operations. We build secure, high-performance architectures using modern frameworks. Could you tell me more about the core functionalities and the user volume you anticipate?";
-      } else if (lowerInput.includes('ai') || lowerInput.includes('automation') || lowerInput.includes('bot')) {
-        return "AI automation is our specialty. Integrating cutting-edge models can dramatically reduce overhead and boost efficiency. Let's dig deeper—what specific bottlenecks or repetitive tasks are you hoping to eliminate with AI?";
-      } else {
-        return "That sounds like a fascinating opportunity. To help us pitch the most effective, high-ROI technical solution for your business, could you describe the main problem this project aims to solve?";
-      }
-    } else if (historyLength <= 4) {
-      return "Excellent insight. At Kuvanta Tech, we specialize in translating complex requirements like these into elegant, enterprise-grade realities. To align our engineering team's approach, what is your ideal timeframe for launching a minimum viable product?";
-    } else if (historyLength <= 6) {
-      return "Understood. Speed to market combined with flawless execution is our promise. I have everything I need to prepare a comprehensive technical briefing for our senior directors. Would you like to share any budget constraints or compliance requirements before I close the file?";
-    } else {
-      return "Thank you for all this valuable information. I've documented our entire architectural discussion. Our executive team will review your needs and reach out via the email you provided to schedule a formal pitch. Whenever you're ready, simply click the red 'End call' button to securely finalize and distribute these minutes.";
+  const generateAIResponse = async (userMessage: string): Promise<string> => {
+    conversationHistoryRef.current = [
+      ...conversationHistoryRef.current,
+      { role: 'user', content: userMessage },
+    ];
+
+    try {
+      const res = await fetch(`${SUPABASE_URL}/functions/v1/chat`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+        },
+        body: JSON.stringify({ messages: conversationHistoryRef.current }),
+      });
+
+      if (!res.ok) throw new Error('API error');
+
+      const data = await res.json();
+      const reply: string = data.reply ?? "I'm having trouble responding right now. Please try again.";
+
+      conversationHistoryRef.current = [
+        ...conversationHistoryRef.current,
+        { role: 'assistant', content: reply },
+      ];
+
+      return reply;
+    } catch {
+      return "Sorry, I'm having trouble connecting right now. Please try again in a moment.";
     }
   };
 
@@ -122,30 +138,30 @@ export const ChatbotWidget = () => {
     }
   };
 
-  const handleDetailsSubmit = (e: React.FormEvent) => {
+  const handleDetailsSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!customerEmail) return;
     setCustomerDetailsSet(true);
     if (messages.length === 0) {
-      const welcomeText = "Welcome to Kuvanta e-support. I am here to assist you. What services are you looking for today?";
+      const welcomeText = "Welcome to Kuvanta e-support! I'm here to help. What can I assist you with today?";
       setMessages([{ sender: 'bot', text: welcomeText }]);
+      conversationHistoryRef.current = [{ role: 'assistant', content: welcomeText }];
       speak(welcomeText);
     }
   };
 
-  const handleSend = (textOverride?: string) => {
+  const handleSend = async (textOverride?: string) => {
     const textToSend = typeof textOverride === 'string' ? textOverride : inputValue;
-    if (!textToSend.trim()) return;
+    if (!textToSend.trim() || isThinking) return;
     if (pauseTimerRef.current) clearTimeout(pauseTimerRef.current);
     setMessages(prev => [...prev, { sender: 'user' as const, text: textToSend }]);
     setInputValue('');
     if (isListening) { recognitionRef.current?.stop(); setIsListening(false); }
-    const currentLength = messages.length + 1;
-    setTimeout(() => {
-      const replyText = generateAIResponse(textToSend, currentLength);
-      setMessages(prev => [...prev, { sender: 'bot', text: replyText }]);
-      speak(replyText);
-    }, 1500);
+    setIsThinking(true);
+    const replyText = await generateAIResponse(textToSend);
+    setIsThinking(false);
+    setMessages(prev => [...prev, { sender: 'bot', text: replyText }]);
+    speak(replyText);
   };
 
   const generateSummary = () => {
@@ -243,6 +259,16 @@ export const ChatbotWidget = () => {
                     <div className="msg-bubble">{msg.text}</div>
                   </div>
                 ))}
+                {isThinking && (
+                  <div className="chat-message bot">
+                    <span className="msg-sender-label">KT Support</span>
+                    <div className="msg-bubble msg-thinking">
+                      <span className="thinking-dot" />
+                      <span className="thinking-dot" />
+                      <span className="thinking-dot" />
+                    </div>
+                  </div>
+                )}
                 <div ref={messagesEndRef} />
               </div>
               <div className="chatbot-input-area">
@@ -253,7 +279,7 @@ export const ChatbotWidget = () => {
                   type="text"
                   value={inputValue}
                   onChange={e => setInputValue(e.target.value)}
-                  onKeyDown={e => e.key === 'Enter' && handleSend()}
+                  onKeyDown={e => { if (e.key === 'Enter') handleSend(); }}
                   placeholder="Type or speak a message..."
                   className="chat-input"
                 />
