@@ -6,7 +6,7 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Client-Info, Apikey",
 };
 
-const SYSTEM_PROMPT = `You are a professional AI support agent for Kuvanta Tech, a software development and technology consultancy. Your name is "KT Support".
+const BASE_SYSTEM_PROMPT = `You are a professional AI support agent for Kuvanta Tech, a software development and technology consultancy. Your name is "KT Support".
 
 Kuvanta Tech specialises in:
 - Custom mobile app development (iOS, Android, cross-platform with React Native / Flutter)
@@ -31,13 +31,23 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
-    const { messages } = await req.json();
+    const { messages, knowledgeBase } = await req.json();
 
     if (!messages || !Array.isArray(messages)) {
       return new Response(JSON.stringify({ error: "messages array required" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
+    }
+
+    let systemPrompt = BASE_SYSTEM_PROMPT;
+    if (knowledgeBase && typeof knowledgeBase === "string" && knowledgeBase.trim().length > 0) {
+      systemPrompt = `${BASE_SYSTEM_PROMPT}
+
+---
+KNOWLEDGE BASE (always prioritise this information when answering questions):
+${knowledgeBase.trim()}
+---`;
     }
 
     const openaiRes = await fetch("https://api.openai.com/v1/chat/completions", {
@@ -49,7 +59,7 @@ Deno.serve(async (req: Request) => {
       body: JSON.stringify({
         model: "gpt-4o-mini",
         messages: [
-          { role: "system", content: SYSTEM_PROMPT },
+          { role: "system", content: systemPrompt },
           ...messages,
         ],
         max_tokens: 200,

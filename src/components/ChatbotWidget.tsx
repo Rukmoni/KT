@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { PhoneOff, Send, Mic, MicOff, X, Phone } from 'lucide-react';
 import { useLeadStore } from '../store/leadStore';
 import { sendEmail } from '../services/emailService';
+import { fetchKnowledgeBase } from '../services/knowledgeBaseService';
 import './ChatbotWidget.css';
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
@@ -25,10 +26,17 @@ export const ChatbotWidget = () => {
   const [customerName, setCustomerName] = useState('');
   const [customerEmail, setCustomerEmail] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
+  const [knowledgeBase, setKnowledgeBase] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const recognitionRef = useRef<any>(null);
   const pauseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const conversationHistoryRef = useRef<{ role: 'user' | 'assistant'; content: string }[]>([]);
+
+  useEffect(() => {
+    fetchKnowledgeBase().then(record => {
+      if (record && record.content) setKnowledgeBase(record.content);
+    });
+  }, []);
 
   const generateAIResponse = async (userMessage: string): Promise<string> => {
     conversationHistoryRef.current = [
@@ -43,7 +51,7 @@ export const ChatbotWidget = () => {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
         },
-        body: JSON.stringify({ messages: conversationHistoryRef.current }),
+        body: JSON.stringify({ messages: conversationHistoryRef.current, knowledgeBase }),
       });
 
       if (!res.ok) throw new Error('API error');

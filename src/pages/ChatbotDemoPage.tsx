@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Send, Mic, MicOff, Bot, Zap, Shield, Clock, ChevronRight, MessageSquare, Volume2, VolumeX, Upload, FileText, X, CircleCheck as CheckCircle, Loader } from 'lucide-react';
 import * as pdfjsLib from 'pdfjs-dist';
+import { fetchKnowledgeBase, saveKnowledgeBase } from '../services/knowledgeBaseService';
 import './ChatbotDemoPage.css';
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
@@ -236,12 +237,25 @@ export const ChatbotDemoPage = () => {
   const [kbSaved, setKbSaved] = useState(false);
   const [kbDragging, setKbDragging] = useState(false);
   const [kbParsing, setKbParsing] = useState(false);
+  const [kbLoading, setKbLoading] = useState(true);
+  const [kbSaving, setKbSaving] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const recognitionRef = useRef<any>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const idleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    fetchKnowledgeBase().then(record => {
+      if (record && record.content) {
+        setKnowledgeBase(record.content);
+        setKbInput(record.content);
+        setKbFileName(record.filename);
+      }
+      setKbLoading(false);
+    });
+  }, []);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -398,10 +412,16 @@ export const ChatbotDemoPage = () => {
     if (file) handleKbFile(file);
   };
 
-  const handleKbSave = () => {
-    setKnowledgeBase(kbInput);
-    setKbSaved(true);
-    setTimeout(() => setKbSaved(false), 2500);
+  const handleKbSave = async () => {
+    setKbSaving(true);
+    const name = kbFileName || 'Custom Knowledge Base';
+    const ok = await saveKnowledgeBase(kbInput, name);
+    if (ok) {
+      setKnowledgeBase(kbInput);
+      setKbSaved(true);
+      setTimeout(() => setKbSaved(false), 2500);
+    }
+    setKbSaving(false);
   };
 
   const handleKbClear = () => {
@@ -608,9 +628,10 @@ export const ChatbotDemoPage = () => {
           </div>
 
           <div className="demo-info-card demo-kb-card">
-            <h3 className="demo-info-title">
-              <FileText size={15} style={{ marginRight: 8, verticalAlign: 'middle', color: '#60a5fa' }} />
+            <h3 className="demo-info-title" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <FileText size={15} style={{ color: '#60a5fa', flexShrink: 0 }} />
               Knowledge Base
+              {kbLoading && <Loader size={13} className="demo-kb-spinner" style={{ marginLeft: 'auto', opacity: 0.6 }} />}
             </h3>
             <p className="demo-info-body">
               Upload a <strong>.txt</strong>, <strong>.md</strong>, or <strong>.pdf</strong> file — or paste text — to teach the chatbot about your business. The bot will search this content first before using its built-in Kuvanta responses.
@@ -671,10 +692,12 @@ export const ChatbotDemoPage = () => {
               <button
                 className={`demo-kb-save-btn${kbSaved ? ' saved' : ''}`}
                 onClick={handleKbSave}
-                disabled={!kbInput.trim()}
+                disabled={!kbInput.trim() || kbSaving}
               >
                 {kbSaved
                   ? <><CheckCircle size={14} /> Saved!</>
+                  : kbSaving
+                  ? <><Loader size={14} className="demo-kb-spinner" /> Saving...</>
                   : <><Upload size={14} /> Apply to Bot</>
                 }
               </button>
