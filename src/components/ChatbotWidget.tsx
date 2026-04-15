@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Phone, PhoneOff, Send, Mic, MicOff } from 'lucide-react';
+import { PhoneOff, Send, Mic, MicOff, X } from 'lucide-react';
 import { useLeadStore } from '../store/leadStore';
 import { sendEmail } from '../services/emailService';
 import './ChatbotWidget.css';
@@ -267,17 +267,14 @@ export const ChatbotWidget = () => {
   return (
     <div className={`chatbot-widget-container ${expanded ? 'expanded' : ''}`}>
       {!expanded ? (
-         <div className="chatbot-minimized shadow-2xl">
-           <div className="chatbot-header-mini">
-              <div className="siri-orb-mini"></div>
-              <span className="chatbot-title-mini">Need help from kuvanta e-support?</span>
-           </div>
-           <button className="chatbot-call-btn" onClick={handleExpand}>
-             <Phone size={18} /> Get support
-           </button>
-         </div>
+        <button className="chatbot-fab" onClick={handleExpand} aria-label="Open support chat">
+          <div className="chatbot-fab-orb" />
+        </button>
       ) : (
          <div className="chatbot-expanded shadow-2xl">
+            <button className="chatbot-close-btn" onClick={() => setExpanded(false)} aria-label="Close support chat">
+              <X size={16} />
+            </button>
             { !customerDetailsSet ? (
                <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'center' }}>
                   <h3 style={{ marginBottom: '16px', fontSize: '18px', fontWeight: 'bold', color: '#fff' }}>Please provide your details</h3>
