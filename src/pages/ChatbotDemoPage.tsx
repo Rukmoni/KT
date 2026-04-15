@@ -12,51 +12,160 @@ interface Message {
 
 const SUGGESTED_PROMPTS = [
   'What services does Kuvanta Tech offer?',
-  'How long does app development take?',
+  'How does your development process work?',
   'Can you build a custom AI solution for my business?',
   'What is your pricing model?',
 ];
 
-const CONVERSATION_FLOWS: Record<string, string> = {
-  services:
-    'Kuvanta Tech specializes in Mobile App Development (React Native & Expo), Web Portals, AI Automation, and strategic Tech Consultation. Each solution is crafted end-to-end — from architecture through deployment.',
-  timeline:
-    'A typical MVP takes 6–12 weeks depending on complexity. We follow agile sprints with bi-weekly demos, so you see progress early and often. Want me to walk you through our delivery process?',
-  ai:
-    'Absolutely. Our AI team has built chatbots, automation pipelines, smart recommendation engines, and custom LLM integrations. We design systems that reduce overhead and scale effortlessly. What specific business problem are you looking to solve?',
-  pricing:
-    'We offer project-based and retainer pricing. Projects start from $5,000 for MVPs and scale based on scope. Retainers are popular for ongoing product evolution. Shall I connect you with our team for a tailored quote?',
-  hello:
-    'Hello! I\'m the Kuvanta AI assistant — here to answer any questions about our services and help you explore how we can build something great together. What are you working on?',
-  thanks:
-    'You\'re very welcome! Is there anything else you\'d like to know? I\'m happy to go deeper on any topic — services, timelines, technical approach, or past work.',
-  default:
-    'Great question. Kuvanta Tech combines engineering excellence with creative problem-solving to deliver products that genuinely move the needle. Could you tell me more about what you\'re building so I can point you in the right direction?',
-};
-
-function classifyInput(input: string): string {
-  const l = input.toLowerCase();
-  if (/\b(hi|hello|hey|greetings|good (morning|afternoon|evening))\b/.test(l)) return 'hello';
-  if (/\b(thank|thanks|appreciate|cheers)\b/.test(l)) return 'thanks';
-  if (/\b(service|offer|do you|provide|speciali[sz]e|build|develop|create)\b/.test(l)) return 'services';
-  if (/\b(time|timeline|long|week|month|fast|quick|duration|deliver)\b/.test(l)) return 'timeline';
-  if (/\b(ai|artificial|automation|bot|chatbot|llm|machine learning|smart)\b/.test(l)) return 'ai';
-  if (/\b(pric|cost|rate|fee|budget|invest|charge|quote)\b/.test(l)) return 'pricing';
-  return 'default';
+interface ConversationRule {
+  patterns: RegExp[];
+  responses: string[];
 }
 
-function generateResponse(input: string, turnCount: number): string {
-  if (turnCount === 0) return CONVERSATION_FLOWS['hello'];
-  const key = classifyInput(input);
-  if (key !== 'default') return CONVERSATION_FLOWS[key];
+const RULES: ConversationRule[] = [
+  {
+    patterns: [/\b(hi|hello|hey|howdy|greetings|good (morning|afternoon|evening|day))\b/],
+    responses: [
+      "Hello! I'm the Kuvanta AI assistant. I can tell you about our mobile apps, web portals, AI automation, pricing, timelines — anything you'd like to know. What are you working on?",
+      "Hey there! Great to have you here. Whether you're exploring a new app idea, need AI automation, or want a web portal, Kuvanta can help. What's on your mind?",
+    ],
+  },
+  {
+    patterns: [/\b(thank|thanks|appreciate|cheers|great|awesome|perfect|wonderful)\b/],
+    responses: [
+      "You're very welcome! Is there anything else you'd like to know? I'm happy to go deeper on services, timelines, tech stack, or pricing.",
+      "Glad I could help! Feel free to ask anything else — or if you're ready to start a project, I can point you to our contact page.",
+    ],
+  },
+  {
+    patterns: [/\b(service|offer|what do you|what can you|provide|speciali[sz]e|capabilities|what does kuvanta)\b/],
+    responses: [
+      "Kuvanta Tech delivers four core services: Mobile App Development (React Native & Expo), Web Portals & Dashboards, AI Automation & Chatbots, and Tech Consultation. Every project is handled end-to-end — from architecture and design through deployment and support.",
+      "We cover the full digital product spectrum: native mobile apps, responsive web platforms, custom AI integrations (chatbots, pipelines, LLMs), and strategic tech consulting. What type of solution are you exploring?",
+    ],
+  },
+  {
+    patterns: [/\b(mobile|app|ios|android|react native|expo|phone|smartphone)\b/],
+    responses: [
+      "Mobile is one of our core strengths. We build cross-platform apps using React Native and Expo, which means your app runs natively on both iOS and Android from a single codebase — cutting cost and time significantly. What kind of app are you envisioning?",
+      "Our mobile team has shipped apps across e-commerce, healthcare, fintech, and more using React Native. We handle UI/UX design, backend integration, app store publishing, and post-launch support. What's your app idea?",
+    ],
+  },
+  {
+    patterns: [/\b(web|website|portal|dashboard|frontend|backend|full.?stack)\b/],
+    responses: [
+      "We build high-performance web portals and dashboards using modern stacks — React, Next.js, Node.js, and Supabase. From customer-facing platforms to internal admin tools, we design for scale and speed. What kind of web solution do you need?",
+      "Web development at Kuvanta means clean architecture, fast load times, and intuitive interfaces. We handle everything from landing pages to complex multi-tenant portals. Can you tell me more about your project?",
+    ],
+  },
+  {
+    patterns: [/\b(ai|artificial intelligence|automation|bot|chatbot|llm|machine learning|smart|gpt|openai|nlp)\b/],
+    responses: [
+      "AI is at the heart of what we do. We've built chatbots like this one, automation pipelines, LLM integrations (OpenAI, Claude, custom models), smart recommendation engines, and document processing systems. What business problem are you looking to automate or enhance with AI?",
+      "Our AI team specialises in practical, production-ready AI — not just experiments. That means chatbots trained on your brand, workflow automation that saves real hours, and smart analytics that surface actionable insights. What's the use case you have in mind?",
+    ],
+  },
+  {
+    patterns: [/\b(pric|cost|rate|fee|budget|invest|charge|quote|how much|afford|expensive|cheap)\b/],
+    responses: [
+      "Our pricing is scoped to your project. MVPs typically start from $5,000 and scale based on complexity and features. We also offer monthly retainers for teams that want ongoing development and support. Want me to point you to our team for a tailored quote?",
+      "We offer both fixed-scope project pricing and flexible retainer models. A basic MVP starts around $5,000; full-scale products vary by scope. The best way to get an accurate number is a 30-minute discovery call — shall I help you set that up?",
+    ],
+  },
+  {
+    patterns: [/\b(time|timeline|long|week|month|fast|quick|duration|deliver|deadline|launch|how soon)\b/],
+    responses: [
+      "A typical MVP takes 6–10 weeks from kickoff to launch. We work in 2-week agile sprints with demos at the end of each sprint, so you see real progress continuously — not just at the end. Larger platforms can take 3–6 months. What's your target launch window?",
+      "Speed depends on scope, but we're built to move fast without cutting corners. Simple apps ship in 6–8 weeks; complex platforms in 3–5 months. We can also phase the build so you get something live sooner while we continue building. What's your timeline looking like?",
+    ],
+  },
+  {
+    patterns: [/\b(process|how do you work|workflow|agile|sprint|methodology|approach|steps)\b/],
+    responses: [
+      "Our process has four phases: Discovery (understand your goals, users, and constraints), Design (wireframes, UI/UX prototypes), Build (agile sprints, bi-weekly demos), and Launch & Support (deployment, monitoring, iteration). You're involved at every stage — no black boxes.",
+      "We kick off every project with a discovery session to align on goals and priorities. Then we move to design, development in sprints, and a staged launch. You get a dedicated point of contact and access to our project tracker throughout.",
+    ],
+  },
+  {
+    patterns: [/\b(tech|technology|stack|framework|language|tools|react|node|supabase|typescript)\b/],
+    responses: [
+      "Our core stack: React Native & Expo for mobile, React / Next.js for web, Node.js and Supabase for backends, TypeScript throughout, and a range of AI tools (OpenAI, LangChain, custom fine-tuned models). We choose the right tool for the job, not just what's trendy.",
+      "We're technology-agnostic at the strategy level but opinionated at the execution level. We default to proven, maintainable stacks: TypeScript, React, Supabase, and cloud-native infrastructure. This keeps your codebase clean and easy to hand over or scale.",
+    ],
+  },
+  {
+    patterns: [/\b(support|maintain|maintenance|after|post.?launch|ongoing|update|bug|fix)\b/],
+    responses: [
+      "We don't disappear after launch. We offer post-launch support packages that cover bug fixes, performance monitoring, feature updates, and scaling. Many clients stay with us on retainer to keep their product evolving.",
+      "Post-launch, you can choose a support retainer or request ad-hoc work. We monitor for issues, push updates, and are available for urgent fixes. Long-term product partnerships are something we genuinely value.",
+    ],
+  },
+  {
+    patterns: [/\b(team|who|people|developer|designer|founder|hire|staff|experience)\b/],
+    responses: [
+      "Kuvanta is a lean, senior-heavy team of engineers, designers, and AI specialists. We don't outsource work — every project is built in-house by people who care about quality. Our team has shipped products used by thousands of users across multiple industries.",
+      "Our team blends product thinking with deep technical execution. Engineers, UX designers, and AI researchers work together on every project. You get direct access to the people building your product — no account managers in between.",
+    ],
+  },
+  {
+    patterns: [/\b(example|portfolio|case study|previous|past|work|project|client|built)\b/],
+    responses: [
+      "We've built e-commerce platforms, logistics dashboards, AI-powered customer support bots, healthcare appointment apps, and SaaS admin portals — across startups and established businesses. Check out our Portfolio section on the homepage for screenshots and details.",
+      "Our portfolio spans mobile apps, web platforms, and AI tools across industries including retail, health, finance, and logistics. Head to the Portfolio section to see examples, or I can describe a specific type of project if you'd like.",
+    ],
+  },
+  {
+    patterns: [/\b(contact|reach|email|call|talk|meeting|consult|demo|appointment|schedule)\b/],
+    responses: [
+      "Ready to connect? You can reach us via the Contact section on our homepage, or just say the word and I'll point you there. We typically respond within a few hours and are happy to schedule a free 30-minute discovery call.",
+      "The easiest way is through our Contact form — scroll to the bottom of the homepage. We respond quickly and usually suggest a short call to understand your project before anything else.",
+    ],
+  },
+  {
+    patterns: [/\b(why|choose|different|better|competitor|compare|unique|advantage|best)\b/],
+    responses: [
+      "A few things set Kuvanta apart: we're senior-only (no juniors learning on your dime), we're end-to-end (design through deployment), and we communicate like partners — not vendors. We push back when something won't work and suggest smarter paths when they exist.",
+      "What makes Kuvanta different is the combination of technical depth and product thinking. We don't just write code — we help you make smart decisions about what to build and why. That's what gets products to market faster and keeps them growing.",
+    ],
+  },
+  {
+    patterns: [/\b(ecommerce|e-commerce|shop|store|checkout|payment|stripe|cart)\b/],
+    responses: [
+      "E-commerce is a strong area for us. We build full shopping experiences — product listings, smart search, cart, checkout with Stripe or other gateways, order management, and admin dashboards. Mobile-first, fast, and conversion-optimised. Tell me more about your store concept.",
+    ],
+  },
+  {
+    patterns: [/\b(startup|mvp|minimum viable|idea|prototype|early stage|launch idea)\b/],
+    responses: [
+      "Startups are our sweet spot. We've helped founders go from idea to working MVP in 6–10 weeks. We help you scope ruthlessly — build what validates your idea fastest, skip what doesn't. What's the core problem your startup is solving?",
+      "If you're early-stage, we can help you figure out what to build first, then build it fast. We've taken many founders from napkin sketch to live product. What's your idea?",
+    ],
+  },
+];
 
-  const fallbacks = [
-    'That\'s a great point to explore. Our team at Kuvanta specializes in tailoring solutions to unique challenges like this. Can you share a bit more context?',
-    'Interesting! We love projects that push boundaries. To give you the most relevant answer, could you tell me what industry or use case you have in mind?',
-    'I want to make sure I give you the most accurate information. Could you rephrase or expand on that? I\'m here to help.',
-    CONVERSATION_FLOWS['default'],
-  ];
-  return fallbacks[turnCount % fallbacks.length];
+const FALLBACKS = [
+  "That's a good question. To give you the most relevant answer, could you tell me a bit more about what you're trying to achieve? I want to make sure I point you in the right direction.",
+  "I want to make sure I answer that properly. Are you asking about our services, a specific technology, timelines, or something else? Happy to go deep on any topic.",
+  "Great — I'm here to help. Could you expand on that a little? Once I understand your context better, I can give you a much more specific answer.",
+  "Kuvanta builds products that genuinely move the needle. To tailor my answer, could you share what industry or problem space you're working in?",
+];
+
+let fallbackIndex = 0;
+
+function generateResponse(input: string, turnCount: number): string {
+  if (turnCount === 0) {
+    return "Hello! I'm the Kuvanta AI assistant. I can answer questions about our mobile apps, web portals, AI automation, pricing, timelines, and more. What are you working on?";
+  }
+  const l = input.toLowerCase();
+  for (const rule of RULES) {
+    if (rule.patterns.some(p => p.test(l))) {
+      const idx = turnCount % rule.responses.length;
+      return rule.responses[idx];
+    }
+  }
+  const resp = FALLBACKS[fallbackIndex % FALLBACKS.length];
+  fallbackIndex++;
+  return resp;
 }
 
 const FEATURES = [
