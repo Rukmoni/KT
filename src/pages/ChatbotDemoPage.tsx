@@ -152,22 +152,34 @@ const FALLBACKS = [
 
 let fallbackIndex = 0;
 
+const STOP_WORDS = new Set([
+  'the','and','for','are','but','not','you','all','can','her','was','one',
+  'our','out','had','have','has','with','this','that','from','they','will',
+  'what','your','been','more','also','into','than','then','them','some',
+  'its','when','who','how','about','which','their','there','would','could',
+  'should','does','did','just','like','make','take','use','get','give',
+  'know','think','see','look','come','want','tell','ask','seem','feel',
+  'try','leave','call','keep','let','put','mean','become','show','hear',
+]);
+
 function searchKnowledgeBase(input: string, kb: string): string | null {
   if (!kb.trim()) return null;
-  const inputWords = input.toLowerCase().split(/\s+/).filter(w => w.length > 3);
+  const rawWords = input.toLowerCase().split(/\s+/);
+  const inputWords = rawWords.filter(w => w.length >= 2 && !STOP_WORDS.has(w));
   if (inputWords.length === 0) return null;
   const sentences = kb
-    .split(/(?<=[.!?\n])/)
+    .split(/[.!?\n]+/)
     .map(s => s.trim())
-    .filter(s => s.length > 20);
+    .filter(s => s.length > 15);
   const scored = sentences
     .map(s => {
       const sl = s.toLowerCase();
       const hits = inputWords.filter(w => sl.includes(w)).length;
-      return { s, hits };
+      const ratio = hits / inputWords.length;
+      return { s, hits, ratio };
     })
-    .filter(x => x.hits > 0)
-    .sort((a, b) => b.hits - a.hits);
+    .filter(x => x.hits > 0 && x.ratio >= 0.25)
+    .sort((a, b) => b.ratio - a.ratio || b.hits - a.hits);
   if (scored.length === 0) return null;
   const top = scored.slice(0, 2).map(x => x.s).join(' ');
   return `Based on our knowledge base: ${top}`;
