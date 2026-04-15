@@ -1,7 +1,13 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Send, Mic, MicOff, Bot, Zap, Shield, Clock, ChevronRight, MessageSquare, Volume2, VolumeX, Upload, FileText, X, CircleCheck as CheckCircle } from 'lucide-react';
+import { Send, Mic, MicOff, Bot, Zap, Shield, Clock, ChevronRight, MessageSquare, Volume2, VolumeX, Upload, FileText, X, CircleCheck as CheckCircle, Loader } from 'lucide-react';
+import * as pdfjsLib from 'pdfjs-dist';
 import './ChatbotDemoPage.css';
+
+pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
+  'pdfjs-dist/build/pdf.worker.mjs',
+  import.meta.url
+).toString();
 
 interface Message {
   id: number;
@@ -229,6 +235,7 @@ export const ChatbotDemoPage = () => {
   const [kbFileName, setKbFileName] = useState('');
   const [kbSaved, setKbSaved] = useState(false);
   const [kbDragging, setKbDragging] = useState(false);
+  const [kbParsing, setKbParsing] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const recognitionRef = useRef<any>(null);
@@ -351,15 +358,37 @@ export const ChatbotDemoPage = () => {
   const formatTime = (d: Date) =>
     d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
-  const handleKbFile = (file: File) => {
-    if (!file || !file.name.match(/\.(txt|md)$/i)) return;
-    const reader = new FileReader();
-    reader.onload = e => {
-      const text = e.target?.result as string;
-      setKbInput(text);
+  const handleKbFile = async (file: File) => {
+    if (!file) return;
+    if (file.name.match(/\.(txt|md)$/i)) {
+      const reader = new FileReader();
+      reader.onload = e => {
+        setKbInput(e.target?.result as string);
+        setKbFileName(file.name);
+      };
+      reader.readAsText(file);
+    } else if (file.name.match(/\.pdf$/i)) {
+      setKbParsing(true);
       setKbFileName(file.name);
-    };
-    reader.readAsText(file);
+      try {
+        const arrayBuffer = await file.arrayBuffer();
+        const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+        const pages: string[] = [];
+        for (let i = 1; i <= pdf.numPages; i++) {
+          const page = await pdf.getPage(i);
+          const content = await page.getTextContent();
+          const pageText = content.items
+            .map((item: any) => item.str)
+            .join(' ');
+          pages.push(pageText);
+        }
+        setKbInput(pages.join('\n'));
+      } catch {
+        setKbFileName('');
+      } finally {
+        setKbParsing(false);
+      }
+    }
   };
 
   const handleKbDrop = (e: React.DragEvent) => {
@@ -380,6 +409,7 @@ export const ChatbotDemoPage = () => {
     setKbInput('');
     setKbFileName('');
     setKbSaved(false);
+    setKbParsing(false);
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
@@ -583,7 +613,7 @@ export const ChatbotDemoPage = () => {
               Knowledge Base
             </h3>
             <p className="demo-info-body">
-              Upload a <strong>.txt</strong> or <strong>.md</strong> file — or paste text — to teach the chatbot about your business. The bot will search this content first before using its built-in Kuvanta responses.
+              Upload a <strong>.txt</strong>, <strong>.md</strong>, or <strong>.pdf</strong> file — or paste text — to teach the chatbot about your business. The bot will search this content first before using its built-in Kuvanta responses.
             </p>
 
             <div
@@ -596,26 +626,30 @@ export const ChatbotDemoPage = () => {
               <input
                 ref={fileInputRef}
                 type="file"
-                accept=".txt,.md"
+                accept=".txt,.md,.pdf"
                 style={{ display: 'none' }}
                 onChange={e => { const f = e.target.files?.[0]; if (f) handleKbFile(f); }}
               />
               {kbFileName ? (
                 <div className="demo-kb-file-info">
-                  <FileText size={16} />
+                  {kbParsing ? <Loader size={16} className="demo-kb-spinner" /> : <FileText size={16} />}
                   <span className="demo-kb-filename">{kbFileName}</span>
-                  <button
-                    className="demo-kb-remove"
-                    onClick={e => { e.stopPropagation(); handleKbClear(); }}
-                  >
-                    <X size={14} />
-                  </button>
+                  {kbParsing ? (
+                    <span className="demo-kb-parsing-label">Parsing PDF...</span>
+                  ) : (
+                    <button
+                      className="demo-kb-remove"
+                      onClick={e => { e.stopPropagation(); handleKbClear(); }}
+                    >
+                      <X size={14} />
+                    </button>
+                  )}
                 </div>
               ) : (
                 <div className="demo-kb-drop-hint">
                   <Upload size={18} />
                   <span>Drop a file or <u>browse</u></span>
-                  <span className="demo-kb-drop-sub">.txt or .md files</span>
+                  <span className="demo-kb-drop-sub">.txt, .md or .pdf</span>
                 </div>
               )}
             </div>
