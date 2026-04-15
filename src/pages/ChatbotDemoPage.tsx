@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Send, Mic, MicOff, Bot, Zap, Shield, Clock, ChevronRight, MessageSquare, Volume2, VolumeX } from 'lucide-react';
+import { Send, Mic, MicOff, Bot, Zap, Shield, Clock, ChevronRight, MessageSquare, Volume2, VolumeX, Upload, FileText, X, CircleCheck as CheckCircle } from 'lucide-react';
 import './ChatbotDemoPage.css';
 
 interface Message {
@@ -152,10 +152,35 @@ const FALLBACKS = [
 
 let fallbackIndex = 0;
 
-function generateResponse(input: string, turnCount: number): string {
+function searchKnowledgeBase(input: string, kb: string): string | null {
+  if (!kb.trim()) return null;
+  const inputWords = input.toLowerCase().split(/\s+/).filter(w => w.length > 3);
+  if (inputWords.length === 0) return null;
+  const sentences = kb
+    .split(/(?<=[.!?\n])/)
+    .map(s => s.trim())
+    .filter(s => s.length > 20);
+  const scored = sentences
+    .map(s => {
+      const sl = s.toLowerCase();
+      const hits = inputWords.filter(w => sl.includes(w)).length;
+      return { s, hits };
+    })
+    .filter(x => x.hits > 0)
+    .sort((a, b) => b.hits - a.hits);
+  if (scored.length === 0) return null;
+  const top = scored.slice(0, 2).map(x => x.s).join(' ');
+  return `Based on our knowledge base: ${top}`;
+}
+
+function generateResponse(input: string, turnCount: number, kb: string): string {
   if (turnCount === 0) {
     return "Hello! I'm the Kuvanta AI assistant. I can answer questions about our mobile apps, web portals, AI automation, pricing, timelines, and more. What are you working on?";
   }
+
+  const kbAnswer = searchKnowledgeBase(input, kb);
+  if (kbAnswer) return kbAnswer;
+
   const l = input.toLowerCase();
   for (const rule of RULES) {
     if (rule.patterns.some(p => p.test(l))) {
@@ -186,10 +211,18 @@ export const ChatbotDemoPage = () => {
   const [voiceEnabled, setVoiceEnabled] = useState(true);
   const [turnCount, setTurnCount] = useState(0);
   const [hasStarted, setHasStarted] = useState(false);
+
+  const [knowledgeBase, setKnowledgeBase] = useState('');
+  const [kbInput, setKbInput] = useState('');
+  const [kbFileName, setKbFileName] = useState('');
+  const [kbSaved, setKbSaved] = useState(false);
+  const [kbDragging, setKbDragging] = useState(false);
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const recognitionRef = useRef<any>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const idleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -211,8 +244,7 @@ export const ChatbotDemoPage = () => {
         try {
           recognitionRef.current.start();
           setIsListening(true);
-        } catch {
-        }
+        } catch { }
       }
     }, 5000);
   };
@@ -220,9 +252,7 @@ export const ChatbotDemoPage = () => {
   useEffect(() => {
     if (!hasStarted) return;
     resetIdleTimer();
-    return () => {
-      if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
-    };
+    return () => { if (idleTimerRef.current) clearTimeout(idleTimerRef.current); };
   }, [messages, isTyping, isSpeaking, isListening, hasStarted]);
 
   useEffect(() => {
@@ -279,14 +309,10 @@ export const ChatbotDemoPage = () => {
     setIsTyping(true);
     const delay = 900 + Math.random() * 700;
     setTimeout(() => {
-      const response = generateResponse(text, turnCount);
+      const response = generateResponse(text, turnCount + 1, knowledgeBase);
       setIsTyping(false);
       addBotMessage(response);
     }, delay);
-  };
-
-  const handleSuggest = (prompt: string) => {
-    handleSend(prompt);
   };
 
   const toggleListen = () => {
@@ -312,6 +338,38 @@ export const ChatbotDemoPage = () => {
 
   const formatTime = (d: Date) =>
     d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+  const handleKbFile = (file: File) => {
+    if (!file || !file.name.match(/\.(txt|md)$/i)) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+      const text = e.target?.result as string;
+      setKbInput(text);
+      setKbFileName(file.name);
+    };
+    reader.readAsText(file);
+  };
+
+  const handleKbDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setKbDragging(false);
+    const file = e.dataTransfer.files[0];
+    if (file) handleKbFile(file);
+  };
+
+  const handleKbSave = () => {
+    setKnowledgeBase(kbInput);
+    setKbSaved(true);
+    setTimeout(() => setKbSaved(false), 2500);
+  };
+
+  const handleKbClear = () => {
+    setKnowledgeBase('');
+    setKbInput('');
+    setKbFileName('');
+    setKbSaved(false);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
 
   return (
     <motion.div
@@ -372,7 +430,7 @@ export const ChatbotDemoPage = () => {
                 <div className="demo-chat-name">Kuvanta AI</div>
                 <div className="demo-chat-status">
                   <span className="demo-status-dot" />
-                  Online — ready to help
+                  {knowledgeBase ? 'Knowledge base active' : 'Online — ready to help'}
                 </div>
               </div>
             </div>
@@ -435,7 +493,7 @@ export const ChatbotDemoPage = () => {
           {hasStarted && messages.length <= 2 && !isTyping && (
             <div className="demo-suggestions">
               {SUGGESTED_PROMPTS.map((p, i) => (
-                <button key={i} className="demo-suggestion-btn" onClick={() => handleSuggest(p)}>
+                <button key={i} className="demo-suggestion-btn" onClick={() => handleSend(p)}>
                   {p}
                   <ChevronRight size={13} />
                 </button>
@@ -483,7 +541,7 @@ export const ChatbotDemoPage = () => {
               <li>
                 <span className="demo-info-num">01</span>
                 <div>
-                  <strong>Natural language processing</strong> — Understands intent without any external ML APIs
+                  <strong>Knowledge base first</strong> — Searches your uploaded content before anything else
                 </div>
               </li>
               <li>
@@ -505,6 +563,83 @@ export const ChatbotDemoPage = () => {
                 </div>
               </li>
             </ul>
+          </div>
+
+          <div className="demo-info-card demo-kb-card">
+            <h3 className="demo-info-title">
+              <FileText size={15} style={{ marginRight: 8, verticalAlign: 'middle', color: '#60a5fa' }} />
+              Knowledge Base
+            </h3>
+            <p className="demo-info-body">
+              Upload a <strong>.txt</strong> or <strong>.md</strong> file — or paste text — to teach the chatbot about your business. The bot will search this content first before using its built-in Kuvanta responses.
+            </p>
+
+            <div
+              className={`demo-kb-dropzone${kbDragging ? ' dragging' : ''}${kbFileName ? ' has-file' : ''}`}
+              onDragOver={e => { e.preventDefault(); setKbDragging(true); }}
+              onDragLeave={() => setKbDragging(false)}
+              onDrop={handleKbDrop}
+              onClick={() => !kbFileName && fileInputRef.current?.click()}
+            >
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".txt,.md"
+                style={{ display: 'none' }}
+                onChange={e => { const f = e.target.files?.[0]; if (f) handleKbFile(f); }}
+              />
+              {kbFileName ? (
+                <div className="demo-kb-file-info">
+                  <FileText size={16} />
+                  <span className="demo-kb-filename">{kbFileName}</span>
+                  <button
+                    className="demo-kb-remove"
+                    onClick={e => { e.stopPropagation(); handleKbClear(); }}
+                  >
+                    <X size={14} />
+                  </button>
+                </div>
+              ) : (
+                <div className="demo-kb-drop-hint">
+                  <Upload size={18} />
+                  <span>Drop a file or <u>browse</u></span>
+                  <span className="demo-kb-drop-sub">.txt or .md files</span>
+                </div>
+              )}
+            </div>
+
+            <textarea
+              className="demo-kb-textarea"
+              placeholder="Or paste your knowledge base text here..."
+              value={kbInput}
+              onChange={e => setKbInput(e.target.value)}
+              rows={5}
+            />
+
+            <div className="demo-kb-actions">
+              {knowledgeBase && (
+                <button className="demo-kb-clear-btn" onClick={handleKbClear}>
+                  <X size={13} /> Clear
+                </button>
+              )}
+              <button
+                className={`demo-kb-save-btn${kbSaved ? ' saved' : ''}`}
+                onClick={handleKbSave}
+                disabled={!kbInput.trim()}
+              >
+                {kbSaved
+                  ? <><CheckCircle size={14} /> Saved!</>
+                  : <><Upload size={14} /> Apply to Bot</>
+                }
+              </button>
+            </div>
+
+            {knowledgeBase && (
+              <div className="demo-kb-active-badge">
+                <CheckCircle size={12} />
+                <span>Knowledge base active — {knowledgeBase.split(/\s+/).length} words loaded</span>
+              </div>
+            )}
           </div>
 
           <div className="demo-info-card demo-info-card--highlight">
