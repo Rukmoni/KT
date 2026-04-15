@@ -74,12 +74,13 @@ export const ChatbotDemoPage = () => {
   const [isTyping, setIsTyping] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
-  const [voiceEnabled, setVoiceEnabled] = useState(false);
+  const [voiceEnabled, setVoiceEnabled] = useState(true);
   const [turnCount, setTurnCount] = useState(0);
   const [hasStarted, setHasStarted] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const recognitionRef = useRef<any>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const idleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -92,6 +93,35 @@ export const ChatbotDemoPage = () => {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isTyping]);
+
+  const resetIdleTimer = () => {
+    if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
+    if (isListening || isSpeaking || isTyping) return;
+    idleTimerRef.current = setTimeout(() => {
+      if (!isListening && !isSpeaking && !isTyping && recognitionRef.current) {
+        try {
+          recognitionRef.current.start();
+          setIsListening(true);
+        } catch {
+        }
+      }
+    }, 5000);
+  };
+
+  useEffect(() => {
+    if (!hasStarted) return;
+    resetIdleTimer();
+    return () => {
+      if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
+    };
+  }, [messages, isTyping, isSpeaking, isListening, hasStarted]);
+
+  useEffect(() => {
+    const events = ['mousemove', 'keydown', 'click', 'touchstart'];
+    const handler = () => resetIdleTimer();
+    events.forEach(e => window.addEventListener(e, handler));
+    return () => events.forEach(e => window.removeEventListener(e, handler));
+  }, [isListening, isSpeaking, isTyping]);
 
   useEffect(() => {
     if (!('SpeechRecognition' in window || 'webkitSpeechRecognition' in window)) return;
