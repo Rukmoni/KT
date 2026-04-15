@@ -69,7 +69,7 @@ export const Navbar = () => {
       <nav className={`kv-nav${scrolled ? ' kv-nav--scrolled' : ''}`}>
         <div className="kv-nav__inner">
           <a href="/" className="kv-nav__logo" onClick={e => { e.preventDefault(); navigate('/'); }}>
-            KUVANTA
+            <img src="/kuavanta-logo.png" alt="Kuvanta" className="kv-nav__logo-img" />
           </a>
 
           <div className="kv-nav__links">
