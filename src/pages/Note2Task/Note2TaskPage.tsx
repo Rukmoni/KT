@@ -1,13 +1,17 @@
 import { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { LayoutDashboard, MessageSquare, SquareCheck as CheckSquare, Hash, Share2, Search, Zap, RefreshCw, ChevronDown, Copy, Check, TriangleAlert as AlertTriangle, FileText, ArrowRight, ChevronRight, TrendingUp, X } from 'lucide-react';
+import { LayoutDashboard, MessageSquare, SquareCheck as CheckSquare, Hash, Share2, Search, Zap, RefreshCw, ChevronDown, Copy, Check, TriangleAlert as AlertTriangle, FileText, ArrowRight, ChevronRight, TrendingUp, X, FlaskConical } from 'lucide-react';
 import { SAMPLE_TRANSCRIPTS, mockExtract } from './sampleData';
 import type { ExtractionResult, ExtractedTask } from './sampleData';
 import { TaskCard } from './TaskCard';
 import { JiraPreviewPanel } from './JiraPreviewPanel';
+import { ConnectionsView } from './ConnectionsView';
+import { MeetingsView } from './MeetingsView';
+import { WorkflowTestView } from './WorkflowTestView';
+import { MOCK_AUDIT } from './mockServices';
 import './Note2TaskPage.css';
 
-type View = 'dashboard' | 'new-sync' | 'meetings' | 'jira' | 'slack' | 'connections';
+type View = 'dashboard' | 'new-sync' | 'meetings' | 'jira' | 'slack' | 'connections' | 'workflow-test';
 type SyncStep = 'input' | 'summary' | 'tasks' | 'jira-preview';
 
 const RECENT_MEETINGS = [
@@ -110,6 +114,7 @@ export const Note2TaskPage = () => {
     { id: 'jira', icon: CheckSquare, label: 'Jira' },
     { id: 'slack', icon: Hash, label: 'Slack' },
     { id: 'connections', icon: Share2, label: 'Connections' },
+    { id: 'workflow-test', icon: FlaskConical, label: 'Workflow Test' },
   ];
 
   const SYNC_STEPS: { id: SyncStep; label: string }[] = [
@@ -264,7 +269,7 @@ export const Note2TaskPage = () => {
                 <section className="n2t-section">
                   <div className="n2t-section__header">
                     <h2 className="n2t-section-heading">Recent Meetings</h2>
-                    <button className="n2t-view-all">View All History <ArrowRight size={13} /></button>
+                    <button className="n2t-view-all" onClick={() => setView('meetings')}>View All History <ArrowRight size={13} /></button>
                   </div>
                   <div className="n2t-meetings-table">
                     <div className="n2t-meetings-table__head">
@@ -298,6 +303,23 @@ export const Note2TaskPage = () => {
                             {m.status}
                           </button>
                         </div>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+
+                {/* Audit Log */}
+                <section className="n2t-section" style={{ paddingBottom: 32 }}>
+                  <div className="n2t-section__header">
+                    <h2 className="n2t-section-heading">Recent Audit Log</h2>
+                    <button className="n2t-view-all" onClick={() => setView('connections')}>View Connections <ArrowRight size={13} /></button>
+                  </div>
+                  <div className="n2t-audit-table">
+                    {MOCK_AUDIT.map(entry => (
+                      <div key={entry.id} className="n2t-audit-row">
+                        <span className={`n2t-audit-action n2t-audit-action--${entry.entityType}`}>{entry.action}</span>
+                        <span className="n2t-audit-detail">{entry.details}</span>
+                        <span className="n2t-audit-time">{new Date(entry.timestamp).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
                       </div>
                     ))}
                   </div>
@@ -491,15 +513,36 @@ export const Note2TaskPage = () => {
               </motion.div>
             )}
 
-            {/* ── Placeholder views ── */}
-            {(view === 'jira' || view === 'slack' || view === 'connections') && (
+            {/* ── Meetings view ── */}
+            {view === 'meetings' && (
+              <motion.div key="meetings" className="n2t-full-view" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
+                <MeetingsView />
+              </motion.div>
+            )}
+
+            {/* ── Connections view ── */}
+            {view === 'connections' && (
+              <motion.div key="connections" className="n2t-full-view" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
+                <ConnectionsView />
+              </motion.div>
+            )}
+
+            {/* ── Workflow Test view ── */}
+            {view === 'workflow-test' && (
+              <motion.div key="workflow-test" className="n2t-full-view" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
+                <WorkflowTestView />
+              </motion.div>
+            )}
+
+            {/* ── Placeholder views (Jira, Slack standalone) ── */}
+            {(view === 'jira' || view === 'slack') && (
               <motion.div key={view} className="n2t-placeholder" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
                 <div className="n2t-placeholder__card">
                   <FileText size={32} color="#334155" />
-                  <h3>{view.charAt(0).toUpperCase() + view.slice(1)}</h3>
-                  <p>Connect your {view} integration to start syncing tasks automatically.</p>
-                  <button className="n2t-action-btn n2t-action-btn--primary" onClick={() => setView('dashboard')}>
-                    Go to Dashboard
+                  <h3>{view === 'jira' ? 'Jira Tickets' : 'Slack Notifications'}</h3>
+                  <p>Configure your {view === 'jira' ? 'Jira' : 'Slack'} integration in Connections, then process a meeting to see tickets here.</p>
+                  <button className="n2t-action-btn n2t-action-btn--primary" onClick={() => setView('connections')}>
+                    Configure Integration
                   </button>
                 </div>
               </motion.div>
