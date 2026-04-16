@@ -1,18 +1,33 @@
 import { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Zap, RefreshCw, ChevronDown, Copy, Check, TriangleAlert as AlertTriangle, Shield, FileText, ListChecks, GitBranch } from 'lucide-react';
+import { LayoutDashboard, MessageSquare, SquareCheck as CheckSquare, Hash, Share2, Search, Zap, RefreshCw, ChevronDown, Copy, Check, TriangleAlert as AlertTriangle, FileText, ArrowRight, ChevronRight, TrendingUp, X } from 'lucide-react';
 import { SAMPLE_TRANSCRIPTS, mockExtract } from './sampleData';
 import type { ExtractionResult, ExtractedTask } from './sampleData';
 import { TaskCard } from './TaskCard';
 import { JiraPreviewPanel } from './JiraPreviewPanel';
 import './Note2TaskPage.css';
 
-type Tab = 'input' | 'summary' | 'tasks' | 'jira';
+type View = 'dashboard' | 'new-sync' | 'meetings' | 'jira' | 'slack' | 'connections';
+type SyncStep = 'input' | 'summary' | 'tasks' | 'jira-preview';
+
+const RECENT_MEETINGS = [
+  { name: 'Q4 Sprint Architecture Review', date: 'Oct 24, 2023', duration: '45m', transcript: 'READY', aiReview: 100, status: 'Review Summary' },
+  { name: 'Internal Security Audit Sync', date: 'Oct 23, 2023', duration: '1h 12m', transcript: 'READY', aiReview: 60, status: 'Processing', action: 'Abort Sync' },
+  { name: 'Design Feedback: Mobile UX', date: 'Oct 23, 2023', duration: '22m', transcript: 'READY', aiReview: 100, status: 'Review Summary' },
+  { name: 'Client Delivery Review — RetailEdge', date: 'Oct 22, 2023', duration: '58m', transcript: 'READY', aiReview: 100, status: 'Review Summary' },
+  { name: 'Sprint 4 Planning Session', date: 'Oct 21, 2023', duration: '1h 5m', transcript: 'READY', aiReview: 100, status: 'Review Summary' },
+];
+
+const WORKFLOW_STEPS = [
+  { icon: '📹', label: 'ZOOM', sub: 'Transcript Ingest' },
+  { icon: '🤖', label: 'AI REVIEW', sub: 'Task Extraction', active: true },
+  { icon: '📋', label: 'JIRA', sub: 'Ticket Generation' },
+  { icon: '💬', label: 'SLACK', sub: 'Team Notification' },
+];
 
 export const Note2TaskPage = () => {
-  const navigate = useNavigate();
-  const [tab, setTab] = useState<Tab>('input');
+  const [view, setView] = useState<View>('dashboard');
+  const [syncStep, setSyncStep] = useState<SyncStep>('input');
   const [transcript, setTranscript] = useState(SAMPLE_TRANSCRIPTS[0].text);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<ExtractionResult | null>(null);
@@ -23,13 +38,6 @@ export const Note2TaskPage = () => {
   const [copied, setCopied] = useState(false);
   const [selectedTask, setSelectedTask] = useState<ExtractedTask | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-
-  const TABS: { id: Tab; label: string; icon: React.ElementType; disabled?: boolean }[] = [
-    { id: 'input', label: 'Transcript', icon: FileText },
-    { id: 'summary', label: 'AI Summary', icon: ListChecks, disabled: !result },
-    { id: 'tasks', label: 'Draft Tasks', icon: GitBranch, disabled: !result },
-    { id: 'jira', label: 'Jira Preview', icon: Shield, disabled: !result },
-  ];
 
   const handleGenerate = async () => {
     if (!transcript.trim()) return;
@@ -42,17 +50,16 @@ export const Note2TaskPage = () => {
     setResult(extracted);
     setTasks(extracted.tasks.map(t => ({ ...t })));
     setLoading(false);
-    setTab('summary');
+    setSyncStep('summary');
   };
 
   const handleReset = () => {
-    setTranscript('');
+    setTranscript(SAMPLE_TRANSCRIPTS[0].text);
     setResult(null);
     setTasks([]);
     setSynced(false);
-    setTab('input');
+    setSyncStep('input');
     setSelectedTask(null);
-    setTimeout(() => textareaRef.current?.focus(), 100);
   };
 
   const handleLoadSample = (idx: number) => {
@@ -61,7 +68,7 @@ export const Note2TaskPage = () => {
     setSampleMenuOpen(false);
     setResult(null);
     setTasks([]);
-    setTab('input');
+    setSyncStep('input');
     setSynced(false);
   };
 
@@ -86,264 +93,420 @@ export const Note2TaskPage = () => {
     setSelectedTask(updated);
   };
 
+  const handleStartNewSync = () => {
+    setView('new-sync');
+    setSyncStep('input');
+    setResult(null);
+    setTasks([]);
+    setSynced(false);
+  };
+
   const approvedCount = tasks.filter(t => t.status === 'Approved').length;
   const readyCount = tasks.filter(t => t.status === 'Ready').length;
 
+  const navItems: { id: View; icon: React.ElementType; label: string }[] = [
+    { id: 'dashboard', icon: LayoutDashboard, label: 'Dashboard' },
+    { id: 'meetings', icon: MessageSquare, label: 'Meetings' },
+    { id: 'jira', icon: CheckSquare, label: 'Jira' },
+    { id: 'slack', icon: Hash, label: 'Slack' },
+    { id: 'connections', icon: Share2, label: 'Connections' },
+  ];
+
+  const SYNC_STEPS: { id: SyncStep; label: string }[] = [
+    { id: 'input', label: 'Transcript' },
+    { id: 'summary', label: 'AI Summary' },
+    { id: 'tasks', label: 'Draft Tasks' },
+    { id: 'jira-preview', label: 'Jira Preview' },
+  ];
+  const syncStepIdx = SYNC_STEPS.findIndex(s => s.id === syncStep);
+
   return (
-    <div className="n2t-page">
-      <header className="n2t-header">
-        <div className="n2t-header__inner">
-          <div className="n2t-header__left">
-            <button className="n2t-back-btn" onClick={() => navigate('/demos')}>
-              <ArrowLeft size={16} />
-              Demos
-            </button>
-            <div className="n2t-header__brand">
-              <div className="n2t-header__logo">
-                <FileText size={16} color="#2563eb" />
-              </div>
-              <div>
-                <span className="n2t-header__product">Note2Task</span>
-                <span className="n2t-header__by">by KuvantaTech</span>
-              </div>
-              <span className="n2t-header__demo-badge">Demo</span>
-            </div>
-          </div>
-          <div className="n2t-header__right">
-            {result && (
-              <button className="n2t-btn n2t-btn--ghost" onClick={handleCopyJSON}>
-                {copied ? <Check size={14} /> : <Copy size={14} />}
-                {copied ? 'Copied!' : 'Copy JSON'}
-              </button>
-            )}
-            <button className="n2t-btn n2t-btn--ghost" onClick={handleReset}>
-              <RefreshCw size={14} />
-              Reset
-            </button>
-            {result && !synced && (
-              <button className="n2t-btn n2t-btn--primary" onClick={handleSync}>
-                <Zap size={14} />
-                Sync to Jira
-              </button>
-            )}
-            {synced && (
-              <div className="n2t-synced-badge">
-                <Check size={13} />
-                Synced to Jira
-              </div>
-            )}
+    <div className="n2t-app">
+      {/* ── Left Sidebar ── */}
+      <aside className="n2t-sidebar">
+        <div className="n2t-sidebar__user">
+          <div className="n2t-sidebar__avatar">A</div>
+          <div>
+            <p className="n2t-sidebar__name">Lead Architect</p>
+            <p className="n2t-sidebar__role">AI OPERATIONS</p>
           </div>
         </div>
-      </header>
 
-      <div className="n2t-tabs-bar">
-        <div className="n2t-tabs-bar__inner">
-          {TABS.map(t => {
-            const Icon = t.icon;
+        <nav className="n2t-sidebar__nav">
+          {navItems.map(item => {
+            const Icon = item.icon;
             return (
               <button
-                key={t.id}
-                className={`n2t-tab${tab === t.id ? ' n2t-tab--active' : ''}${t.disabled ? ' n2t-tab--disabled' : ''}`}
-                onClick={() => !t.disabled && setTab(t.id)}
-                disabled={t.disabled}
+                key={item.id}
+                className={`n2t-nav-item${view === item.id || (view === 'new-sync' && item.id === 'dashboard') ? ' n2t-nav-item--active' : ''}`}
+                onClick={() => { setView(item.id); }}
               >
-                <Icon size={14} />
-                {t.label}
-                {t.id === 'tasks' && tasks.length > 0 && (
-                  <span className="n2t-tab__count">{tasks.length}</span>
-                )}
+                <Icon size={18} />
+                <span>{item.label}</span>
               </button>
             );
           })}
-        </div>
-        {result && (
-          <div className="n2t-tabs-bar__meta">
-            <span className="n2t-status-chip n2t-status-chip--approved">{approvedCount} Approved</span>
-            <span className="n2t-status-chip n2t-status-chip--draft">{tasks.length - approvedCount - readyCount} Draft</span>
+        </nav>
+      </aside>
+
+      {/* ── Main Column ── */}
+      <div className="n2t-main">
+        {/* Top Header */}
+        <header className="n2t-topbar">
+          <div className="n2t-topbar__logo">
+            <img src="/kuavanta-logo.png" alt="KUVANTA" className="n2t-topbar__logo-img" />
           </div>
-        )}
-      </div>
+          <div className="n2t-topbar__search">
+            <Search size={14} color="#64748b" />
+            <input className="n2t-search-input" placeholder="Search architecture..." />
+          </div>
+          <div className="n2t-topbar__right">
+            <button className={`n2t-topbar-link${view === 'dashboard' ? ' n2t-topbar-link--active' : ''}`} onClick={() => setView('dashboard')}>Dashboard</button>
+            <button className="n2t-topbar-link">Architecture</button>
+            <button className="n2t-topbar-link">Logs</button>
+            <div className="n2t-topbar__user-btn">LA</div>
+          </div>
+        </header>
 
-      <div className="n2t-body">
-        <AnimatePresence mode="wait">
+        {/* Content Area */}
+        <div className="n2t-content">
+          <AnimatePresence mode="wait">
 
-          {tab === 'input' && (
-            <motion.div
-              key="input"
-              className="n2t-input-panel"
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -12 }}
-              transition={{ duration: 0.25 }}
-            >
-              <div className="n2t-input-panel__toolbar">
-                <div className="n2t-input-panel__toolbar-left">
-                  <div className="n2t-sample-menu">
-                    <button className="n2t-btn n2t-btn--ghost" onClick={() => setSampleMenuOpen(o => !o)}>
-                      Load Sample
-                      <ChevronDown size={13} />
-                    </button>
-                    {sampleMenuOpen && (
-                      <div className="n2t-sample-dropdown">
-                        {SAMPLE_TRANSCRIPTS.map((s, i) => (
-                          <button key={i} className={`n2t-sample-item${selectedSample === i ? ' n2t-sample-item--active' : ''}`} onClick={() => handleLoadSample(i)}>
-                            {s.label}
+            {/* ── Dashboard View ── */}
+            {(view === 'dashboard') && (
+              <motion.div key="dashboard" className="n2t-dashboard" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
+
+                {/* Hero */}
+                <section className="n2t-hero">
+                  <div className="n2t-hero__content">
+                    <div className="n2t-hero__badge">WORKFLOW STATUS: ACTIVE</div>
+                    <h1 className="n2t-hero__title">
+                      Turn meeting<br />
+                      transcripts into<br />
+                      <em className="n2t-hero__em">delivery-ready</em> Jira<br />
+                      tasks.
+                    </h1>
+                    <p className="n2t-hero__sub">
+                      Our AI engine synthesizes natural conversation into structured engineering requirements, automatically syncing across your stack.
+                    </p>
+                    <div className="n2t-hero__actions">
+                      <button className="n2t-hero-cta n2t-hero-cta--primary" onClick={handleStartNewSync}>
+                        Start New Sync
+                      </button>
+                      <button className="n2t-hero-cta n2t-hero-cta--secondary">
+                        View Documentation
+                      </button>
+                    </div>
+                  </div>
+                  <div className="n2t-hero__visual" />
+                </section>
+
+                {/* Workflow Sequence */}
+                <section className="n2t-section">
+                  <h2 className="n2t-section-heading">Workflow Sequence</h2>
+                  <div className="n2t-workflow">
+                    {WORKFLOW_STEPS.map((step, i) => (
+                      <div key={i} className="n2t-workflow__step-wrap">
+                        <div className={`n2t-workflow__step${step.active ? ' n2t-workflow__step--active' : ''}`}>
+                          <span className="n2t-workflow__icon">{step.icon}</span>
+                          <p className="n2t-workflow__label">{step.label}</p>
+                          <p className="n2t-workflow__sub">{step.sub}</p>
+                        </div>
+                        {i < WORKFLOW_STEPS.length - 1 && (
+                          <ChevronRight size={18} color="#334155" className="n2t-workflow__arrow" />
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </section>
+
+                {/* Stats + Integrations */}
+                <div className="n2t-stats-row">
+                  <div className="n2t-stats-col">
+                    <div className="n2t-stat-card">
+                      <p className="n2t-stat__label">TOTAL PROCESSED</p>
+                      <p className="n2t-stat__value">1,284</p>
+                      <p className="n2t-stat__delta">
+                        <TrendingUp size={11} /> 12% from last month
+                      </p>
+                    </div>
+                    <div className="n2t-stat-card">
+                      <p className="n2t-stat__label">JIRA AUTOMATION RATE</p>
+                      <p className="n2t-stat__value">94.2%</p>
+                      <p className="n2t-stat__note">Active in 8 projects</p>
+                    </div>
+                  </div>
+
+                  <div className="n2t-integrations">
+                    {[
+                      { name: 'Zoom', color: '#2D8CFF' },
+                      { name: 'Jira', color: '#0052CC' },
+                      { name: 'Slack', color: '#E01E5A' },
+                    ].map(int => (
+                      <div key={int.name} className="n2t-integration-card">
+                        <div className="n2t-integration__header">
+                          <div className="n2t-integration__icon" style={{ background: int.color }}>
+                            {int.name[0]}
+                          </div>
+                          <p className="n2t-integration__name">{int.name}</p>
+                        </div>
+                        <div className="n2t-integration__status">
+                          <span className="n2t-status-dot" />
+                          Connected
+                        </div>
+                        <button className="n2t-integration__test">Test</button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Recent Meetings */}
+                <section className="n2t-section">
+                  <div className="n2t-section__header">
+                    <h2 className="n2t-section-heading">Recent Meetings</h2>
+                    <button className="n2t-view-all">View All History <ArrowRight size={13} /></button>
+                  </div>
+                  <div className="n2t-meetings-table">
+                    <div className="n2t-meetings-table__head">
+                      <span>MEETING NAME</span>
+                      <span>TRANSCRIPT</span>
+                      <span>AI REVIEW</span>
+                      <span>INTEGRATIONS</span>
+                      <span>ACTIONS</span>
+                    </div>
+                    {RECENT_MEETINGS.map((m, i) => (
+                      <div key={i} className="n2t-meetings-table__row">
+                        <div>
+                          <p className="n2t-meeting__name">{m.name}</p>
+                          <p className="n2t-meeting__meta">{m.date} · {m.duration}</p>
+                        </div>
+                        <div>
+                          <span className="n2t-ready-chip">READY</span>
+                        </div>
+                        <div className="n2t-ai-review">
+                          <div className="n2t-ai-bar">
+                            <div className="n2t-ai-bar__fill" style={{ width: `${m.aiReview}%` }} />
+                          </div>
+                          {m.aiReview === 100 ? <span className="n2t-ai-pct">100%</span> : <span className="n2t-ai-processing">Processing</span>}
+                        </div>
+                        <div className="n2t-integrations-icons">
+                          <div className="n2t-int-icon n2t-int-icon--jira">J</div>
+                          <div className="n2t-int-icon n2t-int-icon--slack">#</div>
+                        </div>
+                        <div>
+                          <button className="n2t-action-link" onClick={() => { setView('new-sync'); setSyncStep('summary'); setResult(mockExtract(transcript)); setTasks(mockExtract(transcript).tasks.map(t => ({ ...t }))); }}>
+                            {m.status}
                           </button>
-                        ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+              </motion.div>
+            )}
+
+            {/* ── New Sync / Meetings View ── */}
+            {(view === 'new-sync' || view === 'meetings') && (
+              <motion.div key="new-sync" className="n2t-sync-view" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
+
+                <div className="n2t-sync-header">
+                  <div className="n2t-sync-header__left">
+                    <button className="n2t-back-link" onClick={() => setView('dashboard')}>
+                      ← Dashboard
+                    </button>
+                    <h2 className="n2t-sync-title">
+                      {view === 'meetings' ? 'All Meetings' : 'New Sync'}
+                    </h2>
+                  </div>
+                  <div className="n2t-sync-header__right">
+                    {result && (
+                      <button className="n2t-action-btn n2t-action-btn--ghost" onClick={handleCopyJSON}>
+                        {copied ? <Check size={13} /> : <Copy size={13} />}
+                        {copied ? 'Copied' : 'Copy JSON'}
+                      </button>
+                    )}
+                    <button className="n2t-action-btn n2t-action-btn--ghost" onClick={handleReset}>
+                      <RefreshCw size={13} />
+                      Reset
+                    </button>
+                    {result && !synced && (
+                      <button className="n2t-action-btn n2t-action-btn--primary" onClick={handleSync}>
+                        <Zap size={13} />
+                        Sync to Jira
+                      </button>
+                    )}
+                    {synced && (
+                      <div className="n2t-synced-pill">
+                        <Check size={12} /> Synced to Jira
                       </div>
                     )}
                   </div>
-                  <span className="n2t-char-count">{transcript.length} chars</span>
                 </div>
-                <div className="n2t-input-panel__toolbar-right">
-                  <button
-                    className={`n2t-generate-btn${loading ? ' n2t-generate-btn--loading' : ''}`}
-                    onClick={handleGenerate}
-                    disabled={loading || !transcript.trim()}
-                  >
-                    {loading ? (
-                      <>
-                        <span className="n2t-spinner" />
-                        Analyzing...
-                      </>
-                    ) : (
-                      <>
-                        <Zap size={15} />
-                        Generate Tasks
-                      </>
-                    )}
+
+                {/* Step indicator */}
+                <div className="n2t-steps">
+                  {SYNC_STEPS.map((s, i) => (
+                    <div key={s.id} className="n2t-steps__item">
+                      <button
+                        className={`n2t-step${syncStep === s.id ? ' n2t-step--active' : ''}${i < syncStepIdx ? ' n2t-step--done' : ''}${!result && i > 0 ? ' n2t-step--locked' : ''}`}
+                        onClick={() => { if (result || i === 0) setSyncStep(s.id); }}
+                        disabled={!result && i > 0}
+                      >
+                        <span className="n2t-step__num">{i < syncStepIdx ? <Check size={11} /> : i + 1}</span>
+                        {s.label}
+                      </button>
+                      {i < SYNC_STEPS.length - 1 && <ChevronRight size={14} color="#334155" />}
+                    </div>
+                  ))}
+                  {result && (
+                    <div className="n2t-steps__meta">
+                      <span className="n2t-chip n2t-chip--green">{approvedCount} Approved</span>
+                      <span className="n2t-chip n2t-chip--muted">{tasks.length - approvedCount - readyCount} Draft</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Step content */}
+                <AnimatePresence mode="wait">
+
+                  {syncStep === 'input' && (
+                    <motion.div key="input" className="n2t-panel" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
+                      <div className="n2t-panel__toolbar">
+                        <div className="n2t-sample-menu">
+                          <button className="n2t-action-btn n2t-action-btn--ghost" onClick={() => setSampleMenuOpen(o => !o)}>
+                            Load Sample <ChevronDown size={12} />
+                          </button>
+                          {sampleMenuOpen && (
+                            <div className="n2t-dropdown">
+                              {SAMPLE_TRANSCRIPTS.map((s, i) => (
+                                <button key={i} className={`n2t-dropdown__item${selectedSample === i ? ' active' : ''}`} onClick={() => handleLoadSample(i)}>
+                                  {s.label}
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                        <span className="n2t-char-count">{transcript.length} chars</span>
+                        <button
+                          className={`n2t-generate-btn${loading ? ' loading' : ''}`}
+                          onClick={handleGenerate}
+                          disabled={loading || !transcript.trim()}
+                        >
+                          {loading ? <><span className="n2t-spinner" />Analyzing...</> : <><Zap size={14} />Generate Tasks</>}
+                        </button>
+                      </div>
+                      <div className="n2t-panel__body" style={{ position: 'relative' }}>
+                        <textarea
+                          ref={textareaRef}
+                          className="n2t-transcript-area"
+                          value={transcript}
+                          onChange={e => setTranscript(e.target.value)}
+                          placeholder="Paste your meeting notes, Zoom transcript, or action summary here..."
+                          spellCheck={false}
+                        />
+                        {loading && (
+                          <div className="n2t-loading-veil">
+                            <div className="n2t-loading-ring" />
+                            <p className="n2t-loading-label">AI is analyzing your transcript...</p>
+                            <p className="n2t-loading-sub">Extracting decisions, actions, owners, and priorities</p>
+                          </div>
+                        )}
+                      </div>
+                    </motion.div>
+                  )}
+
+                  {syncStep === 'summary' && result && (
+                    <motion.div key="summary" className="n2t-summary-view" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
+                      <div className="n2t-panel">
+                        <div className="n2t-panel__label">Meeting Summary</div>
+                        <p className="n2t-panel__text">{result.summary}</p>
+                      </div>
+                      <div className="n2t-summary-grid">
+                        <div className="n2t-summary-block">
+                          <div className="n2t-summary-block__hd">
+                            <Check size={13} color="#22c55e" /> Key Decisions
+                          </div>
+                          <ul className="n2t-list n2t-list--green">
+                            {result.decisions.map((d, i) => <li key={i}>{d}</li>)}
+                          </ul>
+                        </div>
+                        <div className="n2t-summary-block">
+                          <div className="n2t-summary-block__hd">
+                            <AlertTriangle size={13} color="#f97316" /> Risks
+                          </div>
+                          <ul className="n2t-list n2t-list--orange">
+                            {result.risks.map((r, i) => <li key={i}>{r}</li>)}
+                          </ul>
+                        </div>
+                        <div className="n2t-summary-block">
+                          <div className="n2t-summary-block__hd">
+                            <X size={13} color="#ef4444" /> Blockers
+                          </div>
+                          <ul className="n2t-list n2t-list--red">
+                            {result.blockers.map((b, i) => <li key={i}>{b}</li>)}
+                          </ul>
+                        </div>
+                      </div>
+                      <div className="n2t-summary-footer">
+                        <button className="n2t-action-btn n2t-action-btn--primary" onClick={() => setSyncStep('tasks')}>
+                          Review Draft Tasks <ArrowRight size={13} />
+                        </button>
+                      </div>
+                    </motion.div>
+                  )}
+
+                  {syncStep === 'tasks' && result && (
+                    <motion.div key="tasks" className="n2t-tasks-view" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
+                      <div className="n2t-tasks-header">
+                        <span className="n2t-tasks-count">{tasks.length} tasks extracted</span>
+                        <div className="n2t-tasks-actions">
+                          <button className="n2t-action-btn n2t-action-btn--ghost" onClick={handleApproveAll}>Approve All</button>
+                          <button className="n2t-action-btn n2t-action-btn--primary" onClick={() => setSyncStep('jira-preview')}>
+                            Preview in Jira <ArrowRight size={13} />
+                          </button>
+                        </div>
+                      </div>
+                      <div className="n2t-tasks-list">
+                        {tasks.map((task, i) => (
+                          <TaskCard
+                            key={task.id}
+                            task={task}
+                            index={i}
+                            isSelected={selectedTask?.id === task.id}
+                            onSelect={() => setSelectedTask(selectedTask?.id === task.id ? null : task)}
+                            onUpdate={handleUpdateTask}
+                          />
+                        ))}
+                      </div>
+                    </motion.div>
+                  )}
+
+                  {syncStep === 'jira-preview' && result && (
+                    <motion.div key="jira-preview" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
+                      <JiraPreviewPanel tasks={tasks} synced={synced} onSync={handleSync} onApproveAll={handleApproveAll} />
+                    </motion.div>
+                  )}
+
+                </AnimatePresence>
+              </motion.div>
+            )}
+
+            {/* ── Placeholder views ── */}
+            {(view === 'jira' || view === 'slack' || view === 'connections') && (
+              <motion.div key={view} className="n2t-placeholder" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                <div className="n2t-placeholder__card">
+                  <FileText size={32} color="#334155" />
+                  <h3>{view.charAt(0).toUpperCase() + view.slice(1)}</h3>
+                  <p>Connect your {view} integration to start syncing tasks automatically.</p>
+                  <button className="n2t-action-btn n2t-action-btn--primary" onClick={() => setView('dashboard')}>
+                    Go to Dashboard
                   </button>
                 </div>
-              </div>
+              </motion.div>
+            )}
 
-              <div className="n2t-textarea-wrap">
-                <textarea
-                  ref={textareaRef}
-                  className="n2t-textarea"
-                  value={transcript}
-                  onChange={e => setTranscript(e.target.value)}
-                  placeholder="Paste your meeting notes, Zoom transcript, or action summary here..."
-                  spellCheck={false}
-                />
-              </div>
-
-              {loading && (
-                <div className="n2t-loading-overlay">
-                  <div className="n2t-loading-content">
-                    <div className="n2t-loading-ring" />
-                    <p className="n2t-loading-label">AI is analyzing your transcript...</p>
-                    <p className="n2t-loading-sub">Extracting decisions, actions, owners, and priorities</p>
-                  </div>
-                </div>
-              )}
-            </motion.div>
-          )}
-
-          {tab === 'summary' && result && (
-            <motion.div
-              key="summary"
-              className="n2t-summary-panel"
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -12 }}
-              transition={{ duration: 0.25 }}
-            >
-              <div className="n2t-summary-section">
-                <h3 className="n2t-section-title">Meeting Summary</h3>
-                <p className="n2t-summary-text">{result.summary}</p>
-              </div>
-
-              <div className="n2t-summary-grid">
-                <div className="n2t-summary-block">
-                  <div className="n2t-summary-block__header">
-                    <Check size={14} color="#16a34a" />
-                    <span>Key Decisions</span>
-                  </div>
-                  <ul className="n2t-summary-list">
-                    {result.decisions.map((d, i) => <li key={i}>{d}</li>)}
-                  </ul>
-                </div>
-
-                <div className="n2t-summary-block">
-                  <div className="n2t-summary-block__header">
-                    <AlertTriangle size={14} color="#d97706" />
-                    <span>Risks</span>
-                  </div>
-                  <ul className="n2t-summary-list n2t-summary-list--risk">
-                    {result.risks.map((r, i) => <li key={i}>{r}</li>)}
-                  </ul>
-                </div>
-
-                <div className="n2t-summary-block">
-                  <div className="n2t-summary-block__header">
-                    <Shield size={14} color="#dc2626" />
-                    <span>Blockers</span>
-                  </div>
-                  <ul className="n2t-summary-list n2t-summary-list--blocker">
-                    {result.blockers.map((b, i) => <li key={i}>{b}</li>)}
-                  </ul>
-                </div>
-              </div>
-
-              <div className="n2t-summary-actions">
-                <button className="n2t-btn n2t-btn--primary" onClick={() => setTab('tasks')}>
-                  Review Draft Tasks
-                  <ArrowLeft size={14} style={{ transform: 'rotate(180deg)' }} />
-                </button>
-              </div>
-            </motion.div>
-          )}
-
-          {tab === 'tasks' && result && (
-            <motion.div
-              key="tasks"
-              className="n2t-tasks-panel"
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -12 }}
-              transition={{ duration: 0.25 }}
-            >
-              <div className="n2t-tasks-toolbar">
-                <span className="n2t-tasks-count">{tasks.length} tasks extracted</span>
-                <div style={{ display: 'flex', gap: 8 }}>
-                  <button className="n2t-btn n2t-btn--ghost" onClick={handleApproveAll}>
-                    Approve All
-                  </button>
-                  <button className="n2t-btn n2t-btn--primary" onClick={() => setTab('jira')}>
-                    Preview in Jira
-                    <ArrowLeft size={14} style={{ transform: 'rotate(180deg)' }} />
-                  </button>
-                </div>
-              </div>
-              <div className="n2t-tasks-list">
-                {tasks.map((task, i) => (
-                  <TaskCard
-                    key={task.id}
-                    task={task}
-                    index={i}
-                    isSelected={selectedTask?.id === task.id}
-                    onSelect={() => setSelectedTask(selectedTask?.id === task.id ? null : task)}
-                    onUpdate={handleUpdateTask}
-                  />
-                ))}
-              </div>
-            </motion.div>
-          )}
-
-          {tab === 'jira' && result && (
-            <motion.div
-              key="jira"
-              className="n2t-jira-panel"
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -12 }}
-              transition={{ duration: 0.25 }}
-            >
-              <JiraPreviewPanel tasks={tasks} synced={synced} onSync={handleSync} onApproveAll={handleApproveAll} />
-            </motion.div>
-          )}
-
-        </AnimatePresence>
+          </AnimatePresence>
+        </div>
       </div>
     </div>
   );
