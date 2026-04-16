@@ -1,9 +1,11 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useLeadStore } from '../store/leadStore';
 import { sendEmail } from '../services/emailService';
 
 export const AdminLeads = () => {
     const { leads, clearLeads } = useLeadStore();
+    const navigate = useNavigate();
     const [testStatus, setTestStatus] = useState<'idle' | 'sending' | 'ok' | 'fail'>('idle');
 
     const sendTestEmail = async () => {
@@ -21,6 +23,17 @@ export const AdminLeads = () => {
     return (
         <div style={{ padding: '60px 40px', background: '#050505', color: '#fff', minHeight: '100vh', fontFamily: 'var(--font-sans)' }}>
             <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
+                <div style={{ display: 'flex', gap: '8px', marginBottom: '32px' }}>
+                    <span style={{ padding: '7px 18px', borderRadius: '8px', fontSize: '13px', fontWeight: '600', background: '#1e293b', color: '#e2e8f0', border: '1px solid #334155', cursor: 'default' }}>
+                        Sales &amp; Leads
+                    </span>
+                    <button
+                        onClick={() => navigate('/admin/note2task')}
+                        style={{ padding: '7px 18px', borderRadius: '8px', fontSize: '13px', fontWeight: '600', background: 'transparent', color: '#64748b', border: '1px solid #1e293b', cursor: 'pointer' }}
+                    >
+                        Note2Task Credentials
+                    </button>
+                </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
                     <h1 style={{ fontSize: '32px', fontWeight: 'bold' }}>Sales &amp; Leads Dashboard</h1>
                     <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>

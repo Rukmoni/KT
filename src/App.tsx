@@ -6,6 +6,7 @@ import { DemoPage } from './pages/DemoPage';
 import { DemoListPage } from './pages/DemoListPage';
 import { Note2TaskGuard } from './pages/Note2Task/Note2TaskGuard';
 import { AdminLeads } from './pages/AdminLeads';
+import { AdminNote2Task } from './pages/AdminNote2Task';
 import { ChatbotDemoPage } from './pages/ChatbotDemoPage';
 import { ChatbotWidget } from './components/ChatbotWidget';
 import { Navbar } from './components/Navbar';
@@ -21,6 +22,7 @@ const AnimatedRoutes = () => {
         <Route path="/demo/:screenName" element={<DemoPage />} />
         <Route path="/chatbot-demo" element={<ChatbotDemoPage />} />
         <Route path="/admin" element={<AdminLeads />} />
+        <Route path="/admin/note2task" element={<AdminNote2Task />} />
       </Routes>
     </AnimatePresence>
   );
