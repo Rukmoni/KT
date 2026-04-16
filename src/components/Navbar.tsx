@@ -7,6 +7,7 @@ const NAV_LINKS = [
   { label: 'Process', href: '/#how-we-work' },
   { label: 'Why Kuvanta', href: '/#why-choose-us' },
   { label: 'Portfolio', href: '/#portfolio' },
+  { label: 'Demo', href: '/demos', isDemo: true },
   { label: 'AI Demo', href: '/chatbot-demo', isAI: true },
 ];
 
@@ -49,6 +50,7 @@ export const Navbar = () => {
   const isActive = (href: string) => {
     const [path] = href.split('#');
     if (href === '/chatbot-demo') return location.pathname === '/chatbot-demo';
+    if (href === '/demos') return location.pathname === '/demos' || location.pathname.startsWith('/demo/');
     return location.pathname === '/' && path === '/';
   };
 
@@ -77,7 +79,7 @@ export const Navbar = () => {
               <a
                 key={link.label}
                 href={link.href}
-                className={`kv-nav__link${link.isAI ? ' kv-nav__link--ai' : ''}${isActive(link.href) ? ' kv-nav__link--active' : ''}`}
+                className={`kv-nav__link${link.isAI ? ' kv-nav__link--ai' : ''}${link.isDemo ? ' kv-nav__link--demo' : ''}${isActive(link.href) ? ' kv-nav__link--active' : ''}`}
                 onClick={e => handleNavClick(e, link.href)}
               >
                 {link.isAI && <span className="kv-nav__ai-dot" />}
@@ -108,7 +110,7 @@ export const Navbar = () => {
           <a
             key={link.label}
             href={link.href}
-            className={`kv-nav__mobile-link${link.isAI ? ' kv-nav__mobile-link--ai' : ''}${isActive(link.href) ? ' kv-nav__mobile-link--active' : ''}`}
+            className={`kv-nav__mobile-link${link.isAI ? ' kv-nav__mobile-link--ai' : ''}${link.isDemo ? ' kv-nav__mobile-link--demo' : ''}${isActive(link.href) ? ' kv-nav__mobile-link--active' : ''}`}
             onClick={e => handleNavClick(e, link.href)}
           >
             {link.isAI && <span className="kv-nav__ai-dot" />}

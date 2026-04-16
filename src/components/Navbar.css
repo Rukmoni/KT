@@ -112,6 +112,25 @@
   opacity: 1;
 }
 
+.kv-nav__link--demo {
+  color: #ffffff;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 999px;
+  font-weight: 500;
+}
+
+.kv-nav__link--demo:hover {
+  background: rgba(255,255,255,0.10);
+  border-color: rgba(255,255,255,0.18);
+  opacity: 1;
+}
+
+.kv-nav__mobile-link--demo {
+  color: #ffffff;
+  font-weight: 500;
+}
+
 /* ─── AI dot ──────────────────────────────────────────────────────────────────── */
 .kv-nav__ai-dot {
   width: 7px;
