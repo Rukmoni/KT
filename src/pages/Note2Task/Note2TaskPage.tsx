@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { LayoutDashboard, MessageSquare, SquareCheck as CheckSquare, Hash, Share2, Search, Zap, RefreshCw, ChevronDown, Copy, Check, TriangleAlert as AlertTriangle, FileText, ArrowRight, ChevronRight, TrendingUp, X, FlaskConical } from 'lucide-react';
+import { LayoutDashboard, MessageSquare, SquareCheck as CheckSquare, Hash, Share2, Search, Zap, RefreshCw, ChevronDown, Copy, Check, TriangleAlert as AlertTriangle, FileText, ArrowRight, ChevronRight, TrendingUp, X } from 'lucide-react';
 import { SAMPLE_TRANSCRIPTS, mockExtract } from './sampleData';
 import type { ExtractionResult, ExtractedTask } from './sampleData';
 import { TaskCard } from './TaskCard';
@@ -114,7 +114,6 @@ export const Note2TaskPage = () => {
     { id: 'jira', icon: CheckSquare, label: 'Jira' },
     { id: 'slack', icon: Hash, label: 'Slack' },
     { id: 'connections', icon: Share2, label: 'Connections' },
-    { id: 'workflow-test', icon: FlaskConical, label: 'Workflow Test' },
   ];
 
   const SYNC_STEPS: { id: SyncStep; label: string }[] = [
@@ -130,7 +129,9 @@ export const Note2TaskPage = () => {
       {/* ── Left Sidebar ── */}
       <aside className="n2t-sidebar">
         <div className="n2t-sidebar__user">
-          <div className="n2t-sidebar__avatar">A</div>
+          <div className="n2t-sidebar__avatar">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+          </div>
           <div>
             <p className="n2t-sidebar__name">Lead Architect</p>
             <p className="n2t-sidebar__role">AI OPERATIONS</p>
@@ -159,7 +160,7 @@ export const Note2TaskPage = () => {
         {/* Top Header */}
         <header className="n2t-topbar">
           <div className="n2t-topbar__logo">
-            <img src="/kuavanta-logo.png" alt="KUVANTA" className="n2t-topbar__logo-img" />
+            <span className="n2t-topbar__logo-text">KUVANTA</span>
           </div>
           <div className="n2t-topbar__search">
             <Search size={14} color="#64748b" />
@@ -183,6 +184,7 @@ export const Note2TaskPage = () => {
 
                 {/* Hero */}
                 <section className="n2t-hero">
+                  <div className="n2t-hero__bg" />
                   <div className="n2t-hero__content">
                     <div className="n2t-hero__badge">WORKFLOW STATUS: ACTIVE</div>
                     <h1 className="n2t-hero__title">
@@ -203,7 +205,6 @@ export const Note2TaskPage = () => {
                       </button>
                     </div>
                   </div>
-                  <div className="n2t-hero__visual" />
                 </section>
 
                 {/* Workflow Sequence */}
