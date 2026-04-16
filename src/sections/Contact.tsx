@@ -1,4 +1,4 @@
-import { MessageCircle, Mail } from 'lucide-react';
+import { Mail } from 'lucide-react';
 import { useLeadStore } from '../store/leadStore';
 import { sendEmail } from '../services/emailService';
 import './Contact.css';
