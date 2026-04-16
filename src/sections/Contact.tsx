@@ -27,13 +27,7 @@ export const Contact = () => {
               </div>
             </div>
 
-            <div className="contact-detail">
-              <span className="contact-label">WHATSAPP</span>
-              <div className="contact-info-item">
-                <MessageCircle size={18} style={{ color: '#a482ff' }} />
-                +1 (555) 000-0000
-              </div>
-            </div>
+        
           </div>
         </div>
 
