@@ -125,12 +125,11 @@
   flex-shrink: 0;
 }
 
-.n2t-topbar__logo-text {
-  font-size: 20px;
-  font-weight: 800;
-  letter-spacing: 0.05em;
-  color: #ffffff;
-  font-family: inherit;
+.n2t-topbar__logo-img {
+  height: 32px;
+  width: auto;
+  object-fit: contain;
+  display: block;
 }
 
 .n2t-topbar__search {
@@ -204,6 +203,28 @@
   flex-shrink: 0;
   cursor: pointer;
   overflow: hidden;
+}
+
+.n2t-topbar__signout {
+  width: 30px;
+  height: 30px;
+  border-radius: 6px;
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #64748b;
+  cursor: pointer;
+  margin-left: 6px;
+  flex-shrink: 0;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.n2t-topbar__signout:hover {
+  background: rgba(239,68,68,0.12);
+  border-color: rgba(239,68,68,0.3);
+  color: #f87171;
 }
 
 /* ─── Content Scroll Area ────────────────────────────────────── */

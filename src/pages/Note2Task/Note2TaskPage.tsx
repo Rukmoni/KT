@@ -1,6 +1,7 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useCallback } from 'react';
+import { supabase } from '../../lib/supabase';
 import { motion, AnimatePresence } from 'framer-motion';
-import { LayoutDashboard, MessageSquare, SquareCheck as CheckSquare, Hash, Share2, Search, Zap, RefreshCw, ChevronDown, Copy, Check, TriangleAlert as AlertTriangle, FileText, ArrowRight, ChevronRight, TrendingUp, X } from 'lucide-react';
+import { LayoutDashboard, MessageSquare, SquareCheck as CheckSquare, Hash, Share2, Search, Zap, RefreshCw, ChevronDown, Copy, Check, TriangleAlert as AlertTriangle, FileText, ArrowRight, ChevronRight, TrendingUp, X, FlaskConical } from 'lucide-react';
 import { SAMPLE_TRANSCRIPTS, mockExtract } from './sampleData';
 import type { ExtractionResult, ExtractedTask } from './sampleData';
 import { TaskCard } from './TaskCard';
@@ -105,6 +106,10 @@ export const Note2TaskPage = () => {
     setSynced(false);
   };
 
+  const handleSignOut = useCallback(async () => {
+    await supabase.auth.signOut();
+  }, []);
+
   const approvedCount = tasks.filter(t => t.status === 'Approved').length;
   const readyCount = tasks.filter(t => t.status === 'Ready').length;
 
@@ -114,6 +119,7 @@ export const Note2TaskPage = () => {
     { id: 'jira', icon: CheckSquare, label: 'Jira' },
     { id: 'slack', icon: Hash, label: 'Slack' },
     { id: 'connections', icon: Share2, label: 'Connections' },
+    { id: 'workflow-test', icon: FlaskConical, label: 'Workflow Test' },
   ];
 
   const SYNC_STEPS: { id: SyncStep; label: string }[] = [
@@ -160,7 +166,7 @@ export const Note2TaskPage = () => {
         {/* Top Header */}
         <header className="n2t-topbar">
           <div className="n2t-topbar__logo">
-            <span className="n2t-topbar__logo-text">KUVANTA</span>
+            <img src="/kuavanta-logo.png" alt="KUVANTA" className="n2t-topbar__logo-img" />
           </div>
           <div className="n2t-topbar__search">
             <Search size={14} color="#64748b" />
@@ -170,7 +176,10 @@ export const Note2TaskPage = () => {
             <button className={`n2t-topbar-link${view === 'dashboard' ? ' n2t-topbar-link--active' : ''}`} onClick={() => setView('dashboard')}>Dashboard</button>
             <button className="n2t-topbar-link">Architecture</button>
             <button className="n2t-topbar-link">Logs</button>
-            <div className="n2t-topbar__user-btn">LA</div>
+            <div className="n2t-topbar__user-btn" title="Signed in">LA</div>
+            <button className="n2t-topbar__signout" onClick={handleSignOut} title="Sign out">
+              <X size={14} />
+            </button>
           </div>
         </header>
 
