@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowRight, Zap, FileText, ChartBar as BarChart2, Bot } from 'lucide-react';
+import { ArrowRight, Zap, FileText, ChartBar as BarChart2, Bot, MessageSquare } from 'lucide-react';
 import './DemoListPage.css';
 
 const DEMOS = [
@@ -15,6 +15,18 @@ const DEMOS = [
     path: '/demo/note2task',
     tags: ['AI', 'Jira', 'Project Management'],
     accent: '#2563eb',
+  },
+  {
+    id: 'KT_omnichannel_demo',
+    label: 'KuvantaOmniHub',
+    icon: MessageSquare,
+    tagline: 'Unified omnichannel vendor control center.',
+    description: 'Manage all messaging channels (WhatsApp, Instagram, Facebook, Telegram, Email, Website) in one place. Configure AI knowledge sources, manage integrations, and audit all activity from a single dashboard.',
+    badge: 'Live',
+    badgeColor: '#0d9488',
+    path: '/demo/KT_omnichannel_demo',
+    tags: ['Omnichannel', 'AI', 'Messaging', 'Integrations'],
+    accent: '#0d9488',
   },
   {
     id: 'analytics',
