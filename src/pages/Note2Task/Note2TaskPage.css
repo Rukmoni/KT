@@ -1856,6 +1856,36 @@
 .cv-test-details__row span:first-child { color: #475569; }
 .cv-test-details__row span:last-child { color: #94a3b8; font-family: monospace; }
 
+.cv-test-error-box {
+  margin: 8px 16px 4px;
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  border-radius: 6px;
+  padding: 10px 12px;
+}
+
+.cv-test-error-label {
+  display: block;
+  font-size: 10px;
+  font-weight: 600;
+  color: #ef4444;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 6px;
+}
+
+.cv-test-error-detail {
+  font-family: 'Fira Mono', 'Consolas', monospace;
+  font-size: 11px;
+  color: #fca5a5;
+  white-space: pre-wrap;
+  word-break: break-all;
+  margin: 0;
+  line-height: 1.5;
+  max-height: 120px;
+  overflow-y: auto;
+}
+
 .cv-form-actions {
   padding: 18px 24px;
 }

@@ -37,6 +37,7 @@ export interface TestResult {
   message: string;
   latencyMs: number;
   details?: Record<string, string>;
+  error?: string;
 }
 
 export interface WorkflowStep {

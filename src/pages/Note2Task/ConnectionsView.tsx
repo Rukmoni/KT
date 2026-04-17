@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Check, X, Loader as Loader2, ChevronDown, ChevronUp, TestTube, Save, Eye, EyeOff } from 'lucide-react';
-import { mockTestConnection } from './mockServices';
+import { testConnection } from './integrationService';
 import type { TestResult } from './mockServices';
 
 type TabId = 'zoom' | 'jira' | 'slack';
@@ -14,6 +14,7 @@ interface IntegrationState {
 
 const INITIAL_ZOOM = {
   label: 'KuvantaTech Workspace',
+  accountId: '',
   clientId: '',
   clientSecret: '',
   redirectUri: 'https://kuvanta.tech/api/zoom/callback',
@@ -61,10 +62,16 @@ export const ConnectionsView = () => {
 
   const toggleSecret = (key: string) => setShowSecrets(p => ({ ...p, [key]: !p[key] }));
 
+  const buildConfig = (type: TabId) => {
+    if (type === 'zoom') return { accountId: zoom.accountId, clientId: zoom.clientId, clientSecret: zoom.clientSecret, webhookSecret: zoom.webhookSecret };
+    if (type === 'jira') return { siteUrl: jira.siteUrl, email: jira.email, apiToken: jira.apiToken, projectKey: jira.projectKey };
+    return { botToken: slack.botToken, webhookUrl: slack.webhookUrl, defaultChannel: slack.defaultChannel, useWebhook: slack.useWebhook };
+  };
+
   const runTest = async (type: TabId, testType: string) => {
     const key = `${type}_${testType}`;
     setTesting(p => ({ ...p, [key]: true }));
-    const result = await mockTestConnection(type, testType);
+    const result = await testConnection(type, testType, buildConfig(type));
     setTestResults(p => ({ ...p, [key]: result }));
     setTesting(p => ({ ...p, [key]: false }));
     setIntegStatus(p => ({
@@ -147,6 +154,9 @@ export const ConnectionsView = () => {
             <Section title="Account Details">
               <Field label="Account Label">
                 <input className="cv-input" value={zoom.label} onChange={e => setZoom(p => ({ ...p, label: e.target.value }))} />
+              </Field>
+              <Field label="Account ID">
+                <input className="cv-input cv-input--mono" value={zoom.accountId} onChange={e => setZoom(p => ({ ...p, accountId: e.target.value }))} placeholder="Enter Zoom Account ID (from App Credentials)" />
               </Field>
               <Field label="Client ID">
                 <input className="cv-input" value={zoom.clientId} onChange={e => setZoom(p => ({ ...p, clientId: e.target.value }))} placeholder="Enter Zoom App Client ID" />
@@ -393,13 +403,22 @@ const TestBtn = ({ label, type, testType, testing, results, onTest }: {
           </button>
         </div>
       </div>
-      {result && !open && (
+
+      {result && (
         <p className={`cv-test-card__result${result.passed ? ' pass' : ' fail'}`}>
           {result.passed ? <Check size={11} /> : <X size={11} />}
           {result.message}
           <span className="cv-test-latency">{result.latencyMs}ms</span>
         </p>
       )}
+
+      {result && !result.passed && result.error && (
+        <div className="cv-test-error-box">
+          <span className="cv-test-error-label">Error detail</span>
+          <pre className="cv-test-error-detail">{result.error}</pre>
+        </div>
+      )}
+
       {result && open && result.details && (
         <div className="cv-test-details">
           {Object.entries(result.details).map(([k, v]) => (
