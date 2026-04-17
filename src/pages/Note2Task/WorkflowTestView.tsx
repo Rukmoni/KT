@@ -3,8 +3,6 @@ import { Check, X, Loader as Loader2, Play, RotateCcw, ChevronDown, ChevronUp, C
 import { runSampleWorkflow } from './mockServices';
 import type { WorkflowStep } from './mockServices';
 import { useIntegrations } from './IntegrationContext';
-import { useDataMode } from './DataModeContext';
-import { DataModeToggle } from './DataModeToggle';
 
 const STEP_DEFS = [
   { id: 'zoom_check', label: 'Validate Zoom config', desc: 'Check credentials and webhook endpoint.' },
@@ -26,7 +24,6 @@ const INTEGRATION_STEPS: Array<{ id: string; integ: 'zoom' | 'jira' | 'slack'; l
 
 export const WorkflowTestView = () => {
   const { statuses, checkSingle } = useIntegrations();
-  const { mode } = useDataMode();
   const [steps, setSteps] = useState<WorkflowStep[]>([]);
   const [running, setRunning] = useState(false);
   const [done, setDone] = useState(false);
@@ -91,13 +88,9 @@ export const WorkflowTestView = () => {
       <div className="wt-header">
         <div>
           <h2 className="wt-title">End-to-End Workflow Test</h2>
-          <p className="wt-sub">
-            Validates all integrations and runs a complete meeting-to-Jira workflow using{' '}
-            {mode === 'live' ? 'live data from your Zoom account' : 'a sample transcript'}.
-          </p>
+          <p className="wt-sub">Validates all integrations and runs a complete meeting-to-Jira workflow using a sample transcript.</p>
         </div>
         <div className="wt-header__actions">
-          <DataModeToggle />
           {steps.length > 0 && (
             <button className="wt-btn wt-btn--ghost" onClick={handleReset} disabled={running || validating}>
               <RotateCcw size={14} /> Reset
@@ -114,14 +107,6 @@ export const WorkflowTestView = () => {
           </button>
         </div>
       </div>
-
-      {mode === 'live' && (
-        <div className="dmt-live-banner">
-          <span className="dmt-live-banner__dot" />
-          <span className="dmt-live-banner__text">Live Mode</span>
-          <span className="dmt-live-banner__note">— workflow will use real Zoom transcripts and create actual Jira tickets</span>
-        </div>
-      )}
 
       <div className="wt-integration-status">
         {INTEGRATION_STEPS.map(({ integ, label }) => {
@@ -218,24 +203,13 @@ export const WorkflowTestView = () => {
       </div>
 
       <div className="wt-info">
-        <p className="wt-info__title">What this test does ({mode === 'live' ? 'Live Mode' : 'Sample Mode'})</p>
+        <p className="wt-info__title">What this test does</p>
         <ul className="wt-info__list">
           <li>Validates all three integrations (Zoom, Jira, Slack) before proceeding</li>
-          {mode === 'live' ? (
-            <>
-              <li>Fetches a real recent transcript from your Zoom account</li>
-              <li>Runs AI extraction on the live transcript</li>
-              <li>Creates a test Jira issue (KVT-TEST) and immediately deletes it</li>
-              <li>Posts a test message to the configured Slack channel</li>
-            </>
-          ) : (
-            <>
-              <li>Uses a pre-loaded sample transcript (no real Zoom call needed)</li>
-              <li>Runs AI extraction in mock mode — no OpenAI credits consumed</li>
-              <li>Creates a test Jira issue (KVT-TEST) and immediately deletes it</li>
-              <li>Posts a test message to the configured Slack channel</li>
-            </>
-          )}
+          <li>Uses a pre-loaded sample transcript (no real Zoom call needed)</li>
+          <li>Runs AI extraction in mock mode — no OpenAI credits consumed</li>
+          <li>Creates a test Jira issue (KVT-TEST) and immediately deletes it</li>
+          <li>Posts a test message to the configured Slack channel</li>
           <li>All actions are logged to the audit trail</li>
         </ul>
       </div>

@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback } from 'react';
 import { supabase } from '../../lib/supabase';
 import { motion, AnimatePresence } from 'framer-motion';
-import { LayoutDashboard, MessageSquare, SquareCheck as CheckSquare, Hash, Share2, Search, Zap, RefreshCw, ChevronDown, Copy, Check, TriangleAlert as AlertTriangle, FileText, ArrowRight, ChevronRight, TrendingUp, X, FlaskConical, CircleAlert as AlertCircle, Loader as Loader2 } from 'lucide-react';
+import { LayoutDashboard, MessageSquare, SquareCheck as CheckSquare, Hash, Share2, Search, Zap, RefreshCw, ChevronDown, Copy, Check, TriangleAlert as AlertTriangle, FileText, ArrowRight, ChevronRight, TrendingUp, X, FlaskConical, CircleAlert as AlertCircle, Loader as Loader2, Wifi } from 'lucide-react';
 import { SAMPLE_TRANSCRIPTS, mockExtract } from './sampleData';
 import type { ExtractionResult, ExtractedTask } from './sampleData';
 import { TaskCard } from './TaskCard';
@@ -12,8 +12,8 @@ import { WorkflowTestView } from './WorkflowTestView';
 import { MOCK_AUDIT } from './mockServices';
 import { useIntegrationStatus } from './useIntegrationStatus';
 import { IntegrationContext } from './IntegrationContext';
-import { DataModeProvider, useDataMode } from './DataModeContext';
-import { DataModeToggle } from './DataModeToggle';
+import { fetchZoomMeetings, fetchZoomTranscript } from './integrationService';
+import type { LiveMeeting } from './integrationService';
 import type { LiveStatus } from './useIntegrationStatus';
 import './Note2TaskPage.css';
 
@@ -64,7 +64,6 @@ function IntegrationStatusDot({ status }: { status: LiveStatus }) {
 
 const Note2TaskInner = () => {
   const integrationStatus = useIntegrationStatus();
-  const { mode } = useDataMode();
   const [view, setView] = useState<View>('dashboard');
   const [syncStep, setSyncStep] = useState<SyncStep>('input');
   const [transcript, setTranscript] = useState(SAMPLE_TRANSCRIPTS[0].text);
@@ -77,6 +76,13 @@ const Note2TaskInner = () => {
   const [copied, setCopied] = useState(false);
   const [selectedTask, setSelectedTask] = useState<ExtractedTask | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  const [transcriptMode, setTranscriptMode] = useState<'sample' | 'live'>('sample');
+  const [liveMenuOpen, setLiveMenuOpen] = useState(false);
+  const [liveMeetings, setLiveMeetings] = useState<LiveMeeting[]>([]);
+  const [liveLoading, setLiveLoading] = useState(false);
+  const [liveError, setLiveError] = useState<string | null>(null);
+  const [transcriptFetching, setTranscriptFetching] = useState(false);
 
   const handleGenerate = async () => {
     if (!transcript.trim()) return;
@@ -109,6 +115,54 @@ const Note2TaskInner = () => {
     setTasks([]);
     setSyncStep('input');
     setSynced(false);
+  };
+
+  const handleSwitchToLive = async () => {
+    setTranscriptMode('live');
+    setSampleMenuOpen(false);
+    setLiveMenuOpen(true);
+    setLiveError(null);
+    setLiveMeetings([]);
+    const zoomStatus = integrationStatus.statuses.zoom;
+    if (zoomStatus.status === 'not_configured') {
+      setLiveError('Zoom is not configured. Please set it up in Connections first.');
+      setTranscriptMode('sample');
+      setLiveMenuOpen(false);
+      return;
+    }
+    setLiveLoading(true);
+    const cfg = integrationStatus.config.zoom;
+    const result = await fetchZoomMeetings({ clientId: cfg.clientId, clientSecret: cfg.clientSecret, accountId: cfg.accountId });
+    setLiveLoading(false);
+    if (!result.ok || !result.data) {
+      setLiveError(result.error || 'Failed to fetch Zoom recordings.');
+      setTranscriptMode('sample');
+      setLiveMenuOpen(false);
+      return;
+    }
+    setLiveMeetings(result.data);
+  };
+
+  const handleLoadLiveTranscript = async (meeting: LiveMeeting) => {
+    setLiveMenuOpen(false);
+    setLiveError(null);
+    setTranscriptFetching(true);
+    setTranscript('');
+    setResult(null);
+    setTasks([]);
+    setSyncStep('input');
+    const cfg = integrationStatus.config.zoom;
+    const res = await fetchZoomTranscript(
+      { clientId: cfg.clientId, clientSecret: cfg.clientSecret, accountId: cfg.accountId },
+      meeting.recordingId ?? meeting.id
+    );
+    setTranscriptFetching(false);
+    if (!res.ok || !res.data) {
+      setLiveError(res.error || 'Failed to fetch transcript.');
+      setTranscriptMode('sample');
+      return;
+    }
+    setTranscript(res.data);
   };
 
   const handleApproveAll = () => {
@@ -208,7 +262,6 @@ const Note2TaskInner = () => {
             <input className="n2t-search-input" placeholder="Search architecture..." />
           </div>
           <div className="n2t-topbar__right">
-            <DataModeToggle />
             <button className={`n2t-topbar-link${view === 'dashboard' ? ' n2t-topbar-link--active' : ''}`} onClick={() => setView('dashboard')}>Dashboard</button>
             <button className="n2t-topbar-link">Architecture</button>
             <button className="n2t-topbar-link">Logs</button>
@@ -226,14 +279,6 @@ const Note2TaskInner = () => {
             {/* ── Dashboard View ── */}
             {(view === 'dashboard') && (
               <motion.div key="dashboard" className="n2t-dashboard" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
-
-                {mode === 'live' && (
-                  <div className="dmt-live-banner" style={{ margin: '0 0 4px' }}>
-                    <span className="dmt-live-banner__dot" />
-                    <span className="dmt-live-banner__text">Live Data Active</span>
-                    <span className="dmt-live-banner__note">— pulling from connected Zoom, Jira, and Slack sources</span>
-                  </div>
-                )}
 
                 {/* Hero */}
                 <section className="n2t-hero">
@@ -342,19 +387,9 @@ const Note2TaskInner = () => {
                 {/* Recent Meetings */}
                 <section className="n2t-section">
                   <div className="n2t-section__header">
-                    <h2 className="n2t-section-heading">
-                      Recent Meetings
-                      {mode === 'live' && <span className="dmt-live-dot" style={{ marginLeft: 8, display: 'inline-block', verticalAlign: 'middle' }} />}
-                    </h2>
+                    <h2 className="n2t-section-heading">Recent Meetings</h2>
                     <button className="n2t-view-all" onClick={() => setView('meetings')}>View All History <ArrowRight size={13} /></button>
                   </div>
-                  {mode === 'live' && (
-                    <div className="dmt-live-banner" style={{ marginBottom: 12 }}>
-                      <span className="dmt-live-banner__dot" />
-                      <span className="dmt-live-banner__text">Live</span>
-                      <span className="dmt-live-banner__note">— showing meetings pulled directly from your Zoom account</span>
-                    </div>
-                  )}
                   <div className="n2t-meetings-table">
                     <div className="n2t-meetings-table__head">
                       <span>MEETING NAME</span>
@@ -478,35 +513,61 @@ const Note2TaskInner = () => {
                   {syncStep === 'input' && (
                     <motion.div key="input" className="n2t-panel" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
                       <div className="n2t-panel__toolbar">
-                        <div className="n2t-sample-menu">
-                          <button className="n2t-action-btn n2t-action-btn--ghost" onClick={() => setSampleMenuOpen(o => !o)}>
-                            {mode === 'live' ? 'Load Live Transcript' : 'Load Sample'} <ChevronDown size={12} />
-                          </button>
-                          {sampleMenuOpen && (
-                            <div className="n2t-dropdown">
-                              {mode === 'live' ? (
-                                <>
-                                  <div className="n2t-dropdown__hint">Fetching from Zoom API…</div>
-                                  {SAMPLE_TRANSCRIPTS.map((s, i) => (
-                                    <button key={i} className={`n2t-dropdown__item${selectedSample === i ? ' active' : ''}`} onClick={() => handleLoadSample(i)}>
-                                      <span className="dmt-live-dot" style={{ display: 'inline-block', marginRight: 6 }} />{s.label}
-                                    </button>
-                                  ))}
-                                </>
-                              ) : (
-                                SAMPLE_TRANSCRIPTS.map((s, i) => (
+                        <div className="dmt-root">
+                          <div className="n2t-sample-menu" style={{ position: 'static' }}>
+                            <button
+                              className={`dmt-btn dmt-btn--sample${transcriptMode === 'sample' ? ' dmt-btn--active' : ''}`}
+                              onClick={() => { setTranscriptMode('sample'); setLiveMenuOpen(false); setSampleMenuOpen(o => !o); }}
+                            >
+                              <FlaskConical size={12} />
+                              Sample
+                              <ChevronDown size={10} />
+                            </button>
+                            {transcriptMode === 'sample' && sampleMenuOpen && (
+                              <div className="n2t-dropdown">
+                                {SAMPLE_TRANSCRIPTS.map((s, i) => (
                                   <button key={i} className={`n2t-dropdown__item${selectedSample === i ? ' active' : ''}`} onClick={() => handleLoadSample(i)}>
                                     {s.label}
                                   </button>
-                                ))
-                              )}
-                            </div>
-                          )}
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                          <div className="n2t-sample-menu" style={{ position: 'static' }}>
+                            <button
+                              className={`dmt-btn dmt-btn--live${transcriptMode === 'live' ? ' dmt-btn--active' : ''}`}
+                              onClick={handleSwitchToLive}
+                              disabled={liveLoading || transcriptFetching}
+                            >
+                              {liveLoading ? <Loader2 size={12} className="spin" /> : <Wifi size={12} />}
+                              Live
+                              {transcriptMode === 'live' && !liveLoading && <span className="dmt-live-dot" />}
+                              <ChevronDown size={10} />
+                            </button>
+                            {liveMenuOpen && !liveLoading && (
+                              <div className="n2t-dropdown">
+                                {liveError && <div className="n2t-dropdown__hint" style={{ color: '#ef4444' }}>{liveError}</div>}
+                                {!liveError && liveMeetings.length === 0 && (
+                                  <div className="n2t-dropdown__hint">No recordings found in the last 90 days.</div>
+                                )}
+                                {liveMeetings.map(m => (
+                                  <button key={m.id} className="n2t-dropdown__item" onClick={() => handleLoadLiveTranscript(m)}>
+                                    <span className="dmt-live-dot" style={{ display: 'inline-block', marginRight: 6 }} />
+                                    {m.title}
+                                  </button>
+                                ))}
+                              </div>
+                            )}
+                          </div>
                         </div>
-                        {mode === 'live' && (
-                          <span className="dmt-live-banner" style={{ padding: '4px 10px', fontSize: 11 }}>
-                            <span className="dmt-live-banner__dot" />
-                            <span>Live Transcript</span>
+                        {liveError && !liveMenuOpen && (
+                          <span style={{ fontSize: 11, color: '#ef4444', display: 'flex', alignItems: 'center', gap: 4 }}>
+                            <AlertCircle size={11} /> {liveError}
+                          </span>
+                        )}
+                        {transcriptFetching && (
+                          <span style={{ fontSize: 11, color: '#475569', display: 'flex', alignItems: 'center', gap: 5 }}>
+                            <Loader2 size={11} className="spin" /> Fetching transcript…
                           </span>
                         )}
                         <span className="n2t-char-count">{transcript.length} chars</span>
@@ -527,11 +588,11 @@ const Note2TaskInner = () => {
                           placeholder="Paste your meeting notes, Zoom transcript, or action summary here..."
                           spellCheck={false}
                         />
-                        {loading && (
+                        {(loading || transcriptFetching) && (
                           <div className="n2t-loading-veil">
                             <div className="n2t-loading-ring" />
-                            <p className="n2t-loading-label">AI is analyzing your transcript...</p>
-                            <p className="n2t-loading-sub">Extracting decisions, actions, owners, and priorities</p>
+                            <p className="n2t-loading-label">{transcriptFetching ? 'Fetching live transcript from Zoom…' : 'AI is analyzing your transcript...'}</p>
+                            <p className="n2t-loading-sub">{transcriptFetching ? 'Connecting to your Zoom account' : 'Extracting decisions, actions, owners, and priorities'}</p>
                           </div>
                         )}
                       </div>
@@ -657,8 +718,4 @@ const Note2TaskInner = () => {
   );
 };
 
-export const Note2TaskPage = () => (
-  <DataModeProvider>
-    <Note2TaskInner />
-  </DataModeProvider>
-);
+export const Note2TaskPage = Note2TaskInner;

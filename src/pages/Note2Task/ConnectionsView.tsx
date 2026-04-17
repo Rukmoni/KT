@@ -2,8 +2,6 @@ import { useState } from 'react';
 import { Check, X, Loader as Loader2, ChevronDown, ChevronUp, TestTube, Save, Eye, EyeOff, RefreshCw, Pencil, CircleAlert as AlertCircle, CircleCheck as CheckCircle, Wifi, WifiOff } from 'lucide-react';
 import { testConnection } from './integrationService';
 import { useIntegrations } from './IntegrationContext';
-import { useDataMode } from './DataModeContext';
-import { DataModeToggle } from './DataModeToggle';
 import type { StoredConfig, IntegrationId, LiveStatus } from './useIntegrationStatus';
 import type { TestResult } from './mockServices';
 
@@ -11,7 +9,6 @@ type TabId = 'zoom' | 'jira' | 'slack';
 
 export const ConnectionsView = () => {
   const { statuses, config, updateConfig, checkSingle } = useIntegrations();
-  const { mode } = useDataMode();
 
   const [activeTab, setActiveTab] = useState<TabId>('zoom');
   const [editMode, setEditMode] = useState<Record<TabId, boolean>>({ zoom: false, jira: false, slack: false });
@@ -99,20 +96,10 @@ export const ConnectionsView = () => {
 
   return (
     <div className="cv-root">
-      <div className="cv-header" style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16 }}>
-        <div>
-          <h2 className="cv-title">Integration Connections</h2>
-          <p className="cv-sub">Configure and monitor your Zoom, Jira, and Slack integrations. Status is checked on load and every minute.</p>
-        </div>
-        <DataModeToggle />
+      <div className="cv-header">
+        <h2 className="cv-title">Integration Connections</h2>
+        <p className="cv-sub">Configure and monitor your Zoom, Jira, and Slack integrations. Status is checked on load and every minute.</p>
       </div>
-      {mode === 'live' && (
-        <div className="dmt-live-banner">
-          <span className="dmt-live-banner__dot" />
-          <span className="dmt-live-banner__text">Live Mode</span>
-          <span className="dmt-live-banner__note">— tests are running against your real Zoom, Jira, and Slack accounts</span>
-        </div>
-      )}
 
       <div className="cv-status-bar">
         {tabs.map(t => {
