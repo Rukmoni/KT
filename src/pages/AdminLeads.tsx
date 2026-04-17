@@ -33,6 +33,12 @@ export const AdminLeads = () => {
                     >
                         Note2Task Credentials
                     </button>
+                    <button
+                        onClick={() => navigate('/admin/seo')}
+                        style={{ padding: '7px 18px', borderRadius: '8px', fontSize: '13px', fontWeight: '600', background: 'transparent', color: '#64748b', border: '1px solid #1e293b', cursor: 'pointer' }}
+                    >
+                        SEO Dashboard
+                    </button>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
                     <h1 style={{ fontSize: '32px', fontWeight: 'bold' }}>Sales &amp; Leads Dashboard</h1>
