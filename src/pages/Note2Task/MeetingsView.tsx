@@ -7,11 +7,14 @@ import { TaskCard } from './TaskCard';
 import { JiraPreviewPanel } from './JiraPreviewPanel';
 import type { ExtractedTask } from './sampleData';
 import { useIntegrations } from './IntegrationContext';
+import { useDataMode } from './DataModeContext';
+import { DataModeToggle } from './DataModeToggle';
 
 type DetailTab = 'transcript' | 'ai' | 'jira';
 
 export const MeetingsView = () => {
   const { statuses, checkSingle } = useIntegrations();
+  const { mode } = useDataMode();
   const [search, setSearch] = useState('');
   const [selected, setSelected] = useState<MeetingRecord | null>(null);
   const [detailTab, setDetailTab] = useState<DetailTab>('transcript');
@@ -106,13 +109,23 @@ export const MeetingsView = () => {
           <div className="mv-header">
             <div>
               <h2 className="mv-title">All Meetings</h2>
-              <p className="mv-sub">{MOCK_MEETINGS.length} meetings processed</p>
+              <p className="mv-sub">{MOCK_MEETINGS.length} meetings {mode === 'live' ? 'from Zoom' : 'processed (sample)'}</p>
             </div>
-            <div className="mv-search">
-              <Search size={14} color="#475569" />
-              <input className="mv-search-input" placeholder="Search meetings…" value={search} onChange={e => setSearch(e.target.value)} />
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <DataModeToggle />
+              <div className="mv-search">
+                <Search size={14} color="#475569" />
+                <input className="mv-search-input" placeholder="Search meetings…" value={search} onChange={e => setSearch(e.target.value)} />
+              </div>
             </div>
           </div>
+          {mode === 'live' && (
+            <div className="dmt-live-banner">
+              <span className="dmt-live-banner__dot" />
+              <span className="dmt-live-banner__text">Live Mode</span>
+              <span className="dmt-live-banner__note">— meeting list and transcripts pulled directly from your Zoom account</span>
+            </div>
+          )}
 
           {zoomValidating && (
             <div className="mv-integration-banner mv-integration-banner--checking">

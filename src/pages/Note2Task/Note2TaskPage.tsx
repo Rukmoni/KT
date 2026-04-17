@@ -12,6 +12,8 @@ import { WorkflowTestView } from './WorkflowTestView';
 import { MOCK_AUDIT } from './mockServices';
 import { useIntegrationStatus } from './useIntegrationStatus';
 import { IntegrationContext } from './IntegrationContext';
+import { DataModeProvider, useDataMode } from './DataModeContext';
+import { DataModeToggle } from './DataModeToggle';
 import type { LiveStatus } from './useIntegrationStatus';
 import './Note2TaskPage.css';
 
@@ -60,8 +62,9 @@ function IntegrationStatusDot({ status }: { status: LiveStatus }) {
   );
 }
 
-export const Note2TaskPage = () => {
+const Note2TaskInner = () => {
   const integrationStatus = useIntegrationStatus();
+  const { mode } = useDataMode();
   const [view, setView] = useState<View>('dashboard');
   const [syncStep, setSyncStep] = useState<SyncStep>('input');
   const [transcript, setTranscript] = useState(SAMPLE_TRANSCRIPTS[0].text);
@@ -205,6 +208,7 @@ export const Note2TaskPage = () => {
             <input className="n2t-search-input" placeholder="Search architecture..." />
           </div>
           <div className="n2t-topbar__right">
+            <DataModeToggle />
             <button className={`n2t-topbar-link${view === 'dashboard' ? ' n2t-topbar-link--active' : ''}`} onClick={() => setView('dashboard')}>Dashboard</button>
             <button className="n2t-topbar-link">Architecture</button>
             <button className="n2t-topbar-link">Logs</button>
@@ -222,6 +226,14 @@ export const Note2TaskPage = () => {
             {/* ── Dashboard View ── */}
             {(view === 'dashboard') && (
               <motion.div key="dashboard" className="n2t-dashboard" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
+
+                {mode === 'live' && (
+                  <div className="dmt-live-banner" style={{ margin: '0 0 4px' }}>
+                    <span className="dmt-live-banner__dot" />
+                    <span className="dmt-live-banner__text">Live Data Active</span>
+                    <span className="dmt-live-banner__note">— pulling from connected Zoom, Jira, and Slack sources</span>
+                  </div>
+                )}
 
                 {/* Hero */}
                 <section className="n2t-hero">
@@ -330,9 +342,19 @@ export const Note2TaskPage = () => {
                 {/* Recent Meetings */}
                 <section className="n2t-section">
                   <div className="n2t-section__header">
-                    <h2 className="n2t-section-heading">Recent Meetings</h2>
+                    <h2 className="n2t-section-heading">
+                      Recent Meetings
+                      {mode === 'live' && <span className="dmt-live-dot" style={{ marginLeft: 8, display: 'inline-block', verticalAlign: 'middle' }} />}
+                    </h2>
                     <button className="n2t-view-all" onClick={() => setView('meetings')}>View All History <ArrowRight size={13} /></button>
                   </div>
+                  {mode === 'live' && (
+                    <div className="dmt-live-banner" style={{ marginBottom: 12 }}>
+                      <span className="dmt-live-banner__dot" />
+                      <span className="dmt-live-banner__text">Live</span>
+                      <span className="dmt-live-banner__note">— showing meetings pulled directly from your Zoom account</span>
+                    </div>
+                  )}
                   <div className="n2t-meetings-table">
                     <div className="n2t-meetings-table__head">
                       <span>MEETING NAME</span>
@@ -458,18 +480,35 @@ export const Note2TaskPage = () => {
                       <div className="n2t-panel__toolbar">
                         <div className="n2t-sample-menu">
                           <button className="n2t-action-btn n2t-action-btn--ghost" onClick={() => setSampleMenuOpen(o => !o)}>
-                            Load Sample <ChevronDown size={12} />
+                            {mode === 'live' ? 'Load Live Transcript' : 'Load Sample'} <ChevronDown size={12} />
                           </button>
                           {sampleMenuOpen && (
                             <div className="n2t-dropdown">
-                              {SAMPLE_TRANSCRIPTS.map((s, i) => (
-                                <button key={i} className={`n2t-dropdown__item${selectedSample === i ? ' active' : ''}`} onClick={() => handleLoadSample(i)}>
-                                  {s.label}
-                                </button>
-                              ))}
+                              {mode === 'live' ? (
+                                <>
+                                  <div className="n2t-dropdown__hint">Fetching from Zoom API…</div>
+                                  {SAMPLE_TRANSCRIPTS.map((s, i) => (
+                                    <button key={i} className={`n2t-dropdown__item${selectedSample === i ? ' active' : ''}`} onClick={() => handleLoadSample(i)}>
+                                      <span className="dmt-live-dot" style={{ display: 'inline-block', marginRight: 6 }} />{s.label}
+                                    </button>
+                                  ))}
+                                </>
+                              ) : (
+                                SAMPLE_TRANSCRIPTS.map((s, i) => (
+                                  <button key={i} className={`n2t-dropdown__item${selectedSample === i ? ' active' : ''}`} onClick={() => handleLoadSample(i)}>
+                                    {s.label}
+                                  </button>
+                                ))
+                              )}
                             </div>
                           )}
                         </div>
+                        {mode === 'live' && (
+                          <span className="dmt-live-banner" style={{ padding: '4px 10px', fontSize: 11 }}>
+                            <span className="dmt-live-banner__dot" />
+                            <span>Live Transcript</span>
+                          </span>
+                        )}
                         <span className="n2t-char-count">{transcript.length} chars</span>
                         <button
                           className={`n2t-generate-btn${loading ? ' loading' : ''}`}
@@ -617,3 +656,9 @@ export const Note2TaskPage = () => {
     </IntegrationContext.Provider>
   );
 };
+
+export const Note2TaskPage = () => (
+  <DataModeProvider>
+    <Note2TaskInner />
+  </DataModeProvider>
+);
