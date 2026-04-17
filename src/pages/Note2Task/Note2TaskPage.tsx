@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback } from 'react';
 import { supabase } from '../../lib/supabase';
 import { motion, AnimatePresence } from 'framer-motion';
-import { LayoutDashboard, MessageSquare, SquareCheck as CheckSquare, Hash, Share2, Search, Zap, RefreshCw, ChevronDown, Copy, Check, TriangleAlert as AlertTriangle, FileText, ArrowRight, ChevronRight, TrendingUp, X, FlaskConical } from 'lucide-react';
+import { LayoutDashboard, MessageSquare, SquareCheck as CheckSquare, Hash, Share2, Search, Zap, RefreshCw, ChevronDown, Copy, Check, TriangleAlert as AlertTriangle, FileText, ArrowRight, ChevronRight, TrendingUp, X, FlaskConical, CircleAlert as AlertCircle, Loader as Loader2 } from 'lucide-react';
 import { SAMPLE_TRANSCRIPTS, mockExtract } from './sampleData';
 import type { ExtractionResult, ExtractedTask } from './sampleData';
 import { TaskCard } from './TaskCard';
@@ -10,6 +10,9 @@ import { ConnectionsView } from './ConnectionsView';
 import { MeetingsView } from './MeetingsView';
 import { WorkflowTestView } from './WorkflowTestView';
 import { MOCK_AUDIT } from './mockServices';
+import { useIntegrationStatus } from './useIntegrationStatus';
+import { IntegrationContext } from './IntegrationContext';
+import type { LiveStatus } from './useIntegrationStatus';
 import './Note2TaskPage.css';
 
 type View = 'dashboard' | 'new-sync' | 'meetings' | 'jira' | 'slack' | 'connections' | 'workflow-test';
@@ -30,7 +33,35 @@ const WORKFLOW_STEPS = [
   { icon: '💬', label: 'SLACK', sub: 'Team Notification' },
 ];
 
+const STATUS_COLORS: Record<string, string> = {
+  not_configured: '#475569',
+  checking: '#f59e0b',
+  connected: '#22c55e',
+  error: '#ef4444',
+};
+
+const STATUS_LABELS: Record<string, string> = {
+  not_configured: 'Not Configured',
+  checking: 'Checking…',
+  connected: 'Connected',
+  error: 'Error',
+};
+
+function IntegrationStatusDot({ status }: { status: LiveStatus }) {
+  const color = STATUS_COLORS[status.status];
+  return (
+    <div className="n2t-integration__status">
+      <span
+        className={`n2t-status-dot${status.status === 'checking' ? ' n2t-status-dot--pulse' : ''}`}
+        style={{ background: color }}
+      />
+      <span style={{ color, fontSize: '11px' }}>{STATUS_LABELS[status.status]}</span>
+    </div>
+  );
+}
+
 export const Note2TaskPage = () => {
+  const integrationStatus = useIntegrationStatus();
   const [view, setView] = useState<View>('dashboard');
   const [syncStep, setSyncStep] = useState<SyncStep>('input');
   const [transcript, setTranscript] = useState(SAMPLE_TRANSCRIPTS[0].text);
@@ -131,6 +162,7 @@ export const Note2TaskPage = () => {
   const syncStepIdx = SYNC_STEPS.findIndex(s => s.id === syncStep);
 
   return (
+    <IntegrationContext.Provider value={integrationStatus}>
     <div className="n2t-app">
       {/* ── Left Sidebar ── */}
       <aside className="n2t-sidebar">
@@ -253,25 +285,45 @@ export const Note2TaskPage = () => {
                   </div>
 
                   <div className="n2t-integrations">
-                    {[
-                      { name: 'Zoom', color: '#2D8CFF' },
-                      { name: 'Jira', color: '#0052CC' },
-                      { name: 'Slack', color: '#E01E5A' },
-                    ].map(int => (
-                      <div key={int.name} className="n2t-integration-card">
-                        <div className="n2t-integration__header">
-                          <div className="n2t-integration__icon" style={{ background: int.color }}>
-                            {int.name[0]}
+                    {([
+                      { name: 'Zoom', id: 'zoom' as const, color: '#2D8CFF' },
+                      { name: 'Jira', id: 'jira' as const, color: '#0052CC' },
+                      { name: 'Slack', id: 'slack' as const, color: '#E01E5A' },
+                    ]).map(int => {
+                      const s = integrationStatus.statuses[int.id];
+                      return (
+                        <div key={int.name} className={`n2t-integration-card${s.status === 'error' ? ' n2t-integration-card--error' : ''}`}>
+                          <div className="n2t-integration__header">
+                            <div className="n2t-integration__icon" style={{ background: int.color }}>
+                              {int.name[0]}
+                            </div>
+                            <p className="n2t-integration__name">{int.name}</p>
                           </div>
-                          <p className="n2t-integration__name">{int.name}</p>
+                          <IntegrationStatusDot status={s} />
+                          {s.status === 'error' && (
+                            <p className="n2t-integration__error-msg">
+                              <AlertCircle size={10} /> {s.message}
+                            </p>
+                          )}
+                          <div className="n2t-integration__actions">
+                            <button
+                              className="n2t-integration__test"
+                              onClick={() => integrationStatus.checkSingle(int.id)}
+                              disabled={s.status === 'checking'}
+                            >
+                              {s.status === 'checking' ? <Loader2 size={11} className="spin" /> : null}
+                              {s.status === 'checking' ? 'Checking…' : 'Re-check'}
+                            </button>
+                            <button className="n2t-integration__config" onClick={() => setView('connections')}>Configure</button>
+                          </div>
+                          {s.lastChecked && (
+                            <p className="n2t-integration__checked">
+                              Checked {s.lastChecked.toLocaleTimeString()}
+                            </p>
+                          )}
                         </div>
-                        <div className="n2t-integration__status">
-                          <span className="n2t-status-dot" />
-                          Connected
-                        </div>
-                        <button className="n2t-integration__test">Test</button>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
 
@@ -562,5 +614,6 @@ export const Note2TaskPage = () => {
         </div>
       </div>
     </div>
+    </IntegrationContext.Provider>
   );
 };

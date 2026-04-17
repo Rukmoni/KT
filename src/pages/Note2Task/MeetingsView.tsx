@@ -1,15 +1,17 @@
 import { useState } from 'react';
-import { Search, ChevronRight, SquareCheck as CheckSquare, Clock, Users, Tag } from 'lucide-react';
+import { Search, ChevronRight, SquareCheck as CheckSquare, Clock, Users, Tag, CircleAlert as AlertCircle, Loader as Loader2, Settings } from 'lucide-react';
 import { MOCK_MEETINGS, statusColor, statusLabel } from './mockServices';
 import type { MeetingRecord } from './mockServices';
 import { SAMPLE_TRANSCRIPTS, mockExtract } from './sampleData';
 import { TaskCard } from './TaskCard';
 import { JiraPreviewPanel } from './JiraPreviewPanel';
 import type { ExtractedTask } from './sampleData';
+import { useIntegrations } from './IntegrationContext';
 
 type DetailTab = 'transcript' | 'ai' | 'jira';
 
 export const MeetingsView = () => {
+  const { statuses, checkSingle } = useIntegrations();
   const [search, setSearch] = useState('');
   const [selected, setSelected] = useState<MeetingRecord | null>(null);
   const [detailTab, setDetailTab] = useState<DetailTab>('transcript');
@@ -17,13 +19,32 @@ export const MeetingsView = () => {
   const [synced, setSynced] = useState(false);
   const [loading, setLoading] = useState(false);
   const [selectedTask, setSelectedTask] = useState<ExtractedTask | null>(null);
+  const [zoomValidating, setZoomValidating] = useState(false);
+  const [zoomError, setZoomError] = useState<string | null>(null);
+
+  const zoomStatus = statuses.zoom;
 
   const filtered = MOCK_MEETINGS.filter(m =>
     m.title.toLowerCase().includes(search.toLowerCase()) ||
     m.host.toLowerCase().includes(search.toLowerCase())
   );
 
-  const handleOpen = (m: MeetingRecord) => {
+  const handleOpen = async (m: MeetingRecord) => {
+    if (zoomStatus.status === 'not_configured') {
+      setZoomError('Zoom integration is not configured. Please configure it in Connections before accessing transcripts.');
+      return;
+    }
+    if (zoomStatus.status === 'error') {
+      setZoomValidating(true);
+      setZoomError(null);
+      const fresh = await checkSingle('zoom');
+      setZoomValidating(false);
+      if (fresh.status !== 'connected') {
+        setZoomError(`Zoom integration error: ${fresh.message}${fresh.errorDetail ? `\n\n${fresh.errorDetail}` : ''}`);
+        return;
+      }
+    }
+    setZoomError(null);
     setSelected(m);
     setDetailTab('transcript');
     const idx = m.title.toLowerCase().includes('sprint') ? 0 : 1;
@@ -45,6 +66,13 @@ export const MeetingsView = () => {
   };
 
   const handleSync = async () => {
+    if (statuses.jira.status !== 'connected') {
+      const fresh = await checkSingle('jira');
+      if (fresh.status !== 'connected') {
+        setZoomError(`Cannot sync to Jira: ${fresh.message}${fresh.errorDetail ? `\n${fresh.errorDetail}` : ''}`);
+        return;
+      }
+    }
     setTasks(prev => prev.map(t => ({ ...t, status: 'Approved' as const })));
     await new Promise(r => setTimeout(r, 900));
     setSynced(true);
@@ -85,6 +113,36 @@ export const MeetingsView = () => {
               <input className="mv-search-input" placeholder="Search meetings…" value={search} onChange={e => setSearch(e.target.value)} />
             </div>
           </div>
+
+          {zoomValidating && (
+            <div className="mv-integration-banner mv-integration-banner--checking">
+              <Loader2 size={14} className="spin" />
+              Validating Zoom connection before opening transcript…
+            </div>
+          )}
+
+          {zoomError && (
+            <div className="mv-integration-banner mv-integration-banner--error">
+              <AlertCircle size={14} />
+              <div>
+                <strong>Zoom Integration Issue</strong>
+                <pre className="mv-integration-error-pre">{zoomError}</pre>
+              </div>
+              <button className="mv-integration-fix-btn" onClick={() => checkSingle('zoom').then(() => setZoomError(null))}>
+                <Settings size={12} /> Re-check
+              </button>
+            </div>
+          )}
+
+          {(zoomStatus.status === 'not_configured' || zoomStatus.status === 'error') && !zoomError && (
+            <div className={`mv-integration-banner mv-integration-banner--${zoomStatus.status === 'error' ? 'error' : 'warn'}`}>
+              <AlertCircle size={14} />
+              <span>
+                Zoom is {zoomStatus.status === 'error' ? 'reporting an error' : 'not configured'} — clicking a meeting will validate the connection first.
+                {zoomStatus.status === 'error' && <em> {zoomStatus.message}</em>}
+              </span>
+            </div>
+          )}
 
           <div className="mv-table">
             <div className="mv-table__head">
