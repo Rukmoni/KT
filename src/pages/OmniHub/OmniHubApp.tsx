@@ -44,14 +44,6 @@ export const OmniHubApp = ({ user }: OmniHubAppProps) => {
 
   return (
     <div className="oh-root">
-      <style>{`
-        @keyframes oh-spin {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
-        }
-        .oh-spin { animation: oh-spin 0.7s linear infinite; }
-      `}</style>
-
       <nav className="oh-nav">
         <div className="oh-nav__logo">
           Kuvanta<span>OmniHub</span>

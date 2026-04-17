@@ -3,6 +3,7 @@ import type { Session } from '@supabase/supabase-js';
 import { supabase } from '../../lib/supabase';
 import { OmniHubLogin } from './OmniHubLogin';
 import { OmniHubApp } from './OmniHubApp';
+import './OmniHub.css';
 
 export const OmniHubGuard = () => {
   const [session, setSession] = useState<Session | null>(null);

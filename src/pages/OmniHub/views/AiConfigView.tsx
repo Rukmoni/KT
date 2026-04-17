@@ -200,7 +200,7 @@ export const AiConfigView = () => {
           </div>
           <div className="oh-int-field">
             <label className="oh-int-field-label">Refresh Schedule</label>
-            <select className="oh-select">
+            <select className="oh-select" defaultValue="Weekly">
               <option>Weekly</option>
               <option>Daily</option>
               <option>Monthly</option>
