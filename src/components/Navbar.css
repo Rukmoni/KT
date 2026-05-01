@@ -131,6 +131,29 @@
   font-weight: 500;
 }
 
+/* ─── PM Advisory link ────────────────────────────────────────────────────────── */
+.kv-nav__link--pm {
+  color: #93c5fd;
+  background: rgba(59,130,246,0.08);
+  border: 1px solid rgba(96,165,250,0.22);
+  border-radius: 999px;
+  font-weight: 500;
+  transition: background 0.25s, border-color 0.25s, box-shadow 0.25s;
+}
+
+.kv-nav__link--pm:hover {
+  background: rgba(59,130,246,0.15);
+  border-color: rgba(96,165,250,0.45);
+  box-shadow: 0 0 14px rgba(96,165,250,0.2);
+  opacity: 1;
+  color: #bfdbfe;
+}
+
+.kv-nav__mobile-link--pm {
+  color: #93c5fd;
+  font-weight: 500;
+}
+
 /* ─── AI dot ──────────────────────────────────────────────────────────────────── */
 .kv-nav__ai-dot {
   width: 7px;

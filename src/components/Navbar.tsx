@@ -6,7 +6,7 @@ const NAV_LINKS = [
   { label: 'Services', href: '/#services' },
   { label: 'Process', href: '/#how-we-work' },
   { label: 'Why Kuvanta', href: '/#why-choose-us' },
-  { label: 'Portfolio', href: '/#portfolio' },
+  { label: 'PM Advisory', href: '/pm-advisory', isPM: true },
   { label: 'Demo', href: '/demos', isDemo: true },
   { label: 'AI Demo', href: '/chatbot-demo', isAI: true },
 ];
@@ -51,6 +51,7 @@ export const Navbar = () => {
     const [path] = href.split('#');
     if (href === '/chatbot-demo') return location.pathname === '/chatbot-demo';
     if (href === '/demos') return location.pathname === '/demos' || location.pathname.startsWith('/demo/');
+    if (href === '/pm-advisory') return location.pathname === '/pm-advisory';
     return location.pathname === '/' && path === '/';
   };
 
@@ -79,7 +80,7 @@ export const Navbar = () => {
               <a
                 key={link.label}
                 href={link.href}
-                className={`kv-nav__link${link.isAI ? ' kv-nav__link--ai' : ''}${link.isDemo ? ' kv-nav__link--demo' : ''}${isActive(link.href) ? ' kv-nav__link--active' : ''}`}
+                className={`kv-nav__link${link.isAI ? ' kv-nav__link--ai' : ''}${link.isDemo ? ' kv-nav__link--demo' : ''}${link.isPM ? ' kv-nav__link--pm' : ''}${isActive(link.href) ? ' kv-nav__link--active' : ''}`}
                 onClick={e => handleNavClick(e, link.href)}
               >
                 {link.isAI && <span className="kv-nav__ai-dot" />}
@@ -110,7 +111,7 @@ export const Navbar = () => {
           <a
             key={link.label}
             href={link.href}
-            className={`kv-nav__mobile-link${link.isAI ? ' kv-nav__mobile-link--ai' : ''}${link.isDemo ? ' kv-nav__mobile-link--demo' : ''}${isActive(link.href) ? ' kv-nav__mobile-link--active' : ''}`}
+            className={`kv-nav__mobile-link${link.isAI ? ' kv-nav__mobile-link--ai' : ''}${link.isDemo ? ' kv-nav__mobile-link--demo' : ''}${link.isPM ? ' kv-nav__mobile-link--pm' : ''}${isActive(link.href) ? ' kv-nav__mobile-link--active' : ''}`}
             onClick={e => handleNavClick(e, link.href)}
           >
             {link.isAI && <span className="kv-nav__ai-dot" />}
