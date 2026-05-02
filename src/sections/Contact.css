@@ -69,6 +69,21 @@
   opacity: 0.8;
 }
 
+.contact-calendly-link {
+  color: var(--text-primary);
+  font-size: 0.95rem;
+  font-weight: 500;
+  border-bottom: 1px dashed rgba(164, 130, 255, 0.4);
+  padding-bottom: 2px;
+  display: inline-flex;
+  width: fit-content;
+}
+
+.contact-calendly-link:hover {
+  border-bottom-color: rgba(164, 130, 255, 0.9);
+  opacity: 1;
+}
+
 .contact-label {
   font-size: 0.65rem;
   font-weight: 700;

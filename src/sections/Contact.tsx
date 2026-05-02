@@ -1,4 +1,4 @@
-import { Mail } from 'lucide-react';
+import { Mail, CalendarDays } from 'lucide-react';
 import { useLeadStore } from '../store/leadStore';
 import { sendEmail } from '../services/emailService';
 import './Contact.css';
@@ -25,9 +25,21 @@ export const Contact = () => {
                 <Mail size={18} style={{ color: '#a482ff' }} />
                 letsdothis@kuvanta.tech
               </div>
+              <a
+                href=""
+                onClick={(e) => {
+                  e.preventDefault();
+                  (window as any).Calendly?.initPopupWidget({ url: 'https://calendly.com/nagarajan-kuvanta/30min' });
+                }}
+                className="contact-info-item contact-calendly-link"
+                style={{ marginTop: '0.75rem', cursor: 'pointer', textDecoration: 'none' }}
+              >
+                <CalendarDays size={18} style={{ color: '#a482ff' }} />
+                Schedule time with me
+              </a>
             </div>
 
-        
+
           </div>
         </div>
 
