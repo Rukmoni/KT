@@ -23,7 +23,7 @@ export const Contact = () => {
               <span className="contact-label">EMAIL US</span>
               <div className="contact-info-item">
                 <Mail size={18} style={{ color: '#a482ff' }} />
-                kuvanta.tech@gmail.com
+                letsdothis@kuvanta.tech
               </div>
             </div>
 
@@ -71,7 +71,7 @@ export const Contact = () => {
               requestBody += `${details}\n`;
               
               sendEmail({
-                toEmail: 'kuvanta.tech@gmail.com',
+                toEmail: 'letsdothis@kuvanta.tech',
                 ccEmail: email,
                 subject: `New Inquiry: ${service} - ${name}`,
                 body: requestBody
@@ -110,6 +110,7 @@ export const Contact = () => {
                     <option value="App Development" style={{ color: '#000' }}>App Development</option>
                     <option value="Web Portal Development" style={{ color: '#000' }}>Web Portal Development</option>
                     <option value="AI Automation" style={{ color: '#000' }}>AI Automation</option>
+                    <option value="PM Advisory" style={{ color: '#000' }}>PM Advisory</option>
                     <option value="Consultation" style={{ color: '#000' }}>Consultation</option>
                   </select>
                 </div>

@@ -193,7 +193,7 @@ export const ChatbotWidget = () => {
       transcriptText += `${senderLabel.toUpperCase()}:\n${m.text}\n\n`;
     });
     const subject = `Business Lead & Discovery Minutes: ${customerName || customerEmail}`;
-    sendEmail({ toEmail: 'kuvanta.tech@gmail.com', ccEmail: customerEmail, subject, body: transcriptText });
+    sendEmail({ toEmail: 'letsdothis@kuvanta.tech', ccEmail: customerEmail, subject, body: transcriptText });
     useLeadStore.getState().addLead({ source: 'Chatbot', name: customerName || 'Not Provided', email: customerEmail, phone: customerPhone || 'Not Provided', serviceType: 'AI Chat Lead', summary, fullTranscript: transcriptText });
     setWidgetState('collapsed');
     window.speechSynthesis.cancel();
