@@ -1,14 +1,19 @@
 import emailjs from '@emailjs/browser';
 
-export const EMAILJS_CONFIG = {
-  PUBLIC_KEY: 'tCkT2UyuXoSh7W0ig',
-  SERVICE_ID: 'service_agg3uz6',
-  TEMPLATE_ID: 'template_314wner',
-};
+// ─────────────────────────────────────────────────────────────────────────────
+// HOW TO SET UP (one-time, free):
+// 1. Go to https://www.emailjs.com/ and sign up
+// 2. Add a new Email Service → connect your Gmail (kuvanta.tech@gmail.com)
+// 3. Create an Email Template with variables: {{subject}}, {{body}}, {{to_email}}
+// 4. Copy your Public Key from Account → API Keys
+// 5. Fill in the three constants below
+// ─────────────────────────────────────────────────────────────────────────────
 
-// All enquiries and chatbot leads go to this address.
-// A Gmail filter on "KT_ENQUIRY:" forwards them to nagarajan@kuvanta.tech.
-export const ENQUIRY_RECIPIENT = 'nagarajanm.13@gmail.com';
+export const EMAILJS_CONFIG = {
+  PUBLIC_KEY: 'JSbXAOl0nuhG21IB0',
+  SERVICE_ID: 'service_foutoir',
+  TEMPLATE_ID: 'template_bzc8ayb',
+};
 
 let initialised = false;
 
@@ -20,19 +25,20 @@ const init = () => {
 };
 
 export interface EmailPayload {
-  toEmail: string;
-  ccEmail?: string;
+  toEmail: string;        // primary recipient
+  ccEmail?: string;       // cc (customer)
   subject: string;
   body: string;
 }
 
 export const sendEmail = async (payload: EmailPayload): Promise<boolean> => {
-  if (
-    EMAILJS_CONFIG.PUBLIC_KEY === 'YOUR_PUBLIC_KEY' ||
-    EMAILJS_CONFIG.TEMPLATE_ID === 'YOUR_TEMPLATE_ID'
-  ) {
-    console.warn('EmailJS not fully configured — fill in PUBLIC_KEY and TEMPLATE_ID in emailService.ts');
-    return false;
+  // If keys aren't configured yet, fall back to mailto silently
+  if (EMAILJS_CONFIG.PUBLIC_KEY === 'YOUR_PUBLIC_KEY') {
+    const a = document.createElement('a');
+    a.href = `mailto:${payload.toEmail}${payload.ccEmail ? `?cc=${encodeURIComponent(payload.ccEmail)}` : ''}` +
+             `&subject=${encodeURIComponent(payload.subject)}&body=${encodeURIComponent(payload.body)}`;
+    a.click();
+    return true;
   }
 
   try {
@@ -50,6 +56,10 @@ export const sendEmail = async (payload: EmailPayload): Promise<boolean> => {
     return true;
   } catch (err) {
     console.error('EmailJS send failed:', err);
+    // Graceful fallback
+    const a = document.createElement('a');
+    a.href = `mailto:${payload.toEmail}&subject=${encodeURIComponent(payload.subject)}&body=${encodeURIComponent(payload.body)}`;
+    a.click();
     return false;
   }
 };
