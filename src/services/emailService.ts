@@ -1,9 +1,9 @@
 import emailjs from '@emailjs/browser';
 
 export const EMAILJS_CONFIG = {
-  PUBLIC_KEY: 'YOUR_PUBLIC_KEY',    // Account → API Keys → Public Key
+  PUBLIC_KEY: 'tCkT2UyuXoSh7W0ig',
   SERVICE_ID: 'service_agg3uz6',
-  TEMPLATE_ID: 'YOUR_TEMPLATE_ID', // Email Templates → your template ID
+  TEMPLATE_ID: 'template_314wner',
 };
 
 // All enquiries and chatbot leads go to this address.
