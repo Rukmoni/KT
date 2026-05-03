@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { PhoneOff, Send, Mic, MicOff, X, Phone } from 'lucide-react';
 import { useLeadStore } from '../store/leadStore';
-import { sendEmail } from '../services/emailService';
+import { sendEmail, ENQUIRY_RECIPIENT } from '../services/emailService';
 import { fetchKnowledgeBase } from '../services/knowledgeBaseService';
 import './ChatbotWidget.css';
 
@@ -192,8 +192,8 @@ export const ChatbotWidget = () => {
       const senderLabel = m.sender === 'user' ? (customerName || 'CLIENT') : 'KT SUPPORT';
       transcriptText += `${senderLabel.toUpperCase()}:\n${m.text}\n\n`;
     });
-    const subject = `Business Lead & Discovery Minutes: ${customerName || customerEmail}`;
-    sendEmail({ toEmail: 'letsdothis@kuvanta.tech', ccEmail: customerEmail, subject, body: transcriptText });
+    const subject = `KT_ENQUIRY: Chatbot Lead - ${customerName || customerEmail}`;
+    sendEmail({ toEmail: ENQUIRY_RECIPIENT, ccEmail: customerEmail, subject, body: transcriptText });
     useLeadStore.getState().addLead({ source: 'Chatbot', name: customerName || 'Not Provided', email: customerEmail, phone: customerPhone || 'Not Provided', serviceType: 'AI Chat Lead', summary, fullTranscript: transcriptText });
     setWidgetState('collapsed');
     window.speechSynthesis.cancel();
