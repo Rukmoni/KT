@@ -10,7 +10,6 @@ import { AdminLeads } from './pages/AdminLeads';
 import { AdminNote2Task } from './pages/AdminNote2Task';
 import { AdminSEO } from './pages/AdminSEO/AdminSEO';
 import { ChatbotDemoPage } from './pages/ChatbotDemoPage';
-import { ChatbotWidget } from './components/ChatbotWidget';
 import { Navbar } from './components/Navbar';
 import { PMAdvisory } from './pages/PMAdvisory/PMAdvisory';
 
@@ -53,7 +52,6 @@ const AppShell = () => {
       <Navbar />
       <AnimatedRoutes />
       <Footer />
-      <ChatbotWidget />
     </div>
   );
 };
