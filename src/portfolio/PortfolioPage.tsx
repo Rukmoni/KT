@@ -2,6 +2,7 @@ import { lazy, Suspense, useEffect } from 'react';
 import { Nav } from './components/Nav';
 import { Hero } from './components/Hero';
 import { Metrics } from './components/Metrics';
+import { PERSON, SITE } from './config';
 
 const About = lazy(() => import('./components/About').then((m) => ({ default: m.About })));
 const Timeline = lazy(() => import('./components/Timeline').then((m) => ({ default: m.Timeline })));
@@ -27,16 +28,16 @@ const SectionSkeleton = () => (
 const PERSON_SCHEMA = {
   '@context': 'https://schema.org',
   '@type': 'Person',
-  name: 'Nagarajan Maheswaran',
-  url: 'https://nagarajan.kuvanta.tech',
-  image: 'https://nagarajan.kuvanta.tech/nagarajan.jpg',
-  jobTitle: 'IT Delivery Manager',
-  description: 'Senior IT Delivery Manager with 25+ years across Telecom, BFSI, and Energy. PMP®, PSM I, CSPO® certified. Available for contract and advisory roles.',
-  worksFor: { '@type': 'Organization', name: 'Kuvanta Tech', url: 'https://kuvanta.tech' },
+  name: PERSON.name,
+  url: SITE.url,
+  image: `${SITE.url}${PERSON.headshot}`,
+  jobTitle: PERSON.title,
+  description: SITE.description,
+  worksFor: { '@type': 'Organization', name: 'Kuvanta Tech', url: PERSON.website },
   address: { '@type': 'PostalAddress', addressLocality: 'Kuala Lumpur', addressCountry: 'MY' },
-  email: 'nagarajanm.13@gmail.com',
-  telephone: '+60173312231',
-  sameAs: ['https://www.linkedin.com/in/nagarajanmaheswaran', 'https://kuvanta.tech'],
+  email: PERSON.email,
+  telephone: PERSON.phone,
+  sameAs: [PERSON.linkedin, PERSON.website],
   knowsAbout: ['Project Management', 'Programme Delivery', 'SAFe Agile', 'Digital Transformation', 'MAS Regulatory Compliance', 'Payments Ecosystems', 'Microservices Architecture', 'AI Delivery Consulting'],
   hasCredential: [
     { '@type': 'EducationalOccupationalCredential', name: 'PMP® — Project Management Professional', credentialCategory: 'Certification', recognizedBy: { '@type': 'Organization', name: 'Project Management Institute' } },
@@ -82,7 +83,7 @@ function injectSchema(id: string, data: object) {
 export function PortfolioPage() {
   useEffect(() => {
     const prev = document.title;
-    document.title = 'Nagarajan Maheswaran | IT Delivery Manager · PMP® · Kuala Lumpur';
+    document.title = SITE.title;
     injectSchema('schema-person', PERSON_SCHEMA);
     injectSchema('schema-service', SERVICE_SCHEMA);
     injectSchema('schema-breadcrumb', BREADCRUMB_SCHEMA);
