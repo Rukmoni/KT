@@ -322,3 +322,26 @@
 .kv-nav__mobile-cta-wrap {
   padding: 16px 24px 24px;
 }
+
+/* ─── Portfolio link ──────────────────────────────────────────────────────────── */
+.kv-nav__link--portfolio {
+  color: #a78bfa;
+  background: rgba(124, 58, 237, 0.08);
+  border: 1px solid rgba(124, 58, 237, 0.25);
+  border-radius: 999px;
+  font-weight: 500;
+  transition: background 0.25s, border-color 0.25s, box-shadow 0.25s;
+}
+
+.kv-nav__link--portfolio:hover {
+  background: rgba(124, 58, 237, 0.18);
+  border-color: rgba(124, 58, 237, 0.50);
+  box-shadow: 0 0 14px rgba(124, 58, 237, 0.22);
+  opacity: 1;
+  color: #c4b5fd;
+}
+
+.kv-nav__mobile-link--portfolio {
+  color: #a78bfa;
+  font-weight: 500;
+}
