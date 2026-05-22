@@ -1,13 +1,5 @@
 import { useState, useEffect } from 'react';
-import { PORTFOLIO_CONFIG } from '../config';
-
-const NAV_LINKS = [
-  { label: 'About', href: '#about' },
-  { label: 'Experience', href: '#experience' },
-  { label: 'Certifications', href: '#certifications' },
-  { label: 'Services', href: '#services' },
-  { label: 'Contact', href: '#contact' },
-];
+import { NAV_LINKS, PERSON } from '../config';
 
 export function Nav() {
   const [scrolled, setScrolled] = useState(false);
@@ -35,22 +27,20 @@ export function Nav() {
     >
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <nav className="flex items-center justify-between h-16" aria-label="Main navigation">
-          {/* Logo */}
           <a
             href="#"
             onClick={(e) => { e.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-            className="flex items-center gap-3 group"
-            aria-label="Nagarajan Maheswaran — Home"
+            className="flex items-center gap-3"
+            aria-label={`${PERSON.name} — Home`}
           >
             <span className="w-9 h-9 rounded-lg bg-brand-violet flex items-center justify-center text-white font-bold text-sm tracking-wider flex-shrink-0">
-              NM
+              {PERSON.initials}
             </span>
             <span className="hidden sm:block text-brand-text font-semibold text-sm tracking-widest uppercase">
-              Nagarajan Maheswaran
+              {PERSON.name}
             </span>
           </a>
 
-          {/* Desktop nav */}
           <div className="hidden md:flex items-center gap-6">
             {NAV_LINKS.map((link) => (
               <button
@@ -63,7 +53,7 @@ export function Nav() {
               </button>
             ))}
             <a
-              href={PORTFOLIO_CONFIG.cvPdf}
+              href={PERSON.cv}
               download
               className="ml-2 px-4 py-2 bg-brand-violet hover:bg-brand-violet-light text-white text-sm font-semibold rounded-lg transition-colors duration-200"
               aria-label="Download CV PDF"
@@ -72,7 +62,6 @@ export function Nav() {
             </a>
           </div>
 
-          {/* Mobile hamburger */}
           <button
             className="md:hidden flex flex-col justify-center items-center gap-1.5 w-8 h-8"
             onClick={() => setMenuOpen(!menuOpen)}
@@ -85,10 +74,7 @@ export function Nav() {
           </button>
         </nav>
 
-        {/* Mobile drawer */}
-        <div
-          className={`md:hidden overflow-hidden transition-all duration-300 ${menuOpen ? 'max-h-96 pb-4' : 'max-h-0'}`}
-        >
+        <div className={`md:hidden overflow-hidden transition-all duration-300 ${menuOpen ? 'max-h-96 pb-4' : 'max-h-0'}`}>
           <div className="flex flex-col gap-1 pt-2 border-t border-brand-border">
             {NAV_LINKS.map((link) => (
               <button
@@ -100,7 +86,7 @@ export function Nav() {
               </button>
             ))}
             <a
-              href={PORTFOLIO_CONFIG.cvPdf}
+              href={PERSON.cv}
               download
               className="mt-2 px-4 py-2.5 bg-brand-violet text-white text-sm font-semibold rounded-lg text-center"
             >
