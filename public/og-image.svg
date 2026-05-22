@@ -1,0 +1,104 @@
+<svg xmlns='http://www.w3.org/2000/svg' width='1200' height='630' viewBox='0 0 1200 630'>
+  <defs>
+    <radialGradient id='glow' cx='30%' cy='50%' r='55%'>
+      <stop offset='0%' stop-color='#7C3AED' stop-opacity='0.35'/>
+      <stop offset='100%' stop-color='#0A0A0F' stop-opacity='0'/>
+    </radialGradient>
+    <radialGradient id='glow2' cx='75%' cy='50%' r='40%'>
+      <stop offset='0%' stop-color='#7C3AED' stop-opacity='0.15'/>
+      <stop offset='100%' stop-color='#0A0A0F' stop-opacity='0'/>
+    </radialGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width='1200' height='630' fill='#0A0A0F'/>
+  <rect width='1200' height='630' fill='url(#glow)'/>
+  <rect width='1200' height='630' fill='url(#glow2)'/>
+
+  <!-- Grid lines -->
+  <g stroke='#7C3AED' stroke-opacity='0.07' stroke-width='1'>
+    <line x1='0' y1='90' x2='1200' y2='90'/>
+    <line x1='0' y1='180' x2='1200' y2='180'/>
+    <line x1='0' y1='270' x2='1200' y2='270'/>
+    <line x1='0' y1='360' x2='1200' y2='360'/>
+    <line x1='0' y1='450' x2='1200' y2='450'/>
+    <line x1='0' y1='540' x2='1200' y2='540'/>
+    <line x1='150' y1='0' x2='150' y2='630'/>
+    <line x1='300' y1='0' x2='300' y2='630'/>
+    <line x1='450' y1='0' x2='450' y2='630'/>
+    <line x1='600' y1='0' x2='600' y2='630'/>
+    <line x1='750' y1='0' x2='750' y2='630'/>
+    <line x1='900' y1='0' x2='900' y2='630'/>
+    <line x1='1050' y1='0' x2='1050' y2='630'/>
+  </g>
+
+  <!-- Left border accent -->
+  <rect x='0' y='0' width='4' height='630' fill='#7C3AED' opacity='0.8'/>
+
+  <!-- Top label badge -->
+  <rect x='72' y='72' width='220' height='32' rx='16' fill='#7C3AED' fill-opacity='0.15' stroke='#7C3AED' stroke-opacity='0.4' stroke-width='1'/>
+  <circle cx='92' cy='88' r='5' fill='#06B6D4' opacity='0.9'/>
+  <text x='105' y='93' font-family='Inter, system-ui, sans-serif' font-size='12' font-weight='600' fill='#06B6D4' letter-spacing='2' text-anchor='start'>IT DELIVERY MANAGER</text>
+
+  <!-- Name -->
+  <text x='72' y='175' font-family='Inter, DM Sans, system-ui, sans-serif' font-size='62' font-weight='700' fill='#F1F5F9' letter-spacing='-1'>Nagarajan</text>
+  <text x='72' y='245' font-family='Inter, DM Sans, system-ui, sans-serif' font-size='62' font-weight='700' fill='#F1F5F9' letter-spacing='-1'>Maheswaran</text>
+
+  <!-- Subtitle -->
+  <text x='72' y='295' font-family='Inter, system-ui, sans-serif' font-size='20' font-weight='400' fill='#94A3B8'>Digital Transformation · Enterprise Programme Leadership</text>
+
+  <!-- Divider -->
+  <rect x='72' y='320' width='480' height='1' fill='#1E1E2E'/>
+
+  <!-- Cert pills -->
+  <rect x='72' y='338' width='76' height='28' rx='14' fill='#7C3AED' fill-opacity='0.2' stroke='#7C3AED' stroke-opacity='0.5' stroke-width='1'/>
+  <text x='110' y='357' font-family='Inter, system-ui, sans-serif' font-size='13' font-weight='600' fill='#A78BFA' text-anchor='middle'>PMP®</text>
+
+  <rect x='158' y='338' width='76' height='28' rx='14' fill='#2563EB' fill-opacity='0.15' stroke='#2563EB' stroke-opacity='0.4' stroke-width='1'/>
+  <text x='196' y='357' font-family='Inter, system-ui, sans-serif' font-size='13' font-weight='600' fill='#60A5FA' text-anchor='middle'>PSM I</text>
+
+  <rect x='244' y='338' width='82' height='28' rx='14' fill='#16A34A' fill-opacity='0.15' stroke='#16A34A' stroke-opacity='0.4' stroke-width='1'/>
+  <text x='285' y='357' font-family='Inter, system-ui, sans-serif' font-size='13' font-weight='600' fill='#4ADE80' text-anchor='middle'>CSPO®</text>
+
+  <rect x='336' y='338' width='110' height='28' rx='14' fill='#D97706' fill-opacity='0.15' stroke='#D97706' stroke-opacity='0.4' stroke-width='1'/>
+  <text x='391' y='357' font-family='Inter, system-ui, sans-serif' font-size='13' font-weight='600' fill='#FCD34D' text-anchor='middle'>PMI GenAI</text>
+
+  <!-- KPI row -->
+  <text x='72' y='420' font-family='JetBrains Mono, monospace' font-size='32' font-weight='700' fill='#06B6D4'>0M+</text>
+  <text x='72' y='445' font-family='Inter, system-ui, sans-serif' font-size='12' fill='#94A3B8'>Annual Portfolio</text>
+
+  <text x='210' y='420' font-family='JetBrains Mono, monospace' font-size='32' font-weight='700' fill='#06B6D4'>35%</text>
+  <text x='210' y='445' font-family='Inter, system-ui, sans-serif' font-size='12' fill='#94A3B8'>OTD Improvement</text>
+
+  <text x='330' y='420' font-family='JetBrains Mono, monospace' font-size='32' font-weight='700' fill='#06B6D4'>30%</text>
+  <text x='330' y='445' font-family='Inter, system-ui, sans-serif' font-size='12' fill='#94A3B8'>Velocity Uplift</text>
+
+  <text x='450' y='420' font-family='JetBrains Mono, monospace' font-size='32' font-weight='700' fill='#06B6D4'>25+</text>
+  <text x='450' y='445' font-family='Inter, system-ui, sans-serif' font-size='12' fill='#94A3B8'>Years Experience</text>
+
+  <!-- Bottom URL strip -->
+  <rect x='0' y='580' width='1200' height='50' fill='#12121A'/>
+  <rect x='0' y='580' width='1200' height='1' fill='#1E1E2E'/>
+  <text x='72' y='612' font-family='Inter, system-ui, sans-serif' font-size='16' font-weight='500' fill='#7C3AED'>nagarajan.kuvanta.tech</text>
+  <text x='1130' y='612' font-family='Inter, system-ui, sans-serif' font-size='14' fill='#94A3B8' text-anchor='end'>Kuala Lumpur · Malaysia</text>
+
+  <!-- Right side — NM monogram circle -->
+  <circle cx='940' cy='290' r='160' fill='#12121A' stroke='#7C3AED' stroke-opacity='0.4' stroke-width='2'/>
+  <circle cx='940' cy='290' r='160' fill='url(#glow2)' fill-opacity='0.3'/>
+  <!-- Inner ring -->
+  <circle cx='940' cy='290' r='140' fill='none' stroke='#7C3AED' stroke-opacity='0.15' stroke-width='1' stroke-dasharray='6 4'/>
+  <text x='940' y='320' font-family='Inter, DM Sans, system-ui, sans-serif' font-size='96' font-weight='700' fill='#7C3AED' text-anchor='middle' dominant-baseline='middle'>NM</text>
+
+  <!-- Floating badges around circle -->
+  <rect x='750' y='110' width='130' height='30' rx='15' fill='#12121A' stroke='#1E1E2E' stroke-width='1'/>
+  <text x='815' y='130' font-family='Inter, system-ui, sans-serif' font-size='12' font-weight='600' fill='#F1F5F9' text-anchor='middle'>PMP® Certified</text>
+
+  <rect x='1030' y='200' width='130' height='30' rx='15' fill='#12121A' stroke='#1E1E2E' stroke-width='1'/>
+  <text x='1095' y='220' font-family='Inter, system-ui, sans-serif' font-size='12' font-weight='600' fill='#F1F5F9' text-anchor='middle'>PSM I · CSPO®</text>
+
+  <rect x='740' y='430' width='150' height='30' rx='15' fill='#12121A' stroke='#1E1E2E' stroke-width='1'/>
+  <text x='815' y='450' font-family='Inter, system-ui, sans-serif' font-size='12' font-weight='600' fill='#F1F5F9' text-anchor='middle'>25 Years Delivery</text>
+
+  <rect x='1020' y='390' width='120' height='30' rx='15' fill='#12121A' stroke='#1E1E2E' stroke-width='1'/>
+  <text x='1080' y='410' font-family='Inter, system-ui, sans-serif' font-size='12' font-weight='600' fill='#F1F5F9' text-anchor='middle'>KL · Global</text>
+</svg>
