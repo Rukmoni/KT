@@ -1,0 +1,17 @@
+export const PORTFOLIO_CONFIG = {
+  name: 'Nagarajan Maheswaran',
+  initials: 'NM',
+  title: 'IT Delivery Manager',
+  tagline: 'IT Delivery Manager · Kuala Lumpur',
+  subtitle: 'Delivering Regulated, High-Stakes Programmes',
+  sectors: 'Across Telecom · BFSI · Energy',
+  email: 'nagarajanm.13@gmail.com',
+  phone: '+60173312231',
+  linkedin: 'https://www.linkedin.com/in/nagarajanmaheswaran',
+  website: 'https://kuvanta.tech',
+  portfolioUrl: 'https://nagarajan.kuvanta.tech',
+  location: 'Kuala Lumpur, Malaysia',
+  cvPdf: '/nagarajan-cv.pdf',
+  avatar: '/nagarajan.jpg',
+  ogImage: '/og-image.jpg',
+};

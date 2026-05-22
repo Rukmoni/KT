@@ -12,6 +12,7 @@ import { AdminSEO } from './pages/AdminSEO/AdminSEO';
 import { ChatbotDemoPage } from './pages/ChatbotDemoPage';
 import { Navbar } from './components/Navbar';
 import { PMAdvisory } from './pages/PMAdvisory/PMAdvisory';
+import { PortfolioPage } from './portfolio/PortfolioPage';
 
 const FULLSCREEN_PATHS = ['/demo/note2task', '/demo/KT_omnichannel_demo'];
 
@@ -34,6 +35,7 @@ const AnimatedRoutes = () => {
         <Route path="/admin/note2task" element={<AdminNote2Task />} />
         <Route path="/admin/seo" element={<AdminSEO />} />
         <Route path="/pm-advisory" element={<PMAdvisory />} />
+        <Route path="/nagarajan" element={<PortfolioPage />} />
       </Routes>
     </AnimatePresence>
   );
