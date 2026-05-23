@@ -24,7 +24,7 @@ export const PERSON = {
   website: "https://kuvanta.tech",
   portfolio: "https://nagarajan.kuvanta.tech",
 
-  headshot: "/nagarajan.jpg",
+  headshot: "/nagarajan.png",
   cv: "/nagarajan-cv.pdf",
   ogImage: "/og-image.jpg",
 } as const;
