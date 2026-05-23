@@ -165,7 +165,7 @@ export function BlogPost() {
 
   return (
     <div className="min-h-screen bg-[#f8fafc] font-['Inter',sans-serif]">
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 py-10 sm:py-14">
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 pt-28 pb-10 sm:pt-32 sm:pb-14">
         {/* ── Back link ── */}
         <Link
           to="/blog"

@@ -69,7 +69,7 @@ export function Hero() {
   const scrollTo = (id: string) => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
 
   return (
-    <section className="relative min-h-screen flex items-center overflow-hidden bg-brand-bg pt-16">
+    <section className="relative min-h-screen flex items-center overflow-hidden bg-brand-bg pt-24">
       <canvas ref={gridRef} className="absolute inset-0 w-full h-full pointer-events-none" aria-hidden="true" />
 
       <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-20 w-full">

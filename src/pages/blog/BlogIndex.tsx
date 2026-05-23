@@ -124,7 +124,7 @@ export function BlogIndex() {
     <div className="min-h-screen bg-[#f8fafc] font-['Inter',sans-serif]">
       {/* ── Hero ───────────────────────────────────────────── */}
       <div className="bg-white border-b border-slate-200">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-14 sm:py-20">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-28 pb-14 sm:pt-32 sm:pb-20">
           <p className="text-[#6366f1] text-sm font-semibold uppercase tracking-widest mb-3">
             Blog
           </p>
