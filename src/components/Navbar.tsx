@@ -7,7 +7,7 @@ const NAV_LINKS = [
   { label: 'Process', href: '/#how-we-work' },
   { label: 'Why Kuvanta', href: '/#why-choose-us' },
   { label: 'PM Advisory', href: '/pm-advisory', isPM: true },
-  { label: 'Portfolio', href: '/nagarajan', isPortfolio: true },
+  { label: 'Meet Nagarajan', href: '/nagarajan', isPortfolio: true },
   { label: 'Demo', href: '/demos', isDemo: true },
 ];
 
