@@ -1,0 +1,38 @@
+{
+  "categories": {
+    "ai-strategy": {
+      "label": "AI Strategy",
+      "color": "#6366f1",
+      "description": "How AI is reshaping delivery, teams, and enterprise strategy."
+    },
+    "delivery-leadership": {
+      "label": "Delivery Leadership",
+      "color": "#0EA5E9",
+      "description": "Lessons from 25 years of programme and project delivery."
+    },
+    "agile-transformation": {
+      "label": "Agile Transformation",
+      "color": "#10B981",
+      "description": "SAFe, Scrum, and real-world Agile adoption."
+    }
+  },
+  "posts": [
+    {
+      "id": 1,
+      "slug": "placeholder-post",
+      "title": "Placeholder Post",
+      "category": "ai-strategy",
+      "categoryLabel": "AI Strategy",
+      "excerpt": "This is a placeholder post. Replace posts.json with your real content.",
+      "body": "This is a placeholder post.\n\nReplace /public/data/posts.json with your real content.\n\n#placeholder #blog",
+      "linkedinUrl": "https://www.linkedin.com/in/nagarajanmaheswaran/recent-activity/all/",
+      "author": "Nagarajan Maheswaran",
+      "authorTitle": "Senior Project & Programme Manager | PMP® PSM I CSPO®",
+      "tags": ["placeholder"],
+      "image": null,
+      "video": null,
+      "published": true,
+      "draft": false
+    }
+  ]
+}
