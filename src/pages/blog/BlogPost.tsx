@@ -1,6 +1,6 @@
 import { useParams, Link, Navigate } from 'react-router-dom';
 import { ArrowLeft, Linkedin } from 'lucide-react';
-import { usePosts, type Post, type Category } from '../../hooks/usePosts';
+import { usePosts, type Post } from '../../hooks/usePosts';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 

@@ -345,3 +345,26 @@
   color: #a78bfa;
   font-weight: 500;
 }
+
+/* ─── Blog link ───────────────────────────────────────────────────────────────── */
+.kv-nav__link--blog {
+  color: #6ee7b7;
+  background: rgba(16, 185, 129, 0.08);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  border-radius: 999px;
+  font-weight: 500;
+  transition: background 0.25s, border-color 0.25s, box-shadow 0.25s;
+}
+
+.kv-nav__link--blog:hover {
+  background: rgba(16, 185, 129, 0.16);
+  border-color: rgba(16, 185, 129, 0.50);
+  box-shadow: 0 0 14px rgba(16, 185, 129, 0.20);
+  opacity: 1;
+  color: #a7f3d0;
+}
+
+.kv-nav__mobile-link--blog {
+  color: #6ee7b7;
+  font-weight: 500;
+}

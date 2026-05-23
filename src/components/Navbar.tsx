@@ -8,6 +8,7 @@ const NAV_LINKS = [
   { label: 'Why Kuvanta', href: '/#why-choose-us' },
   { label: 'PM Advisory', href: '/pm-advisory', isPM: true },
   { label: 'Meet Nagarajan', href: '/nagarajan', isPortfolio: true },
+  { label: 'Blog', href: '/blog', isBlog: true },
   { label: 'Demo', href: '/demos', isDemo: true },
 ];
 
@@ -52,6 +53,7 @@ export const Navbar = () => {
     if (href === '/nagarajan') return location.pathname === '/nagarajan';
     if (href === '/demos') return location.pathname === '/demos' || location.pathname.startsWith('/demo/');
     if (href === '/pm-advisory') return location.pathname === '/pm-advisory';
+    if (href === '/blog') return location.pathname === '/blog' || location.pathname.startsWith('/blog/');
     return location.pathname === '/' && path === '/';
   };
 
@@ -80,7 +82,7 @@ export const Navbar = () => {
               <a
                 key={link.label}
                 href={link.href}
-                className={`kv-nav__link${link.isDemo ? ' kv-nav__link--demo' : ''}${link.isPM ? ' kv-nav__link--pm' : ''}${'isPortfolio' in link && link.isPortfolio ? ' kv-nav__link--portfolio' : ''}${isActive(link.href) ? ' kv-nav__link--active' : ''}`}
+                className={`kv-nav__link${link.isDemo ? ' kv-nav__link--demo' : ''}${link.isPM ? ' kv-nav__link--pm' : ''}${'isPortfolio' in link && link.isPortfolio ? ' kv-nav__link--portfolio' : ''}${'isBlog' in link && link.isBlog ? ' kv-nav__link--blog' : ''}${isActive(link.href) ? ' kv-nav__link--active' : ''}`}
                 onClick={e => handleNavClick(e, link.href)}
               >
                 {link.label}
@@ -110,7 +112,7 @@ export const Navbar = () => {
           <a
             key={link.label}
             href={link.href}
-            className={`kv-nav__mobile-link${link.isDemo ? ' kv-nav__mobile-link--demo' : ''}${link.isPM ? ' kv-nav__mobile-link--pm' : ''}${'isPortfolio' in link && link.isPortfolio ? ' kv-nav__mobile-link--portfolio' : ''}${isActive(link.href) ? ' kv-nav__mobile-link--active' : ''}`}
+            className={`kv-nav__mobile-link${link.isDemo ? ' kv-nav__mobile-link--demo' : ''}${link.isPM ? ' kv-nav__mobile-link--pm' : ''}${'isPortfolio' in link && link.isPortfolio ? ' kv-nav__mobile-link--portfolio' : ''}${'isBlog' in link && link.isBlog ? ' kv-nav__mobile-link--blog' : ''}${isActive(link.href) ? ' kv-nav__mobile-link--active' : ''}`}
             onClick={e => handleNavClick(e, link.href)}
           >
             {link.label}
