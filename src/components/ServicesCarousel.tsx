@@ -28,7 +28,7 @@ const slides: ServiceSlide[] = [
     description: 'Embed battle-tested product managers into your team without the full-time overhead. Drive roadmaps, align stakeholders, and ship what matters — faster.',
     features: ['Roadmap strategy & prioritisation', 'Stakeholder alignment & OKRs', 'Sprint facilitation & delivery'],
     ctaText: 'Get a PM', accentColor: '#6366f1', accentGradient: 'linear-gradient(135deg,#6366f1,#8b5cf6)', visualType: 'roadmap',
-    imageUrl: '/carousel-images/C_img1.png',
+    imageUrl: '/carousel-images/C_img1 copy.png',
   },
   {
     id: 2, service: 'PM Advisory',
@@ -37,7 +37,7 @@ const slides: ServiceSlide[] = [
     description: 'Access VP-level product thinking for a fraction of the cost. Ideal for startups scaling fast or teams between hires who still need world-class product ownership.',
     features: ['Weekly strategy & prioritisation sessions', 'Metrics frameworks & KPI design', 'Team mentorship & hiring support'],
     ctaText: 'Hire Fractional', accentColor: '#6366f1', accentGradient: 'linear-gradient(135deg,#6366f1,#8b5cf6)', visualType: 'team',
-    imageUrl: '/carousel-images/C_img2.png',
+    imageUrl: '/carousel-images/C_img2 copy.png',
   },
   {
     id: 3, service: 'PM Advisory',
@@ -46,7 +46,7 @@ const slides: ServiceSlide[] = [
     description: 'From backlog hygiene to full Scrum ceremony facilitation — we embed agile discipline into your team so sprints are productive, predictable, and built around real outcomes.',
     features: ['Sprint governance & backlog grooming', 'Scrum ceremonies, Kanban & SAFe', 'Velocity tracking & retrospectives'],
     ctaText: 'Go Agile', accentColor: '#6366f1', accentGradient: 'linear-gradient(135deg,#6366f1,#8b5cf6)', visualType: 'kanban',
-    imageUrl: '/carousel-images/C_img3.png',
+    imageUrl: '/carousel-images/C_img3 copy.png',
   },
   {
     id: 4, service: 'PM Advisory',
@@ -55,7 +55,7 @@ const slides: ServiceSlide[] = [
     description: 'Governance-heavy programmes need structure without bureaucracy. We apply Waterfall and SAFe at the right level — stage-gated, milestone-driven, and audit-ready.',
     features: ['Stage-gated project lifecycle control', 'RAID management & change control', 'Milestone tracking & board reporting'],
     ctaText: 'Structure My Programme', accentColor: '#6366f1', accentGradient: 'linear-gradient(135deg,#6366f1,#8b5cf6)', visualType: 'gantt',
-    imageUrl: '/carousel-images/C_img4.png',
+    imageUrl: '/carousel-images/C_img4 copy.png',
   },
   {
     id: 5, service: 'PM Advisory',
@@ -114,7 +114,7 @@ const slides: ServiceSlide[] = [
     description: 'Natural language voice assistants that schedule, answer, route, and automate — embedded directly into your app, website, or phone system.',
     features: ['Natural language voice interactions', 'Schedule, query & automate via voice', 'Integrates with phone, app & web surfaces'],
     ctaText: 'Build My Voice Agent', accentColor: '#06b6d4', accentGradient: 'linear-gradient(135deg,#06b6d4,#0ea5e9)', visualType: 'voice',
-    imageUrl: '/carousel-images/C_img11.jpg',
+    imageUrl: '/carousel-images/C_img11 copy.jpg',
   },
   {
     id: 12, service: 'App Development',
