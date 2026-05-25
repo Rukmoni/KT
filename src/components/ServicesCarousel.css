@@ -101,25 +101,25 @@
 .svc-image-visual {
   min-height: 380px;
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  align-items: stretch;
   justify-content: center;
-  padding: 16px;
+  padding: 12px;
 }
 .svc-image-frame {
   position: relative;
   width: 100%;
-  height: 100%;
-  min-height: 340px;
   border-radius: 14px;
   border: 1px solid;
   overflow: hidden;
+  line-height: 0;
 }
 .svc-image-media {
   width: 100%;
-  height: 100%;
-  min-height: 340px;
-  object-fit: cover;
+  height: auto;
   display: block;
+  object-fit: contain;
+  border-radius: 13px;
 }
 .svc-image-overlay {
   position: absolute;
