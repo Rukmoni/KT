@@ -103,6 +103,18 @@ export const AdminNote2Task = () => {
           <span style={{ padding: '7px 18px', borderRadius: '8px', fontSize: '13px', fontWeight: '600', background: '#1e293b', color: '#e2e8f0', border: '1px solid #334155', cursor: 'default' }}>
             Note2Task Credentials
           </span>
+          <button
+            onClick={() => navigate('/admin/seo')}
+            style={{ padding: '7px 18px', borderRadius: '8px', fontSize: '13px', fontWeight: '600', background: 'transparent', color: '#64748b', border: '1px solid #1e293b', cursor: 'pointer' }}
+          >
+            SEO Dashboard
+          </button>
+          <button
+            onClick={() => navigate('/admin/carousel-images')}
+            style={{ padding: '7px 18px', borderRadius: '8px', fontSize: '13px', fontWeight: '600', background: 'transparent', color: '#64748b', border: '1px solid #1e293b', cursor: 'pointer' }}
+          >
+            Carousel Images
+          </button>
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '14px', marginBottom: '8px' }}>

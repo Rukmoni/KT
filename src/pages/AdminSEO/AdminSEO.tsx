@@ -48,6 +48,7 @@ export const AdminSEO = () => {
     { label: 'Sales & Leads', path: '/admin' },
     { label: 'Note2Task Credentials', path: '/admin/note2task' },
     { label: 'SEO Dashboard', path: '/admin/seo' },
+    { label: 'Carousel Images', path: '/admin/carousel-images' },
   ];
 
   return (

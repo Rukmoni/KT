@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, ChevronRight, ArrowRight, Check } from 'lucide-react';
+import { supabase } from '../lib/supabase';
 import './ServicesCarousel.css';
 
 interface ServiceSlide {
@@ -901,8 +902,24 @@ export default function ServicesCarousel() {
   const [activeIndex, setActiveIndex] = useState(0);
   const [direction, setDirection]     = useState(1);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [remoteImages, setRemoteImages] = useState<Record<number, string>>({});
 
-  const current = slides[activeIndex];
+  useEffect(() => {
+    supabase.from('carousel_images').select('slide_id, image_url').then(({ data }) => {
+      if (data) {
+        const map: Record<number, string> = {};
+        (data as { slide_id: number; image_url: string }[]).forEach(r => { map[r.slide_id] = r.image_url; });
+        setRemoteImages(map);
+      }
+    });
+  }, []);
+
+  const resolvedSlides = slides.map(s => ({
+    ...s,
+    imageUrl: remoteImages[s.id] ?? s.imageUrl,
+  }));
+
+  const current = resolvedSlides[activeIndex];
   const VisualComponent = visualMap[current.visualType];
 
   const goTo = useCallback((idx: number, dir: number) => {
@@ -910,8 +927,8 @@ export default function ServicesCarousel() {
     setActiveIndex(idx);
   }, []);
 
-  const goToNext = useCallback(() => goTo((activeIndex + 1) % slides.length, 1),  [activeIndex, goTo]);
-  const goToPrev = useCallback(() => goTo((activeIndex - 1 + slides.length) % slides.length, -1), [activeIndex, goTo]);
+  const goToNext = useCallback(() => goTo((activeIndex + 1) % resolvedSlides.length, 1),  [activeIndex, goTo, resolvedSlides.length]);
+  const goToPrev = useCallback(() => goTo((activeIndex - 1 + resolvedSlides.length) % resolvedSlides.length, -1), [activeIndex, goTo, resolvedSlides.length]);
 
   const resetTimer = useCallback(() => {
     if (timerRef.current) clearInterval(timerRef.current);
@@ -934,9 +951,9 @@ export default function ServicesCarousel() {
 
         <div className="svc-tabs" role="tablist">
           {SERVICES.map((svc) => {
-            const firstIdx  = slides.findIndex(s => s.service === svc);
+            const firstIdx  = resolvedSlides.findIndex(s => s.service === svc);
             const isActive  = current.service === svc;
-            const accentCol = slides.find(s => s.service === svc)!.accentColor;
+            const accentCol = resolvedSlides.find(s => s.service === svc)!.accentColor;
             return (
               <button key={svc} role="tab" aria-selected={isActive}
                 className={`svc-tab${isActive ? ' svc-tab-active' : ''}`}
@@ -990,8 +1007,8 @@ export default function ServicesCarousel() {
             </AnimatePresence>
 
             <div className="svc-dots">
-              {slides.filter(s => s.service === current.service).map((s) => {
-                const idx = slides.findIndex(sl => sl.id === s.id);
+              {resolvedSlides.filter(s => s.service === current.service).map((s) => {
+                const idx = resolvedSlides.findIndex(sl => sl.id === s.id);
                 const active = idx === activeIndex;
                 return (
                   <button key={s.id}
@@ -1015,7 +1032,7 @@ export default function ServicesCarousel() {
           </div>
           <div className="svc-nav-controls">
             <span className="svc-slide-count">
-              {String(activeIndex + 1).padStart(2, '0')} <span>/ {String(slides.length).padStart(2, '0')}</span>
+              {String(activeIndex + 1).padStart(2, '0')} <span>/ {String(resolvedSlides.length).padStart(2, '0')}</span>
             </span>
             <div className="svc-arrow-group">
               <button className="svc-arrow-btn" onClick={() => nav(goToPrev)} aria-label="Previous"><ChevronLeft size={20} /></button>
