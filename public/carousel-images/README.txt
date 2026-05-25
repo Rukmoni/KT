@@ -1,4 +1,4 @@
-﻿Kuvanta Services Carousel — Custom Images
+Kuvanta Services Carousel — Custom Images
 ==========================================
 
 Drop images here named:  C_img1  through  C_img19
