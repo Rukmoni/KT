@@ -3,6 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { Upload, Trash2, RefreshCw, CircleCheck as CheckCircle, CircleAlert as AlertCircle, Image as ImageIcon } from 'lucide-react';
 
+const ADMIN_FN_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/carousel-admin`;
+const FN_HEADERS = { 'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}` };
+
 interface SlideMeta {
   id: number;
   service: string;
@@ -71,56 +74,52 @@ export const AdminCarouselImages = () => {
     setSlotState(p => ({ ...p, [id]: s }));
 
   const handleUpload = async (slideId: number, file: File) => {
-    // show local preview immediately
     const objUrl = URL.createObjectURL(file);
     setLocalPreview(p => ({ ...p, [slideId]: objUrl }));
     setSlot(slideId, 'uploading');
     setSlotError(e => { const n = { ...e }; delete n[slideId]; return n; });
 
-    const ext  = file.name.split('.').pop() ?? 'png';
-    const path = `slide-${slideId}.${ext}`;
+    try {
+      const form = new FormData();
+      form.append('slideId', String(slideId));
+      form.append('file', file);
 
-    const { error: upErr } = await supabase.storage
-      .from('carousel-images')
-      .upload(path, file, { upsert: true, contentType: file.type });
+      const res = await fetch(`${ADMIN_FN_URL}?action=upload`, {
+        method: 'POST',
+        headers: FN_HEADERS,
+        body: form,
+      });
+      const json = await res.json();
 
-    if (upErr) {
+      if (!res.ok || json.error) throw new Error(json.error ?? 'Upload failed');
+
+      setSavedUrls(p => ({ ...p, [slideId]: json.publicUrl }));
+      setSlot(slideId, 'success');
+      setTimeout(() => setSlot(slideId, 'idle'), 3000);
+    } catch (err) {
       setSlot(slideId, 'error');
-      setSlotError(e => ({ ...e, [slideId]: upErr.message }));
-      return;
+      setSlotError(e => ({ ...e, [slideId]: err instanceof Error ? err.message : 'Upload failed' }));
     }
-
-    const { data: urlData } = supabase.storage
-      .from('carousel-images')
-      .getPublicUrl(path);
-
-    // bust cache with timestamp query param
-    const publicUrl = `${urlData.publicUrl}?t=${Date.now()}`;
-
-    const { error: dbErr } = await supabase
-      .from('carousel_images')
-      .upsert(
-        { slide_id: slideId, image_url: publicUrl, updated_at: new Date().toISOString() },
-        { onConflict: 'slide_id' }
-      );
-
-    if (dbErr) {
-      setSlot(slideId, 'error');
-      setSlotError(e => ({ ...e, [slideId]: dbErr.message }));
-      return;
-    }
-
-    setSavedUrls(p => ({ ...p, [slideId]: publicUrl }));
-    setSlot(slideId, 'success');
-    setTimeout(() => setSlot(slideId, 'idle'), 3000);
   };
 
   const handleRemove = async (slideId: number) => {
     setSlot(slideId, 'uploading');
-    await supabase.from('carousel_images').delete().eq('slide_id', slideId);
-    setSavedUrls(p => { const n = { ...p }; delete n[slideId]; return n; });
-    setLocalPreview(p => { const n = { ...p }; delete n[slideId]; return n; });
-    setSlot(slideId, 'idle');
+    try {
+      const res = await fetch(`${ADMIN_FN_URL}?action=delete`, {
+        method: 'POST',
+        headers: { ...FN_HEADERS, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ slideId }),
+      });
+      const json = await res.json();
+      if (!res.ok || json.error) throw new Error(json.error ?? 'Delete failed');
+
+      setSavedUrls(p => { const n = { ...p }; delete n[slideId]; return n; });
+      setLocalPreview(p => { const n = { ...p }; delete n[slideId]; return n; });
+      setSlot(slideId, 'idle');
+    } catch (err) {
+      setSlot(slideId, 'error');
+      setSlotError(e => ({ ...e, [slideId]: err instanceof Error ? err.message : 'Delete failed' }));
+    }
   };
 
   const grouped = SLIDE_META.reduce<Record<string, SlideMeta[]>>((acc, s) => {
