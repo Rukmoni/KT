@@ -1,14 +1,12 @@
-/* =============================================
-   Hero Showcase Section — 30/70 Split Layout
-   ============================================= */
-
 .hero-showcase-section {
   min-height: 100vh;
   background: linear-gradient(135deg, #020617 0%, #0a0f1e 50%, #020617 100%);
   display: flex;
   align-items: center;
+  justify-content: center;
   overflow: hidden;
   position: relative;
+  padding: 5rem 2rem 4rem;
 }
 
 .hero-showcase-section::before {
@@ -16,152 +14,15 @@
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(ellipse 60% 60% at 70% 50%, rgba(99, 102, 241, 0.12) 0%, transparent 65%),
+    radial-gradient(ellipse 60% 60% at 50% 50%, rgba(99, 102, 241, 0.12) 0%, transparent 65%),
     radial-gradient(ellipse 40% 40% at 30% 30%, rgba(16, 185, 129, 0.07) 0%, transparent 65%);
   pointer-events: none;
-}
-
-.hero-showcase-inner {
-  width: 100%;
-  max-width: 1440px;
-  margin: 0 auto;
-  display: flex;
-  align-items: center;
-  min-height: 100vh;
-  padding: 5rem 2rem 4rem;
-  gap: 0;
-}
-
-/* ─── LEFT PANEL (30%) ─────────────────────── */
-
-.hero-left-panel {
-  flex: 0 0 30%;
-  max-width: 30%;
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-  z-index: 10;
-  padding-right: 2rem;
-}
-
-.hero-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: 0.65rem;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: #10b981;
-  background: rgba(16, 185, 129, 0.1);
-  border: 1px solid rgba(16, 185, 129, 0.25);
-  border-radius: 9999px;
-  padding: 0.4rem 0.9rem;
-  width: fit-content;
-}
-
-.hero-badge-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: #10b981;
-  box-shadow: 0 0 8px rgba(16, 185, 129, 0.8);
-  animation: hero-dot-pulse 2s ease-in-out infinite;
-}
-
-@keyframes hero-dot-pulse {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.5; transform: scale(1.4); }
-}
-
-.hero-showcase-title {
-  font-size: clamp(2rem, 3vw, 3rem);
-  font-weight: 800;
-  line-height: 1.1;
-  letter-spacing: -0.03em;
-  color: #f8fafc;
-  margin: 0;
-}
-
-.hero-title-gradient {
-  background: linear-gradient(135deg, #10b981 0%, #6366f1 60%, #a855f7 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-.hero-showcase-subtitle {
-  font-size: 0.95rem;
-  line-height: 1.65;
-  color: #94a3b8;
-  margin: 0;
-}
-
-.hero-showcase-actions {
-  display: flex;
-  align-items: center;
-  gap: 1.25rem;
-  flex-wrap: wrap;
-}
-
-.hero-demo-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  background: none;
-  border: none;
-  color: #cbd5e1;
-  font-size: 0.95rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: color 0.25s ease, gap 0.25s ease;
-  padding: 0;
-}
-
-.hero-demo-link:hover {
-  color: #f8fafc;
-  gap: 0.55rem;
-}
-
-
-.hero-dots {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.hero-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 9999px;
-  background: rgba(255, 255, 255, 0.15);
-  border: none;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  padding: 0;
-}
-
-.hero-dot-active {
-  width: 28px;
-  background: linear-gradient(90deg, #10b981, #6366f1);
-  box-shadow: 0 0 8px rgba(99, 102, 241, 0.5);
-}
-
-/* ─── RIGHT PANEL (70%) ────────────────────── */
-
-.hero-right-panel {
-  flex: 0 0 70%;
-  max-width: 70%;
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 100vh;
 }
 
 .hero-carousel-stage {
   position: relative;
   width: 100%;
+  max-width: 1000px;
   height: 760px;
   display: flex;
   align-items: center;
@@ -186,8 +47,6 @@
   50% { opacity: 0.4; transform: translate(-50%, -50%) scale(1.15); }
 }
 
-/* ─── Carousel Track (overflow hidden container) */
-
 .hero-carousel-track {
   position: relative;
   width: 100%;
@@ -198,8 +57,6 @@
   overflow: hidden;
 }
 
-/* ─── Phone card wrapper (absolutely centered) */
-
 .hero-phone-card-wrapper {
   position: absolute;
   display: flex;
@@ -208,8 +65,6 @@
   gap: 0.75rem;
   will-change: transform, opacity, filter;
 }
-
-/* ─── Card top label ─── */
 
 .hero-card-label {
   width: 260px;
@@ -317,8 +172,6 @@
   z-index: 20;
 }
 
-/* ─── Navigation Arrows ─── */
-
 .hero-arrow {
   position: absolute;
   top: 50%;
@@ -339,15 +192,13 @@
 }
 
 .hero-arrow:hover {
-  background: rgba(99, 102, 241, 0.2);
-  border-color: rgba(99, 102, 241, 0.4);
+  background: rgba(16, 185, 129, 0.2);
+  border-color: rgba(16, 185, 129, 0.4);
   transform: translateY(-50%) scale(1.08);
 }
 
 .hero-arrow-left { left: 1rem; }
 .hero-arrow-right { right: 1rem; }
-
-/* ─── Progress Bar ─── */
 
 .hero-progress-bar-wrap {
   position: absolute;
@@ -367,41 +218,7 @@
   width: 100%;
 }
 
-/* ─── Responsive ─────────────────────────── */
-
 @media (max-width: 1024px) {
-  .hero-showcase-inner {
-    flex-direction: column;
-    min-height: auto;
-    padding: 6rem 1.5rem 3rem;
-    gap: 3rem;
-  }
-
-  .hero-left-panel,
-  .hero-right-panel {
-    flex: unset;
-    max-width: 100%;
-    width: 100%;
-    padding-right: 0;
-  }
-
-  .hero-left-panel {
-    align-items: center;
-    text-align: center;
-  }
-
-  .hero-showcase-title {
-    font-size: clamp(2rem, 6vw, 3rem);
-  }
-
-.hero-dots {
-    justify-content: center;
-  }
-
-  .hero-right-panel {
-    min-height: 580px;
-  }
-
   .hero-carousel-stage {
     height: 580px;
   }
