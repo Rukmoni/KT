@@ -99,32 +99,35 @@
 
 /* ─── Image Visual ─────────────────────────────────────────── */
 .svc-image-visual {
-  min-height: 380px;
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  justify-content: center;
-  padding: 12px;
+  overflow: visible !important;
+  min-height: unset !important;
+  background: transparent !important;
+  border: none !important;
+  backdrop-filter: none !important;
+  padding: 0;
+  display: block;
 }
 .svc-image-frame {
   position: relative;
   width: 100%;
-  border-radius: 14px;
+  border-radius: 16px;
   border: 1px solid;
   overflow: hidden;
   line-height: 0;
+  background: #0a0f1a;
 }
 .svc-image-media {
   width: 100%;
   height: auto;
   display: block;
   object-fit: contain;
-  border-radius: 13px;
+  border-radius: 15px;
 }
 .svc-image-overlay {
   position: absolute;
   inset: 0;
   pointer-events: none;
+  border-radius: 15px;
 }
 
 /* ─── Shared atoms ────────────────────────────────────────── */

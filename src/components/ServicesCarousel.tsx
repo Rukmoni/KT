@@ -856,17 +856,17 @@ const ImageVisual = ({ imageUrl, videoUrl, title, color }: { imageUrl: string; v
   }, [videoUrl]);
 
   return (
-    <div className="svc-visual svc-image-visual" style={{ boxShadow: `0 0 60px ${color}20` }}>
-      <div className="svc-image-frame" style={{ borderColor: `${color}30` }}>
+    <div className="svc-visual svc-image-visual">
+      <div className="svc-image-frame" style={{ borderColor: `${color}30`, boxShadow: `0 0 40px ${color}18` }}>
         {videoUrl
           ? <video ref={videoRef} src={videoUrl} muted loop playsInline autoPlay className="svc-image-media" />
           : <img src={imageUrl} alt={title} className="svc-image-media" />
         }
-        <div className="svc-image-overlay" style={{ background: `linear-gradient(to top, ${color}18 0%, transparent 60%)` }} />
-      </div>
-      <div className="svc-float-badge" style={{ background: `${color}18`, borderColor: `${color}40`, bottom: '6%', right: '4%' }}>
-        <span className="svc-badge-dot" style={{ background: color }} />
-        <span style={{ color }}>Live Preview</span>
+        <div className="svc-image-overlay" style={{ background: `linear-gradient(to top, ${color}28 0%, transparent 55%)` }} />
+        <div style={{ position: 'absolute', bottom: '10px', right: '12px', display: 'flex', alignItems: 'center', gap: '6px', padding: '5px 11px', borderRadius: '100px', border: `1px solid ${color}40`, background: `${color}18`, fontSize: '12px', fontWeight: 600, whiteSpace: 'nowrap' }}>
+          <span style={{ width: 6, height: 6, borderRadius: '50%', background: color, display: 'inline-block' }} />
+          <span style={{ color }}>Live Preview</span>
+        </div>
       </div>
     </div>
   );
@@ -905,15 +905,21 @@ export default function ServicesCarousel() {
   const [remoteImages, setRemoteImages] = useState<Record<number, string>>({});
 
   useEffect(() => {
-    supabase.from('carousel_images').select('slide_id, image_url').then(({ data }) => {
-      if (data) {
-        const map: Record<number, string> = {};
-        (data as { slide_id: number; image_url: string }[]).forEach(r => { map[r.slide_id] = r.image_url; });
-        setRemoteImages(map);
-      }
-    });
+    supabase
+      .from('carousel_images')
+      .select('slide_id, image_url')
+      .then(({ data }) => {
+        if (data) {
+          const map: Record<number, string> = {};
+          (data as { slide_id: number; image_url: string }[]).forEach(r => {
+            map[r.slide_id] = r.image_url;
+          });
+          setRemoteImages(map);
+        }
+      });
   }, []);
 
+  // Remote image overrides local fallback; local fallback overrides animated visual
   const resolvedSlides = slides.map(s => ({
     ...s,
     imageUrl: remoteImages[s.id] ?? s.imageUrl,
