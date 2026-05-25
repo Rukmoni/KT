@@ -1,4 +1,4 @@
-import { Code2, Zap, Palette, Network, Layers } from 'lucide-react';
+import { Code as Code2, Zap, Palette, Network, Layers } from 'lucide-react';
 
 const features = [
   {
@@ -58,16 +58,18 @@ export const WhyChooseUs = () => {
 
           {/* Feature Cards map to the remaining 5 cells */}
           {features.map((feature, index) => (
-            <div 
-              key={index} 
+            <div
+              key={index}
               className="bg-[#111424] border border-white/5 hover:border-purple-500/20 rounded-[1.25rem] p-7 transition-all duration-300 flex flex-col h-full group hover:bg-[#15192b]"
             >
-              <div className={`w-9 h-9 rounded-lg flex items-center justify-center mb-5 border border-white/5 shadow-inner transition-transform group-hover:scale-110 duration-300 ${feature.iconBg}`}>
-                {feature.icon}
+              <div className="flex items-center gap-3 mb-2">
+                <div className={`w-9 h-9 rounded-lg flex-shrink-0 flex items-center justify-center border border-white/5 shadow-inner transition-transform group-hover:scale-110 duration-300 ${feature.iconBg}`}>
+                  {feature.icon}
+                </div>
+                <h3 className="text-white font-semibold text-[1.05rem] tracking-tight leading-snug">
+                  {feature.title}
+                </h3>
               </div>
-              <h3 className="text-white font-semibold text-[1.05rem] mb-2 tracking-tight">
-                {feature.title}
-              </h3>
               <p className="text-[#8f8f9d] text-[0.8rem] leading-[1.6] flex-grow pr-2">
                 {feature.description}
               </p>

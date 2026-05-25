@@ -1,4 +1,4 @@
-import { Search, MessageSquare, ThumbsUp, Mic, Wand2, Zap } from 'lucide-react';
+import { Search, MessageSquare, ThumbsUp, Mic, Wand as Wand2, Zap } from 'lucide-react';
 
 const aiFeatures = [
   {
@@ -63,16 +63,18 @@ export const AIFeatures = () => {
         {/* Grid Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {aiFeatures.map((feat, index) => (
-            <div 
-              key={index} 
+            <div
+              key={index}
               className="bg-[#111424] border border-white/5 hover:border-purple-500/20 rounded-[2rem] p-8 md:p-10 transition-all duration-300 flex flex-col h-full group hover:bg-[#15192b]"
             >
-              <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-8 border border-white/5 shadow-inner transition-transform group-hover:scale-110 duration-300 ${feat.iconBg}`}>
-                {feat.icon}
+              <div className="flex items-center gap-4 mb-3">
+                <div className={`w-12 h-12 rounded-xl flex-shrink-0 flex items-center justify-center border border-white/5 shadow-inner transition-transform group-hover:scale-110 duration-300 ${feat.iconBg}`}>
+                  {feat.icon}
+                </div>
+                <h3 className="text-white font-semibold text-[1.15rem] tracking-tight leading-snug">
+                  {feat.title}
+                </h3>
               </div>
-              <h3 className="text-white font-semibold text-[1.15rem] mb-3 tracking-tight">
-                {feat.title}
-              </h3>
               <p className="text-[#a1a1aa] text-[0.85rem] leading-relaxed flex-grow">
                 {feat.description}
               </p>
