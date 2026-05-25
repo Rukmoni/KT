@@ -1,14 +1,75 @@
-import { Mail, CalendarDays } from 'lucide-react';
+import { useState } from 'react';
+import { Mail, CalendarDays, CheckCircle, AlertCircle } from 'lucide-react';
 import { useLeadStore } from '../store/leadStore';
 import { sendEmail } from '../services/emailService';
 import './Contact.css';
 
 export const Contact = () => {
+  const [status, setStatus] = useState<'idle' | 'sending' | 'success' | 'error'>('idle');
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setStatus('sending');
+
+    const formData = new FormData(e.currentTarget);
+    const name    = formData.get('name')    as string;
+    const email   = formData.get('email')   as string;
+    const phone   = formData.get('phone')   as string;
+    const service = formData.get('service') as string;
+    const details = formData.get('details') as string;
+    const today   = new Date().toLocaleString();
+
+    const summarySnippet = details.length > 120 ? details.substring(0, 120) + '...' : details;
+
+    let requestBody = `Dear Kuvanta Tech Sales Support Team,\n\n`;
+    requestBody += `Please find the details of a new business inquiry submitted via the web portal on ${today}.\n\n`;
+    requestBody += `EXECUTIVE SUMMARY\n`;
+    requestBody += `-------------------------------------------------------\n`;
+    requestBody += `The client is requesting assistance with ${service}. They provided the following requirement: "${summarySnippet}".\n\n`;
+    requestBody += `CLIENT CONTACT DETAILS\n`;
+    requestBody += `-------------------------------------------------------\n`;
+    requestBody += `Name:          ${name}\n`;
+    requestBody += `Email:         ${email}\n`;
+    requestBody += `Phone:         ${phone}\n`;
+    requestBody += `Service Type:  ${service}\n`;
+    requestBody += `Date/Time:     ${today}\n\n`;
+    requestBody += `RECOMMENDED ACTION ITEMS\n`;
+    requestBody += `-------------------------------------------------------\n`;
+    requestBody += `1. Review the verbatim inquiry constraints.\n`;
+    requestBody += `2. Contact ${name} within 24 hours to schedule a deep-dive consultation.\n\n`;
+    requestBody += `VERBATIM INQUIRY DETAILS\n`;
+    requestBody += `-------------------------------------------------------\n`;
+    requestBody += `${details}\n`;
+
+    const ok = await sendEmail({
+      toEmail: 'letsdothis@kuvanta.tech',
+      ccEmail: email,
+      subject: `New Inquiry: ${service} - ${name}`,
+      body: requestBody,
+    });
+
+    useLeadStore.getState().addLead({
+      source: 'Contact Form',
+      name,
+      email,
+      phone,
+      serviceType: service,
+      summary: summarySnippet,
+      fullTranscript: requestBody,
+    });
+
+    setStatus(ok ? 'success' : 'error');
+    if (ok) {
+      (e.target as HTMLFormElement).reset();
+      setTimeout(() => setStatus('idle'), 5000);
+    }
+  };
+
   return (
     <section id="contact" className="py-32 contact-section">
       <div className="container mx-auto contact-layout">
-        
-        {/* Left Side: Text and Contact Info */}
+
+        {/* Left Side */}
         <div className="contact-left">
           <h2 className="mb-6 font-bold contact-heading" style={{ lineHeight: '1.1', letterSpacing: '-0.03em' }}>
             Ready to build <br />
@@ -29,7 +90,7 @@ export const Contact = () => {
                 href=""
                 onClick={(e) => {
                   e.preventDefault();
-                  (window as any).Calendly?.initPopupWidget({ url: 'https://calendly.com/nagarajan-kuvanta/30min' });
+                  (window as unknown as Record<string, unknown> & { Calendly?: { initPopupWidget: (opts: Record<string, string>) => void } }).Calendly?.initPopupWidget({ url: 'https://calendly.com/nagarajan-kuvanta/30min' });
                 }}
                 className="contact-info-item contact-calendly-link"
                 style={{ marginTop: '0.75rem', cursor: 'pointer', textDecoration: 'none' }}
@@ -38,67 +99,13 @@ export const Contact = () => {
                 Schedule time with me
               </a>
             </div>
-
-
           </div>
         </div>
 
-        {/* Right Side: Contact Form */}
+        {/* Right Side: Form */}
         <div className="contact-right">
           <div className="contact-form-card">
-            <form className="contact-form" onSubmit={(e) => {
-              e.preventDefault();
-              const formData = new FormData(e.target as HTMLFormElement);
-              const name = formData.get('name') as string;
-              const email = formData.get('email') as string;
-              const phone = formData.get('phone') as string;
-              const service = formData.get('service') as string;
-              const details = formData.get('details') as string;
-              const today = new Date().toLocaleString();
-              
-              const summarySnippet = details.length > 120 ? details.substring(0, 120) + '...' : details;
-
-              let requestBody = `Dear Kuvanta Tech Sales Support Team,\n\n`;
-              requestBody += `Please find the details of a new business inquiry submitted via the web portal on ${today}.\n\n`;
-              
-              requestBody += `EXECUTIVE SUMMARY\n`;
-              requestBody += `-------------------------------------------------------\n`;
-              requestBody += `The client is requesting assistance with ${service}. They provided the following requirement: "${summarySnippet}".\n\n`;
-
-              requestBody += `CLIENT CONTACT DETAILS\n`;
-              requestBody += `-------------------------------------------------------\n`;
-              requestBody += `Name:          ${name}\n`;
-              requestBody += `Email:         ${email}\n`;
-              requestBody += `Phone:         ${phone}\n`;
-              requestBody += `Service Type:  ${service}\n`;
-              requestBody += `Date/Time:     ${today}\n\n`;
-
-              requestBody += `RECOMMENDED ACTION ITEMS\n`;
-              requestBody += `-------------------------------------------------------\n`;
-              requestBody += `1. Review the verbatim inquiry constraints.\n`;
-              requestBody += `2. Contact ${name} within 24 hours to schedule a deep-dive consultation.\n\n`;
-
-              requestBody += `VERBATIM INQUIRY DETAILS\n`;
-              requestBody += `-------------------------------------------------------\n`;
-              requestBody += `${details}\n`;
-              
-              sendEmail({
-                toEmail: 'letsdothis@kuvanta.tech',
-                ccEmail: email,
-                subject: `New Inquiry: ${service} - ${name}`,
-                body: requestBody
-              });
-              
-              useLeadStore.getState().addLead({
-                  source: 'Contact Form',
-                  name: name,
-                  email: email,
-                  phone: phone,
-                  serviceType: service,
-                  summary: summarySnippet,
-                  fullTranscript: requestBody
-              });
-            }}>
+            <form className="contact-form" onSubmit={handleSubmit}>
               <div className="contact-form-row">
                 <div className="form-field">
                   <label className="contact-label">NAME</label>
@@ -118,7 +125,7 @@ export const Contact = () => {
                 <div className="form-field">
                   <label className="contact-label">TYPE OF SERVICE</label>
                   <select name="service" className="contact-input" required style={{ appearance: 'auto', backgroundColor: 'transparent' }}>
-                    <option value="" disabled selected style={{ color: '#000' }}>Select a service...</option>
+                    <option value="" disabled style={{ color: '#000' }}>Select a service...</option>
                     <option value="App Development" style={{ color: '#000' }}>App Development</option>
                     <option value="Web Portal Development" style={{ color: '#000' }}>Web Portal Development</option>
                     <option value="AI Automation" style={{ color: '#000' }}>AI Automation</option>
@@ -130,11 +137,30 @@ export const Contact = () => {
 
               <div className="form-field">
                 <label className="contact-label">BRIEF DESCRIPTION OF SERVICE EXPECTED</label>
-                <textarea name="details" className="contact-input" rows={4} placeholder="Tell us about your requirements..." required></textarea>
+                <textarea name="details" className="contact-input" rows={4} placeholder="Tell us about your requirements..." required />
               </div>
 
-              <button type="submit" className="contact-submit-btn">
-                Send Inquiry
+              {/* Status feedback */}
+              {status === 'success' && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '12px 16px', borderRadius: '10px', background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.25)', color: '#10b981', fontSize: '14px', fontWeight: 500 }}>
+                  <CheckCircle size={16} />
+                  Inquiry sent! We'll be in touch within 24 hours.
+                </div>
+              )}
+              {status === 'error' && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '12px 16px', borderRadius: '10px', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.25)', color: '#f87171', fontSize: '14px', fontWeight: 500 }}>
+                  <AlertCircle size={16} />
+                  Couldn't send via email — your mail client has been opened as a fallback.
+                </div>
+              )}
+
+              <button
+                type="submit"
+                className="contact-submit-btn"
+                disabled={status === 'sending'}
+                style={{ opacity: status === 'sending' ? 0.7 : 1, cursor: status === 'sending' ? 'not-allowed' : 'pointer' }}
+              >
+                {status === 'sending' ? 'Sending…' : 'Send Inquiry'}
               </button>
             </form>
           </div>

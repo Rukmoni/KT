@@ -47,16 +47,21 @@ export const sendEmail = async (payload: EmailPayload): Promise<boolean> => {
       EMAILJS_CONFIG.SERVICE_ID,
       EMAILJS_CONFIG.TEMPLATE_ID,
       {
-        to_email: payload.toEmail,
-        cc_email: payload.ccEmail || '',
-        subject: payload.subject,
-        body: payload.body,
+        // Standard EmailJS template variable names
+        from_name:  payload.ccEmail || 'Website Visitor',
+        from_email: payload.ccEmail || payload.toEmail,
+        reply_to:   payload.ccEmail || payload.toEmail,
+        to_email:   payload.toEmail,
+        subject:    payload.subject,
+        message:    payload.body,
+        // Keep legacy names in case template uses them
+        body:       payload.body,
+        cc_email:   payload.ccEmail || '',
       }
     );
     return true;
   } catch (err) {
     console.error('EmailJS send failed:', err);
-    // Graceful fallback
     const a = document.createElement('a');
     a.href = `mailto:${payload.toEmail}&subject=${encodeURIComponent(payload.subject)}&body=${encodeURIComponent(payload.body)}`;
     a.click();
