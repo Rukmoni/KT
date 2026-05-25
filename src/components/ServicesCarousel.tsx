@@ -15,6 +15,8 @@ interface ServiceSlide {
   accentColor: string;
   accentGradient: string;
   visualType: string;
+  imageUrl?: string;
+  videoUrl?: string;
 }
 
 const slides: ServiceSlide[] = [
@@ -84,6 +86,7 @@ const slides: ServiceSlide[] = [
     description: 'iOS and Android apps engineered for performance, beauty, and scale. From concept to App Store — we own the full journey and obsess over every pixel.',
     features: ['iOS & Android native apps', 'React Native cross-platform builds', 'App Store optimisation & launch'],
     ctaText: 'Build My App', accentColor: '#06b6d4', accentGradient: 'linear-gradient(135deg,#06b6d4,#0ea5e9)', visualType: 'mobile',
+    imageUrl: '/carousel-images/C_img1.png', videoUrl: '/paymentVideo.mov',
   },
   {
     id: 9, service: 'App Development',
@@ -92,6 +95,7 @@ const slides: ServiceSlide[] = [
     description: 'Rock-solid architecture with real-time features, offline support, and automated CI/CD pipelines that let you ship confidently at any scale.',
     features: ['Cloud-native architecture', 'Real-time sync & offline mode', 'Automated testing & CI/CD'],
     ctaText: 'See Our Work', accentColor: '#06b6d4', accentGradient: 'linear-gradient(135deg,#06b6d4,#0ea5e9)', visualType: 'code',
+    imageUrl: '/carousel-images/C_img11.jpg', videoUrl: '/demovideo1.mov',
   },
   {
     id: 10, service: 'App Development',
@@ -100,6 +104,7 @@ const slides: ServiceSlide[] = [
     description: 'Context-aware AI support agents trained on your documentation, FAQs, and product data — handling customer queries instantly across web, mobile, and messaging channels.',
     features: ['Trained on your docs, FAQs & knowledge base', 'Multi-turn context-aware conversations', 'Live handoff to human agents when needed'],
     ctaText: 'Build My Chatbot', accentColor: '#06b6d4', accentGradient: 'linear-gradient(135deg,#06b6d4,#0ea5e9)', visualType: 'chatbot',
+    imageUrl: '/carousel-images/C_img2.png',
   },
   {
     id: 11, service: 'App Development',
@@ -108,6 +113,7 @@ const slides: ServiceSlide[] = [
     description: 'Natural language voice assistants that schedule, answer, route, and automate — embedded directly into your app, website, or phone system.',
     features: ['Natural language voice interactions', 'Schedule, query & automate via voice', 'Integrates with phone, app & web surfaces'],
     ctaText: 'Build My Voice Agent', accentColor: '#06b6d4', accentGradient: 'linear-gradient(135deg,#06b6d4,#0ea5e9)', visualType: 'voice',
+    imageUrl: '/carousel-images/C_img3.png',
   },
   {
     id: 12, service: 'App Development',
@@ -116,6 +122,7 @@ const slides: ServiceSlide[] = [
     description: 'Manage all messaging channels — WhatsApp, Instagram, Facebook, Telegram, Email, and Website — from a single AI-powered control centre. Configure, monitor, and audit everything in one place.',
     features: ['WhatsApp · Instagram · FB · Telegram · Email · Web', 'AI knowledge base & smart conversation routing', 'Real-time audit log & performance analytics'],
     ctaText: 'Explore OmniHub', accentColor: '#06b6d4', accentGradient: 'linear-gradient(135deg,#06b6d4,#0ea5e9)', visualType: 'omnichannel',
+    imageUrl: '/carousel-images/C_img4.png',
   },
 
   /* ── Web Development (2 slides) ── */
@@ -838,6 +845,32 @@ const WorkflowVisual = ({ color }: { color: string }) => (
   </div>
 );
 
+const ImageVisual = ({ imageUrl, videoUrl, title, color }: { imageUrl: string; videoUrl?: string; title: string; color: string }) => {
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  useEffect(() => {
+    if (videoRef.current) {
+      videoRef.current.play().catch(() => {});
+    }
+  }, [videoUrl]);
+
+  return (
+    <div className="svc-visual svc-image-visual" style={{ boxShadow: `0 0 60px ${color}20` }}>
+      <div className="svc-image-frame" style={{ borderColor: `${color}30` }}>
+        {videoUrl
+          ? <video ref={videoRef} src={videoUrl} muted loop playsInline autoPlay className="svc-image-media" />
+          : <img src={imageUrl} alt={title} className="svc-image-media" />
+        }
+        <div className="svc-image-overlay" style={{ background: `linear-gradient(to top, ${color}18 0%, transparent 60%)` }} />
+      </div>
+      <div className="svc-float-badge" style={{ background: `${color}18`, borderColor: `${color}40`, bottom: '6%', right: '4%' }}>
+        <span className="svc-badge-dot" style={{ background: color }} />
+        <span style={{ color }}>Live Preview</span>
+      </div>
+    </div>
+  );
+};
+
 type VisualFC = ({ color }: { color: string }) => React.ReactElement;
 
 const visualMap: Record<string, VisualFC> = {
@@ -949,7 +982,10 @@ export default function ServicesCarousel() {
               <motion.div key={`visual-${activeIndex}`} className="svc-visual-wrap"
                 custom={direction} variants={visualVariants} initial="enter" animate="center" exit="exit"
                 transition={{ duration: 0.48, ease: [0.32, 0.72, 0, 1] }}>
-                {VisualComponent && <VisualComponent color={current.accentColor} />}
+                {current.imageUrl
+                  ? <ImageVisual imageUrl={current.imageUrl} videoUrl={current.videoUrl} title={current.title} color={current.accentColor} />
+                  : VisualComponent && <VisualComponent color={current.accentColor} />
+                }
               </motion.div>
             </AnimatePresence>
 
