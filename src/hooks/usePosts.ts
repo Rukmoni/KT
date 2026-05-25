@@ -51,6 +51,7 @@ export function usePosts() {
   }, []);
 
   const publishedPosts = data?.posts.filter(p => p.published && !p.draft) ?? [];
+  const allPosts = data?.posts ?? [];
 
-  return { data, posts: publishedPosts, loading, error };
+  return { data, posts: publishedPosts, allPosts, loading, error };
 }

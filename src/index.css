@@ -150,3 +150,28 @@ a:hover {
     padding-bottom: 5rem;
   }
 }
+
+/* ── Post body formatter styles ─────────────────────────── */
+
+.post-body { font-size: 1.0625rem; line-height: 1.85; color: #374151; }
+.post-body p  { margin-bottom: 1.1rem; }
+.post-body h3 {
+  font-size: 1.05rem; font-weight: 700; color: #1e293b;
+  margin: 1.6rem 0 0.5rem;
+  display: flex; align-items: center; gap: 0.4rem;
+  padding-bottom: 0.35rem; border-bottom: 2px solid #f1f5f9;
+}
+.post-body ul { margin: 0.3rem 0 1.1rem 0; padding: 0; list-style: none; }
+.post-body ol { margin: 0.3rem 0 1.1rem 1.4rem; }
+.post-body li { margin-bottom: 0.45rem; line-height: 1.7; }
+.post-body .bullet-item { display: flex; gap: 0.55rem; align-items: flex-start; padding: 0.3rem 0; }
+.post-body .bullet-icon { flex-shrink: 0; margin-top: 0.18rem; width: 1.1rem; text-align: center; }
+.post-body .bullet-text { flex: 1; }
+.post-body .callout-block {
+  background: #f0f9ff; border-left: 4px solid #0ea5e9;
+  padding: 0.75rem 1rem; border-radius: 0 8px 8px 0;
+  margin: 1rem 0; color: #0c4a6e; font-style: italic;
+}
+.post-body hr { border: none; border-top: 1px solid #e2e8f0; margin: 1.5rem 0; }
+.post-body .section-divider { text-align: center; color: #94a3b8; font-size: 1.4rem; margin: 1.5rem 0; letter-spacing: 0.3rem; }
+.post-body .hashtag { display: inline-block; background: #eef2ff; color: #6366f1; border-radius: 4px; padding: 1px 7px; font-size: 0.8rem; margin: 1px 2px; font-weight: 500; }

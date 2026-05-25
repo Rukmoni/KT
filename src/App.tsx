@@ -40,6 +40,7 @@ const AnimatedRoutes = () => {
         <Route path="/nagarajan" element={<PortfolioPage />} />
         <Route path="/blog" element={<BlogIndex />} />
         <Route path="/blog/:slug" element={<BlogPost />} />
+        <Route path="/blog/draft/:slug" element={<BlogPost />} />
       </Routes>
     </AnimatePresence>
   );
