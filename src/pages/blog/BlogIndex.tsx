@@ -1,9 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Linkedin } from 'lucide-react';
+import { Linkedin, Search } from 'lucide-react';
 import { usePosts, type Post, type Category } from '../../hooks/usePosts';
-
-// ── Helpers ───────────────────────────────────────────────────────────────────
 
 function cleanExcerpt(text: string): string {
   return text
@@ -13,16 +11,14 @@ function cleanExcerpt(text: string): string {
     .replace(/\s{2,}/g, ' ')
     .replace(/(#\w+)/g, '')
     .trim()
-    .slice(0, 200);
+    .slice(0, 180);
 }
-
-// ── Sub-components ─────────────────────────────────────────────────────────────
 
 function CategoryBadge({ label, color }: { label: string; color: string }) {
   return (
     <span
-      className="inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold text-white"
-      style={{ backgroundColor: color }}
+      className="inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold"
+      style={{ backgroundColor: `${color}22`, color, border: `1px solid ${color}44` }}
     >
       {label}
     </span>
@@ -30,33 +26,30 @@ function CategoryBadge({ label, color }: { label: string; color: string }) {
 }
 
 function PostCard({ post, categoryColor }: { post: Post; categoryColor: string }) {
-  const hasMedia = post.image || post.video;
+  const hasImage = Boolean(post.image);
 
   return (
-    <article className="bg-white rounded-xl border border-gray-100 shadow-sm flex flex-col overflow-hidden group transition-all duration-300 hover:-translate-y-[3px] hover:shadow-lg focus-within:ring-2 focus-within:ring-[#6366f1] focus-within:ring-offset-2">
-      {/* Card media header */}
-      {post.image && (
-        <div className="h-44 overflow-hidden">
+    <article
+      className="group flex flex-col overflow-hidden rounded-2xl border transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
+      style={{ background: '#0f172a', borderColor: 'rgba(255,255,255,0.07)' }}
+    >
+      {hasImage ? (
+        <div className="h-44 overflow-hidden flex-shrink-0">
           <img
-            src={post.image}
+            src={post.image!}
             alt={post.title}
             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
             loading="lazy"
           />
         </div>
-      )}
-      {!post.image && post.video && (
-        <div className="h-44 bg-slate-100 flex items-center justify-center flex-shrink-0">
-          <div className="w-12 h-12 rounded-full bg-slate-200 flex items-center justify-center">
-            <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 text-slate-500 ml-0.5">
-              <path d="M8 5v14l11-7z" />
-            </svg>
-          </div>
-        </div>
+      ) : (
+        <div
+          className="h-1.5 w-full flex-shrink-0"
+          style={{ background: `linear-gradient(90deg, ${categoryColor}, transparent)` }}
+        />
       )}
 
-      {/* Content */}
-      <div className={`p-5 flex flex-col flex-1 gap-3 ${!hasMedia ? '' : ''}`}>
+      <div className="p-5 flex flex-col flex-1 gap-3">
         <div className="flex items-start justify-between gap-2">
           <CategoryBadge label={post.categoryLabel} color={categoryColor} />
           <a
@@ -64,25 +57,29 @@ function PostCard({ post, categoryColor }: { post: Post; categoryColor: string }
             target="_blank"
             rel="noopener noreferrer"
             aria-label={`View "${post.title}" on LinkedIn`}
-            className="flex-shrink-0 text-[#0A66C2] hover:opacity-75 transition-opacity mt-0.5"
-            tabIndex={0}
+            className="flex-shrink-0 transition-opacity hover:opacity-70 mt-0.5"
+            style={{ color: '#0A66C2' }}
           >
-            <Linkedin size={17} strokeWidth={1.8} />
+            <Linkedin size={16} strokeWidth={1.8} />
           </a>
         </div>
 
-        <h2 className="text-slate-900 font-bold text-base leading-snug group-hover:text-[#6366f1] transition-colors line-clamp-2">
+        <h2
+          className="font-bold text-base leading-snug line-clamp-2"
+          style={{ color: '#f1f5f9' }}
+        >
           {post.title}
         </h2>
 
-        <p className="text-slate-500 text-sm leading-relaxed flex-1 line-clamp-3">
+        <p className="text-sm leading-relaxed flex-1 line-clamp-3" style={{ color: '#94a3b8' }}>
           {cleanExcerpt(post.excerpt || post.body)}
         </p>
 
-        <div className="pt-2 border-t border-gray-100 mt-auto">
+        <div className="pt-3 mt-auto border-t" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
           <Link
             to={`/blog/${post.slug}`}
-            className="text-[#6366f1] text-sm font-semibold hover:underline focus:outline-none focus:underline"
+            className="text-sm font-semibold transition-opacity hover:opacity-80"
+            style={{ color: categoryColor }}
           >
             Read more →
           </Link>
@@ -107,11 +104,12 @@ function FilterBar({
         <button
           aria-pressed={active === 'all'}
           onClick={() => onChange('all')}
-          className={`px-4 py-1.5 rounded-full text-sm font-semibold border transition-colors duration-200 whitespace-nowrap ${
-            active === 'all'
-              ? 'bg-gray-900 text-white border-gray-900'
-              : 'bg-white text-gray-600 border-gray-200 hover:border-gray-400 hover:text-gray-900'
-          }`}
+          className="px-4 py-1.5 rounded-full text-sm font-semibold border transition-all duration-200 whitespace-nowrap"
+          style={{
+            background: active === 'all' ? '#f1f5f9' : 'transparent',
+            color: active === 'all' ? '#020617' : '#64748b',
+            borderColor: active === 'all' ? '#f1f5f9' : 'rgba(255,255,255,0.1)',
+          }}
         >
           All Posts
         </button>
@@ -124,9 +122,9 @@ function FilterBar({
               onClick={() => onChange(key)}
               className="px-4 py-1.5 rounded-full text-sm font-semibold border transition-all duration-200 whitespace-nowrap"
               style={{
-                backgroundColor: isActive ? cat.color : 'white',
-                color: isActive ? 'white' : '#4b5563',
-                borderColor: isActive ? cat.color : '#e5e7eb',
+                background: isActive ? cat.color : 'transparent',
+                color: isActive ? '#fff' : '#64748b',
+                borderColor: isActive ? cat.color : 'rgba(255,255,255,0.1)',
               }}
             >
               {cat.label}
@@ -138,87 +136,116 @@ function FilterBar({
   );
 }
 
-// ── Page ──────────────────────────────────────────────────────────────────────
-
 export function BlogIndex() {
   const { posts, data, loading, error } = usePosts();
   const [activeCategory, setActiveCategory] = useState('all');
+  const [search, setSearch] = useState('');
 
-  const sortedPosts = [...posts].sort((a, b) => b.id - a.id);
+  const sorted = [...posts].sort((a, b) => b.id - a.id);
 
-  const filtered =
-    activeCategory === 'all'
-      ? sortedPosts
-      : sortedPosts.filter(p => p.category === activeCategory);
+  const filtered = sorted.filter(p => {
+    const matchCat = activeCategory === 'all' || p.category === activeCategory;
+    const matchSearch = !search || p.title.toLowerCase().includes(search.toLowerCase());
+    return matchCat && matchSearch;
+  });
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#f8fafc]">
-        <div className="w-8 h-8 rounded-full border-2 border-[#6366f1] border-t-transparent animate-spin" />
+      <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--bg-primary)' }}>
+        <div
+          className="w-8 h-8 rounded-full border-2 animate-spin"
+          style={{ borderColor: '#6366f133', borderTopColor: '#6366f1' }}
+        />
       </div>
     );
   }
 
   if (error || !data) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#f8fafc]">
-        <p className="text-slate-500 text-sm">Could not load posts.</p>
+      <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--bg-primary)' }}>
+        <p style={{ color: '#64748b' }} className="text-sm">Could not load posts.</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] font-['Inter',sans-serif]">
-      {/* ── Hero ────────────────────────────────────────────────── */}
-      <div className="bg-white border-b border-slate-200">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-28 pb-12 sm:pt-32 sm:pb-16 text-center">
-          {/* Avatar */}
-          <div className="w-16 h-16 rounded-full bg-[#6366f1] flex items-center justify-center text-white text-xl font-bold mx-auto mb-5 shadow-md">
+    <div className="min-h-screen font-['Inter',sans-serif]" style={{ background: 'var(--bg-primary)', color: 'var(--text-primary)' }}>
+
+      {/* Hero */}
+      <div style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', background: 'var(--bg-secondary)' }}>
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-28 pb-12 sm:pt-32 sm:pb-14 text-center">
+          <div
+            className="w-16 h-16 rounded-full flex items-center justify-center text-white text-xl font-bold mx-auto mb-5 shadow-lg"
+            style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}
+          >
             NM
           </div>
-          <h1 className="text-4xl font-bold text-slate-900 mb-3">
+          <h1 className="text-4xl sm:text-5xl font-extrabold mb-3" style={{ color: '#f1f5f9' }}>
             Insights &amp; Ideas
           </h1>
-          <p className="text-lg text-gray-500 mb-4">
+          <p className="text-lg mb-4" style={{ color: '#94a3b8' }}>
             Thoughts on AI, Project Management, Agile Delivery, and Leadership
           </p>
-          <p className="text-sm text-slate-500">
+          <p className="text-sm" style={{ color: '#64748b' }}>
             by{' '}
             <a
               href="https://www.linkedin.com/in/nagarajanmaheswaran/"
               target="_blank"
               rel="noopener noreferrer"
-              className="font-semibold text-slate-700 hover:text-[#6366f1] transition-colors"
+              className="font-semibold transition-colors hover:opacity-80"
+              style={{ color: '#cbd5e1' }}
             >
               Nagarajan Maheswaran
             </a>
             {' · '}
-            <span className="text-slate-400">PMP® PSM I CSPO®</span>
+            <span style={{ color: '#475569' }}>PMP® PSM I CSPO®</span>
           </p>
+
+          {/* Search */}
+          <div className="relative mt-7 max-w-md mx-auto">
+            <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2" style={{ color: '#475569' }} />
+            <input
+              type="text"
+              placeholder="Search posts..."
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              className="w-full pl-9 pr-4 py-2.5 rounded-xl text-sm outline-none transition-all focus:ring-1"
+              style={{
+                background: 'rgba(255,255,255,0.05)',
+                border: '1px solid rgba(255,255,255,0.1)',
+                color: '#f1f5f9',
+              }}
+            />
+          </div>
         </div>
       </div>
 
-      {/* ── Filter bar (sticky on desktop) ──────────────────────── */}
-      <div className="bg-white border-b border-slate-100 sticky top-[72px] z-20 shadow-sm">
+      {/* Filter bar */}
+      <div
+        className="sticky z-20"
+        style={{
+          top: '72px',
+          background: 'rgba(2,6,23,0.9)',
+          backdropFilter: 'blur(12px)',
+          borderBottom: '1px solid rgba(255,255,255,0.06)',
+        }}
+      >
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
-          <FilterBar
-            categories={data.categories}
-            active={activeCategory}
-            onChange={setActiveCategory}
-          />
+          <FilterBar categories={data.categories} active={activeCategory} onChange={setActiveCategory} />
         </div>
       </div>
 
-      {/* ── Grid ────────────────────────────────────────────────── */}
+      {/* Grid */}
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         {filtered.length === 0 ? (
           <div className="text-center py-24">
             <p className="text-4xl mb-4">🔍</p>
-            <p className="text-slate-600 font-semibold mb-1">No posts in this category yet</p>
-            <p className="text-slate-400 text-sm">Check back soon — more content is on its way.</p>
+            <p className="font-semibold mb-1" style={{ color: '#cbd5e1' }}>No posts found</p>
+            <p className="text-sm" style={{ color: '#475569' }}>Try a different filter or search term.</p>
             <button
-              onClick={() => setActiveCategory('all')}
-              className="mt-6 text-[#6366f1] text-sm font-semibold hover:underline"
+              onClick={() => { setActiveCategory('all'); setSearch(''); }}
+              className="mt-6 text-sm font-semibold hover:opacity-80 transition-opacity"
+              style={{ color: '#6366f1' }}
             >
               ← View all posts
             </button>

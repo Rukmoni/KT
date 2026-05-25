@@ -3,8 +3,6 @@ import { useParams, Link, Navigate } from 'react-router-dom';
 import { ArrowLeft, Linkedin } from 'lucide-react';
 import { usePosts, type Post } from '../../hooks/usePosts';
 
-// ── SEO helper ─────────────────────────────────────────────────────────────────
-
 function setMeta(name: string, content: string, prop = false) {
   const attr = prop ? 'property' : 'name';
   let el = document.querySelector(`meta[${attr}="${name}"]`) as HTMLMetaElement | null;
@@ -16,143 +14,67 @@ function setMeta(name: string, content: string, prop = false) {
   el.setAttribute('content', content);
 }
 
-// ── YouTube helper ─────────────────────────────────────────────────────────────
-
 function getYouTubeId(url: string): string | null {
   const m = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|v\/))([a-zA-Z0-9_-]{11})/);
   return m ? m[1] : null;
 }
 
-// ── Body formatter (returns HTML string) ──────────────────────────────────────
-
-const BULLET_RE    = /^([•✔✅☑→👉►▸◆▶🔸🔹🔶⚡📌🚨])\s+(.+)/u;
-const NUMBERED_RE  = /^([0-9]+[.):])\s*(.+)/u;
-const DIVIDER_RE   = /^[─—⸻\-=~]{3,}$/;
-const QUOTE_RE     = /^[""](.+)[""]$/;
-const TAG_RE       = /(#[A-Za-z][A-Za-z0-9_]+)/g;
+const BULLET_RE     = /^([•✔✅☑→👉►▸◆▶🔸🔹🔶⚡📌🚨])\s+(.+)/u;
+const NUMBERED_RE   = /^([0-9]+[.):])\s*(.+)/u;
+const DIVIDER_RE    = /^[─—⸻\-=~]{3,}$/;
+const QUOTE_RE      = /^[""](.+)[""]$/;
+const TAG_RE        = /(#[A-Za-z][A-Za-z0-9_]+)/g;
 const HEADING_EMOJI = /^[🚀💡📱🎨🌐💰🤖🔥✨🎯🧭📊📘🔑🧠💼🏆🌟🎉📢🔎🛠️⭐🌍🚦⚙️🎓🌱⚖️🔐💎📈🔮🧩]/u;
 
 function escapeHtml(s: string): string {
-  return s
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
 function applyInline(text: string): string {
   let s = escapeHtml(text);
-  // Bold
   s = s.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
-  // Hashtags
-  s = s.replace(TAG_RE, '<span class="hashtag">$1</span>');
+  s = s.replace(TAG_RE, '<span class="blog-hashtag">$1</span>');
   return s;
 }
 
 function formatBody(raw: string): string {
   const lines = raw.split('\n');
   const parts: string[] = [];
-
   let paraBuffer: string[] = [];
-  let ulBuffer: string[] = [];
-  let olBuffer: string[] = [];
+  let ulBuffer:   string[] = [];
+  let olBuffer:   string[] = [];
 
-  const flushPara = () => {
-    if (paraBuffer.length) {
-      parts.push(`<p>${paraBuffer.join(' ')}</p>`);
-      paraBuffer = [];
-    }
-  };
+  const flushPara = () => { if (paraBuffer.length) { parts.push(`<p>${paraBuffer.join(' ')}</p>`); paraBuffer = []; } };
+  const flushUl   = () => { if (ulBuffer.length)   { parts.push(`<ul>${ulBuffer.join('')}</ul>`); ulBuffer = []; } };
+  const flushOl   = () => { if (olBuffer.length)   { parts.push(`<ol>${olBuffer.join('')}</ol>`); olBuffer = []; } };
+  const flushAll  = () => { flushPara(); flushUl(); flushOl(); };
 
-  const flushUl = () => {
-    if (ulBuffer.length) {
-      parts.push(`<ul>${ulBuffer.join('')}</ul>`);
-      ulBuffer = [];
-    }
-  };
-
-  const flushOl = () => {
-    if (olBuffer.length) {
-      parts.push(`<ol class="list-decimal ml-5">${olBuffer.join('')}</ol>`);
-      olBuffer = [];
-    }
-  };
-
-  const flushAll = () => {
-    flushPara();
-    flushUl();
-    flushOl();
-  };
-
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
+  for (const line of lines) {
     const trimmed = line.trim();
+    if (trimmed === '') { flushAll(); continue; }
+    if (trimmed === '⸻' || trimmed === '—') { flushAll(); parts.push('<div class="blog-divider">· · ·</div>'); continue; }
+    if (DIVIDER_RE.test(trimmed)) { flushAll(); parts.push('<hr class="blog-hr">'); continue; }
 
-    // Blank line
-    if (trimmed === '') {
-      flushAll();
-      continue;
-    }
-
-    // Divider
-    if (trimmed === '⸻' || trimmed === '—') {
-      flushAll();
-      parts.push('<div class="section-divider">· · ·</div>');
-      continue;
-    }
-
-    if (DIVIDER_RE.test(trimmed)) {
-      flushAll();
-      parts.push('<hr>');
-      continue;
-    }
-
-    // Quote / callout
     const quoteMatch = trimmed.match(QUOTE_RE);
-    if (quoteMatch) {
-      flushAll();
-      parts.push(`<div class="callout-block">${applyInline(quoteMatch[1])}</div>`);
-      continue;
-    }
+    if (quoteMatch) { flushAll(); parts.push(`<div class="blog-callout">${applyInline(quoteMatch[1])}</div>`); continue; }
 
-    // Bullet
     const bulletMatch = trimmed.match(BULLET_RE);
     if (bulletMatch) {
-      flushPara();
-      flushOl();
-      const icon = bulletMatch[1];
-      const text = applyInline(bulletMatch[2]);
-      ulBuffer.push(
-        `<li><div class="bullet-item"><span class="bullet-icon">${escapeHtml(icon)}</span><span class="bullet-text">${text}</span></div></li>`
-      );
+      flushPara(); flushOl();
+      ulBuffer.push(`<li><span class="blog-bullet-icon">${escapeHtml(bulletMatch[1])}</span><span>${applyInline(bulletMatch[2])}</span></li>`);
       continue;
     }
 
-    // Numbered list
     const numberedMatch = trimmed.match(NUMBERED_RE);
-    if (numberedMatch) {
-      flushPara();
-      flushUl();
-      const text = applyInline(numberedMatch[2]);
-      olBuffer.push(`<li>${text}</li>`);
-      continue;
-    }
+    if (numberedMatch) { flushPara(); flushUl(); olBuffer.push(`<li>${applyInline(numberedMatch[2])}</li>`); continue; }
 
-    // Heading (emoji start, short line, no trailing punctuation)
-    if (
-      HEADING_EMOJI.test(trimmed) &&
-      trimmed.length < 90 &&
-      !trimmed.endsWith('.') &&
-      !trimmed.endsWith(',')
-    ) {
+    if (HEADING_EMOJI.test(trimmed) && trimmed.length < 90 && !trimmed.endsWith('.') && !trimmed.endsWith(',')) {
       flushAll();
-      parts.push(`<h3>${applyInline(trimmed)}</h3>`);
+      parts.push(`<h3 class="blog-h3">${applyInline(trimmed)}</h3>`);
       continue;
     }
 
-    // Regular paragraph line — accumulate
-    flushUl();
-    flushOl();
+    flushUl(); flushOl();
     paraBuffer.push(applyInline(trimmed));
   }
 
@@ -160,13 +82,11 @@ function formatBody(raw: string): string {
   return parts.join('\n');
 }
 
-// ── Sub-components ─────────────────────────────────────────────────────────────
-
 function CategoryBadge({ label, color }: { label: string; color: string }) {
   return (
     <span
-      className="inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold text-white"
-      style={{ backgroundColor: color }}
+      className="inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold"
+      style={{ backgroundColor: `${color}22`, color, border: `1px solid ${color}44` }}
     >
       {label}
     </span>
@@ -178,24 +98,25 @@ function AuthorBlock({ post, categoryColor }: { post: Post; categoryColor: strin
     <div className="flex items-center gap-3">
       <div
         className="w-11 h-11 rounded-full flex items-center justify-center text-white text-sm font-bold flex-shrink-0"
-        style={{ backgroundColor: categoryColor }}
+        style={{ background: `linear-gradient(135deg, ${categoryColor}, ${categoryColor}99)` }}
       >
         NM
       </div>
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-slate-900 font-bold text-sm">{post.author}</span>
+          <span className="font-bold text-sm" style={{ color: '#f1f5f9' }}>{post.author}</span>
           <a
             href="https://www.linkedin.com/in/nagarajanmaheswaran/"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1 text-xs font-semibold text-[#0A66C2] hover:opacity-75 transition-opacity"
+            className="inline-flex items-center gap-1 text-xs font-semibold transition-opacity hover:opacity-75"
+            style={{ color: '#0A66C2' }}
           >
             <Linkedin size={13} strokeWidth={2} />
             Follow
           </a>
         </div>
-        <p className="text-gray-400 text-xs leading-snug mt-0.5 truncate max-w-xs sm:max-w-sm">
+        <p className="text-xs leading-snug mt-0.5 truncate max-w-xs sm:max-w-sm" style={{ color: '#64748b' }}>
           {post.authorTitle}
         </p>
       </div>
@@ -207,22 +128,21 @@ function RelatedCard({ post, categoryColor }: { post: Post; categoryColor: strin
   return (
     <Link
       to={`/blog/${post.slug}`}
-      className="bg-white rounded-xl border border-slate-200 p-4 flex flex-col gap-2 hover:-translate-y-0.5 hover:shadow-md transition-all duration-200 group focus:outline-none focus:ring-2 focus:ring-[#6366f1] focus:ring-offset-2"
+      className="rounded-xl p-4 flex flex-col gap-2 transition-all duration-200 hover:-translate-y-0.5 border"
+      style={{ background: '#0f172a', borderColor: 'rgba(255,255,255,0.07)' }}
     >
       <span
-        className="inline-block px-2 py-0.5 rounded-full text-xs font-semibold text-white w-fit"
-        style={{ backgroundColor: categoryColor }}
+        className="inline-block px-2 py-0.5 rounded-full text-xs font-semibold w-fit"
+        style={{ backgroundColor: `${categoryColor}22`, color: categoryColor }}
       >
         {post.categoryLabel}
       </span>
-      <p className="text-slate-800 font-semibold text-sm leading-snug group-hover:text-[#6366f1] transition-colors line-clamp-2">
+      <p className="font-semibold text-sm leading-snug line-clamp-2" style={{ color: '#cbd5e1' }}>
         {post.title}
       </p>
     </Link>
   );
 }
-
-// ── Page ──────────────────────────────────────────────────────────────────────
 
 export function BlogPost() {
   const { slug } = useParams<{ slug: string }>();
@@ -231,7 +151,6 @@ export function BlogPost() {
   const post = allPosts.find(p => p.slug === slug);
   const categoryColor = post && data ? (data.categories[post.category]?.color ?? '#6366f1') : '#6366f1';
 
-  // SEO
   useEffect(() => {
     if (!post) return;
     const prev = document.title;
@@ -244,68 +163,63 @@ export function BlogPost() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#f8fafc]">
-        <div className="w-8 h-8 rounded-full border-2 border-[#6366f1] border-t-transparent animate-spin" />
+      <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--bg-primary)' }}>
+        <div className="w-8 h-8 rounded-full border-2 animate-spin" style={{ borderColor: '#6366f133', borderTopColor: '#6366f1' }} />
       </div>
     );
   }
 
-  if (!post || !data) {
-    return <Navigate to="/blog" replace />;
-  }
+  if (!post || !data) return <Navigate to="/blog" replace />;
 
   const youtubeId = post.video ? getYouTubeId(post.video) : null;
-  const bodyHtml = formatBody(post.body);
+  const bodyHtml  = formatBody(post.body);
 
   const related = allPosts
     .filter(p => p.published && !p.draft && p.category === post.category && p.slug !== post.slug)
     .slice(0, 3);
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] font-['Inter',sans-serif]">
-      <div className="max-w-2xl mx-auto px-4 sm:px-6 pt-28 pb-10 sm:pt-32 sm:pb-16">
+    <div className="min-h-screen font-['Inter',sans-serif]" style={{ background: 'var(--bg-primary)', color: 'var(--text-primary)' }}>
 
-        {/* Back link */}
+      {/* Accent stripe */}
+      <div className="h-1 w-full" style={{ background: `linear-gradient(90deg, ${categoryColor}, transparent)` }} />
+
+      <div className="max-w-2xl mx-auto px-4 sm:px-6 pt-24 pb-16">
+
         <Link
           to="/blog"
-          className="inline-flex items-center gap-1.5 text-slate-500 text-sm hover:text-[#6366f1] transition-colors mb-8 focus:outline-none focus:underline"
+          className="inline-flex items-center gap-1.5 text-sm mb-8 transition-opacity hover:opacity-70"
+          style={{ color: '#64748b' }}
         >
           <ArrowLeft size={15} />
           Back to Blog
         </Link>
 
-        {/* Draft banner */}
         {post.draft && (
-          <div className="mb-6 flex items-center gap-2 px-4 py-3 bg-amber-50 border border-amber-200 rounded-xl text-amber-700 text-sm font-semibold">
-            <span>⚠️</span>
-            <span>Draft — this post is not yet published</span>
+          <div
+            className="mb-6 flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-semibold border"
+            style={{ background: 'rgba(245,158,11,0.08)', borderColor: 'rgba(245,158,11,0.25)', color: '#f59e0b' }}
+          >
+            Draft — this post is not yet published
           </div>
         )}
 
-        {/* Header */}
         <div className="mb-7">
           <CategoryBadge label={post.categoryLabel} color={categoryColor} />
-          <h1 className="text-3xl font-extrabold text-slate-900 mt-3 mb-5 leading-tight">
+          <h1 className="text-3xl font-extrabold mt-3 mb-5 leading-tight" style={{ color: '#f1f5f9' }}>
             {post.title}
           </h1>
           <AuthorBlock post={post} categoryColor={categoryColor} />
         </div>
 
-        {/* Image */}
         {post.image && (
-          <div className="mb-8 rounded-2xl overflow-hidden border border-slate-200">
-            <img
-              src={post.image}
-              alt={post.title}
-              className="w-full object-cover"
-              loading="lazy"
-            />
+          <div className="mb-8 rounded-2xl overflow-hidden border" style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
+            <img src={post.image} alt={post.title} className="w-full object-cover" loading="lazy" />
           </div>
         )}
 
-        {/* Video */}
         {youtubeId && (
-          <div className="mb-8 rounded-2xl overflow-hidden border border-slate-200 aspect-video">
+          <div className="mb-8 rounded-2xl overflow-hidden border aspect-video" style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
             <iframe
               className="w-full h-full"
               src={`https://www.youtube-nocookie.com/embed/${youtubeId}`}
@@ -316,19 +230,21 @@ export function BlogPost() {
           </div>
         )}
 
-        {/* Body */}
         <div
-          className="post-body bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 mb-8"
+          className="blog-post-body rounded-2xl border p-6 sm:p-8 mb-8"
+          style={{ background: '#0f172a', borderColor: 'rgba(255,255,255,0.07)' }}
           dangerouslySetInnerHTML={{ __html: bodyHtml }}
         />
 
-        {/* LinkedIn CTA */}
-        <div className="mb-10 bg-gradient-to-br from-blue-50 to-indigo-50 border border-indigo-100 rounded-2xl p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div
+          className="mb-10 rounded-2xl p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border"
+          style={{ background: 'rgba(10,102,194,0.08)', borderColor: 'rgba(10,102,194,0.2)' }}
+        >
           <div className="flex items-start gap-3">
-            <Linkedin size={22} className="text-[#0A66C2] flex-shrink-0 mt-0.5" />
+            <Linkedin size={22} className="flex-shrink-0 mt-0.5" style={{ color: '#0A66C2' }} />
             <div>
-              <p className="text-slate-800 font-semibold text-sm">Originally shared on LinkedIn</p>
-              <p className="text-slate-500 text-xs mt-0.5">Join the conversation and share your thoughts.</p>
+              <p className="font-semibold text-sm" style={{ color: '#f1f5f9' }}>Originally shared on LinkedIn</p>
+              <p className="text-xs mt-0.5" style={{ color: '#64748b' }}>Join the conversation and share your thoughts.</p>
             </div>
           </div>
           <a
@@ -343,10 +259,9 @@ export function BlogPost() {
           </a>
         </div>
 
-        {/* Related posts */}
         {related.length > 0 && (
           <div>
-            <h2 className="text-slate-900 font-bold text-base mb-4">More in this category</h2>
+            <h2 className="font-bold text-base mb-4" style={{ color: '#94a3b8' }}>More in this category</h2>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               {related.map(r => (
                 <RelatedCard
@@ -359,6 +274,21 @@ export function BlogPost() {
           </div>
         )}
       </div>
+
+      <style>{`
+        .blog-post-body { color: #cbd5e1; line-height: 1.75; font-size: 0.95rem; }
+        .blog-post-body p { margin-bottom: 1rem; }
+        .blog-post-body strong { color: #f1f5f9; font-weight: 600; }
+        .blog-post-body ul { list-style: none; padding: 0; margin-bottom: 1rem; display: flex; flex-direction: column; gap: 0.5rem; }
+        .blog-post-body ul li { display: flex; gap: 0.6rem; align-items: flex-start; }
+        .blog-bullet-icon { flex-shrink: 0; margin-top: 0.1rem; }
+        .blog-post-body ol { list-style: decimal; padding-left: 1.5rem; margin-bottom: 1rem; display: flex; flex-direction: column; gap: 0.4rem; }
+        .blog-h3 { color: #f1f5f9; font-size: 1.05rem; font-weight: 700; margin: 1.5rem 0 0.75rem; }
+        .blog-divider { text-align: center; color: #334155; letter-spacing: 0.5rem; margin: 2rem 0; font-size: 0.9rem; }
+        .blog-hr { border: none; border-top: 1px solid rgba(255,255,255,0.08); margin: 2rem 0; }
+        .blog-callout { border-left: 3px solid #6366f1; padding: 0.75rem 1rem; margin: 1.25rem 0; background: rgba(99,102,241,0.08); border-radius: 0 0.5rem 0.5rem 0; color: #c7d2fe; font-style: italic; }
+        .blog-hashtag { color: #6366f1; font-weight: 500; }
+      `}</style>
     </div>
   );
 }

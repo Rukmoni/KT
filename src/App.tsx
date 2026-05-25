@@ -10,6 +10,7 @@ import { AdminLeads } from './pages/AdminLeads';
 import { AdminNote2Task } from './pages/AdminNote2Task';
 import { AdminSEO } from './pages/AdminSEO/AdminSEO';
 import { AdminCarouselImages } from './pages/AdminCarouselImages';
+import { AdminBlog } from './pages/AdminBlog';
 import { ChatbotDemoPage } from './pages/ChatbotDemoPage';
 import { Navbar } from './components/Navbar';
 import { PMAdvisory } from './pages/PMAdvisory/PMAdvisory';
@@ -38,6 +39,7 @@ const AnimatedRoutes = () => {
         <Route path="/admin/note2task" element={<AdminNote2Task />} />
         <Route path="/admin/seo" element={<AdminSEO />} />
         <Route path="/admin/carousel-images" element={<AdminCarouselImages />} />
+        <Route path="/admin/blog" element={<AdminBlog />} />
         <Route path="/pm-advisory" element={<PMAdvisory />} />
         <Route path="/nagarajan" element={<PortfolioPage />} />
         <Route path="/blog" element={<BlogIndex />} />
