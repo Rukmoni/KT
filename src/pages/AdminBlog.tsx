@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { Plus, Pencil, Trash2, X, Save, ExternalLink, Upload, Loader } from 'lucide-react';
 import { BLOG_CATEGORIES } from '../hooks/usePosts';
@@ -152,6 +152,7 @@ function MediaUploadField({
 
 export function AdminBlog() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [posts, setPosts]         = useState<DbPost[]>([]);
   const [loading, setLoading]     = useState(true);
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -174,6 +175,15 @@ export function AdminBlog() {
   }, []);
 
   useEffect(() => { fetchPosts(); }, [fetchPosts]);
+
+  // Auto-open editor when ?edit=ID is in the URL
+  useEffect(() => {
+    const editId = searchParams.get('edit');
+    if (!editId || loading || posts.length === 0) return;
+    const post = posts.find(p => p.id === Number(editId));
+    if (post) openEdit(post);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams, loading, posts]);
 
   const scrollToEditor = () => {
     setTimeout(() => editorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);

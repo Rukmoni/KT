@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
-import { useParams, Link, Navigate } from 'react-router-dom';
-import { ArrowLeft, Linkedin } from 'lucide-react';
+import { useParams, Link, Navigate, useNavigate } from 'react-router-dom';
+import { ArrowLeft, Linkedin, Pencil } from 'lucide-react';
 import { usePosts, type Post } from '../../hooks/usePosts';
 
 function setMeta(name: string, content: string, prop = false) {
@@ -147,6 +147,7 @@ function RelatedCard({ post, categoryColor }: { post: Post; categoryColor: strin
 export function BlogPost() {
   const { slug } = useParams<{ slug: string }>();
   const { allPosts, data, loading } = usePosts();
+  const navigate = useNavigate();
 
   const post = allPosts.find(p => p.slug === slug);
   const categoryColor = post && data ? (data.categories[post.category]?.color ?? '#6366f1') : '#6366f1';
@@ -286,6 +287,25 @@ export function BlogPost() {
           </div>
         )}
       </div>
+
+      {/* Floating edit button — always visible for quick admin access */}
+      <button
+        onClick={() => navigate(`/admin/blog?edit=${post.id}`)}
+        title="Edit this post in Admin"
+        style={{
+          position: 'fixed', bottom: '28px', right: '28px', zIndex: 50,
+          display: 'flex', alignItems: 'center', gap: '6px',
+          padding: '10px 16px', borderRadius: '999px',
+          background: '#1e293b', border: '1px solid rgba(255,255,255,0.12)',
+          color: '#94a3b8', fontSize: '13px', fontWeight: 600,
+          cursor: 'pointer', boxShadow: '0 4px 20px rgba(0,0,0,0.5)',
+          transition: 'background 0.15s, color 0.15s',
+        }}
+        onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = '#334155'; (e.currentTarget as HTMLButtonElement).style.color = '#f1f5f9'; }}
+        onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = '#1e293b'; (e.currentTarget as HTMLButtonElement).style.color = '#94a3b8'; }}
+      >
+        <Pencil size={13} /> Edit Post
+      </button>
 
       <style>{`
         .blog-post-body { color: #cbd5e1; line-height: 1.75; font-size: 0.95rem; }
