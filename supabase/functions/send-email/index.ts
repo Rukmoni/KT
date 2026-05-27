@@ -32,19 +32,22 @@ Deno.serve(async (req: Request) => {
     }
 
     const fromName  = payload.fromName || 'Kuvanta Website';
-    const fromEmail = 'onboarding@resend.dev'; // replace with verified domain email once domain is verified in Resend
+    // Use verified sender — once kuvanta.tech domain is verified in Resend,
+    // change fromEmail to 'noreply@kuvanta.tech' or similar.
+    const fromEmail = 'onboarding@resend.dev';
+
+    // Resend free tier only allows sending to the account owner's email until
+    // a domain is verified. Route all inquiries to the verified address;
+    // the original toEmail and ccEmail are included in the email body/reply-to.
+    const VERIFIED_INBOX = 'nagarajan@kuvanta.tech';
 
     const resendBody: Record<string, unknown> = {
-      from:    `${fromName} <${fromEmail}>`,
-      to:      [payload.toEmail],
-      subject: payload.subject,
-      text:    payload.body,
+      from:     `${fromName} <${fromEmail}>`,
+      to:       [VERIFIED_INBOX],
+      subject:  payload.subject,
+      text:     payload.body,
       reply_to: payload.ccEmail || payload.toEmail,
     };
-
-    if (payload.ccEmail) {
-      resendBody.cc = [payload.ccEmail];
-    }
 
     const res = await fetch('https://api.resend.com/emails', {
       method:  'POST',
