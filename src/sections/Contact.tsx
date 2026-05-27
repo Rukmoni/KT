@@ -1,39 +1,65 @@
-import { useRef } from 'react';
-import { Mail, CalendarDays } from 'lucide-react';
+import { useState } from 'react';
+import { Mail, CalendarDays, CircleCheck as CheckCircle, CircleAlert as AlertCircle } from 'lucide-react';
 import { useLeadStore } from '../store/leadStore';
 import { buildSubject } from '../services/emailService';
 import './Contact.css';
 
 export const Contact = () => {
-  const subjectRef = useRef<HTMLInputElement>(null);
-  const ccRef      = useRef<HTMLInputElement>(null);
+  const [status, setStatus] = useState<'idle' | 'sending' | 'success' | 'error'>('idle');
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    const form     = e.currentTarget;
-    const name     = (form.elements.namedItem('name')    as HTMLInputElement).value;
-    const email    = (form.elements.namedItem('email')   as HTMLInputElement).value;
-    const phone    = (form.elements.namedItem('phone')   as HTMLInputElement).value;
-    const service  = (form.elements.namedItem('service') as HTMLSelectElement).value;
-    const details  = (form.elements.namedItem('details') as HTMLTextAreaElement).value;
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setStatus('sending');
 
-    // Set dynamic hidden fields (same pattern as tested HTML)
-    if (subjectRef.current) subjectRef.current.value = buildSubject(name, service);
-    if (ccRef.current)      ccRef.current.value      = email;
+    const form    = e.currentTarget;
+    const name    = (form.elements.namedItem('name')    as HTMLInputElement).value;
+    const email   = (form.elements.namedItem('email')   as HTMLInputElement).value;
+    const phone   = (form.elements.namedItem('phone')   as HTMLInputElement).value;
+    const service = (form.elements.namedItem('service') as HTMLSelectElement).value;
+    const details = (form.elements.namedItem('details') as HTMLTextAreaElement).value;
 
-    // Save lead to store before navigation
-    const today         = new Date().toLocaleString();
-    const summarySnippet = details.length > 120 ? details.substring(0, 120) + '...' : details;
-    useLeadStore.getState().addLead({
-      source: 'Contact Form',
-      name,
-      email,
-      phone,
-      serviceType: service,
-      summary: summarySnippet,
-      fullTranscript: `Submitted on ${today}\n\n${details}`,
-    });
+    // formsubmit.co AJAX mode — no page redirect
+    const payload = new FormData();
+    payload.append('name',        name);
+    payload.append('email',       email);
+    payload.append('phone',       phone);
+    payload.append('service',     service);
+    payload.append('description', details);
+    payload.append('_subject',    buildSubject(name, service));
+    payload.append('_cc',         email);
+    payload.append('_captcha',    'false');
+    payload.append('_template',   'table');
 
-    // Allow native form POST to proceed (no preventDefault)
+    try {
+      const res = await fetch('https://formsubmit.co/ajax/letsdothis@kuvanta.tech', {
+        method: 'POST',
+        headers: { Accept: 'application/json' },
+        body: payload,
+      });
+
+      const json = await res.json();
+
+      if (json.success === 'true' || json.success === true) {
+        const summarySnippet = details.length > 120 ? details.substring(0, 120) + '...' : details;
+        useLeadStore.getState().addLead({
+          source: 'Contact Form',
+          name,
+          email,
+          phone,
+          serviceType: service,
+          summary: summarySnippet,
+          fullTranscript: `Submitted on ${new Date().toLocaleString()}\n\n${details}`,
+        });
+
+        setStatus('success');
+        form.reset();
+        setTimeout(() => setStatus('idle'), 6000);
+      } else {
+        setStatus('error');
+      }
+    } catch {
+      setStatus('error');
+    }
   };
 
   return (
@@ -76,18 +102,7 @@ export const Contact = () => {
         {/* Right Side: Form */}
         <div className="contact-right">
           <div className="contact-form-card">
-            <form
-              className="contact-form"
-              action="https://formsubmit.co/letsdothis@kuvanta.tech"
-              method="POST"
-              target="_blank"
-              onSubmit={handleSubmit}
-            >
-              {/* formsubmit.co hidden config — mirrors tested HTML exactly */}
-              <input ref={ccRef}      type="hidden" name="_cc"       defaultValue="" />
-              <input                  type="hidden" name="_captcha"  value="false" />
-              <input                  type="hidden" name="_template" value="table" />
-              <input ref={subjectRef} type="hidden" name="_subject"  defaultValue="New Enquiry from Kuvanta Website" />
+            <form className="contact-form" onSubmit={handleSubmit}>
 
               <div className="contact-form-row">
                 <div className="form-field">
@@ -109,11 +124,11 @@ export const Contact = () => {
                   <label className="contact-label">TYPE OF SERVICE</label>
                   <select name="service" className="contact-input" required style={{ appearance: 'auto', backgroundColor: 'transparent' }}>
                     <option value="" disabled style={{ color: '#000' }}>Select a service...</option>
-                    <option value="App Development"          style={{ color: '#000' }}>App Development</option>
-                    <option value="Web Portal Development"   style={{ color: '#000' }}>Web Portal Development</option>
-                    <option value="AI Automation"            style={{ color: '#000' }}>AI Automation</option>
-                    <option value="PM Advisory"              style={{ color: '#000' }}>PM Advisory</option>
-                    <option value="Consultation"             style={{ color: '#000' }}>Consultation</option>
+                    <option value="App Development"        style={{ color: '#000' }}>App Development</option>
+                    <option value="Web Portal Development" style={{ color: '#000' }}>Web Portal Development</option>
+                    <option value="AI Automation"          style={{ color: '#000' }}>AI Automation</option>
+                    <option value="PM Advisory"            style={{ color: '#000' }}>PM Advisory</option>
+                    <option value="Consultation"           style={{ color: '#000' }}>Consultation</option>
                   </select>
                 </div>
               </div>
@@ -123,8 +138,26 @@ export const Contact = () => {
                 <textarea name="details" className="contact-input" rows={4} placeholder="Tell us about your requirements..." required />
               </div>
 
-              <button type="submit" className="contact-submit-btn">
-                Send Inquiry
+              {status === 'success' && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '12px 16px', borderRadius: '10px', background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.25)', color: '#10b981', fontSize: '14px', fontWeight: 500 }}>
+                  <CheckCircle size={16} />
+                  Inquiry sent! We'll be in touch within 24 hours.
+                </div>
+              )}
+              {status === 'error' && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '12px 16px', borderRadius: '10px', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.25)', color: '#f87171', fontSize: '14px', fontWeight: 500 }}>
+                  <AlertCircle size={16} />
+                  Something went wrong. Please try again or email us directly.
+                </div>
+              )}
+
+              <button
+                type="submit"
+                className="contact-submit-btn"
+                disabled={status === 'sending'}
+                style={{ opacity: status === 'sending' ? 0.7 : 1, cursor: status === 'sending' ? 'not-allowed' : 'pointer' }}
+              >
+                {status === 'sending' ? 'Sending…' : 'Send Inquiry'}
               </button>
             </form>
           </div>
