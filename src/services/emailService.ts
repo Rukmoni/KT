@@ -1,70 +1,44 @@
-import emailjs from '@emailjs/browser';
-
-// ─────────────────────────────────────────────────────────────────────────────
-// HOW TO SET UP (one-time, free):
-// 1. Go to https://www.emailjs.com/ and sign up
-// 2. Add a new Email Service → connect your Gmail (kuvanta.tech@gmail.com)
-// 3. Create an Email Template with variables: {{subject}}, {{body}}, {{to_email}}
-// 4. Copy your Public Key from Account → API Keys
-// 5. Fill in the three constants below
-// ─────────────────────────────────────────────────────────────────────────────
-
-export const EMAILJS_CONFIG = {
-  PUBLIC_KEY: 'JSbXAOl0nuhG21IB0',
-  SERVICE_ID: 'service_foutoir',
-  TEMPLATE_ID: 'template_bzc8ayb',
-};
-
-let initialised = false;
-
-const init = () => {
-  if (!initialised) {
-    emailjs.init(EMAILJS_CONFIG.PUBLIC_KEY);
-    initialised = true;
-  }
-};
+const EDGE_FN_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-email`;
 
 export interface EmailPayload {
-  toEmail: string;        // primary recipient
-  ccEmail?: string;       // cc (customer)
+  toEmail: string;
+  ccEmail?: string;
   subject: string;
   body: string;
+  fromName?: string;
 }
 
 export const sendEmail = async (payload: EmailPayload): Promise<boolean> => {
-  // If keys aren't configured yet, fall back to mailto silently
-  if (EMAILJS_CONFIG.PUBLIC_KEY === 'YOUR_PUBLIC_KEY') {
-    const a = document.createElement('a');
-    a.href = `mailto:${payload.toEmail}${payload.ccEmail ? `?cc=${encodeURIComponent(payload.ccEmail)}` : ''}` +
-             `&subject=${encodeURIComponent(payload.subject)}&body=${encodeURIComponent(payload.body)}`;
-    a.click();
-    return true;
-  }
-
   try {
-    init();
-    await emailjs.send(
-      EMAILJS_CONFIG.SERVICE_ID,
-      EMAILJS_CONFIG.TEMPLATE_ID,
-      {
-        // Standard EmailJS template variable names
-        from_name:  payload.ccEmail || 'Website Visitor',
-        from_email: payload.ccEmail || payload.toEmail,
-        reply_to:   payload.ccEmail || payload.toEmail,
-        to_email:   payload.toEmail,
-        subject:    payload.subject,
-        message:    payload.body,
-        // Keep legacy names in case template uses them
-        body:       payload.body,
-        cc_email:   payload.ccEmail || '',
-      }
-    );
+    const res = await fetch(EDGE_FN_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type':  'application/json',
+        'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+      },
+      body: JSON.stringify(payload),
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ error: res.statusText }));
+      console.error('send-email failed:', err);
+      openMailto(payload);
+      return false;
+    }
+
     return true;
   } catch (err) {
-    console.error('EmailJS send failed:', err);
-    const a = document.createElement('a');
-    a.href = `mailto:${payload.toEmail}&subject=${encodeURIComponent(payload.subject)}&body=${encodeURIComponent(payload.body)}`;
-    a.click();
+    console.error('send-email error:', err);
+    openMailto(payload);
     return false;
   }
 };
+
+function openMailto(payload: EmailPayload) {
+  const a = document.createElement('a');
+  a.href =
+    `mailto:${payload.toEmail}` +
+    `?subject=${encodeURIComponent(payload.subject)}` +
+    `&body=${encodeURIComponent(payload.body)}`;
+  a.click();
+}
