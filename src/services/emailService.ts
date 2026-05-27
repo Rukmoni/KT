@@ -8,6 +8,7 @@ export interface EmailPayload {
   fromName?: string;
 }
 
+// Used by ChatbotWidget and AdminLeads for programmatic (non-form) email sends.
 export const sendEmail = async (payload: EmailPayload): Promise<boolean> => {
   try {
     const res = await fetch(EDGE_FN_URL, {
@@ -22,23 +23,22 @@ export const sendEmail = async (payload: EmailPayload): Promise<boolean> => {
     if (!res.ok) {
       const err = await res.json().catch(() => ({ error: res.statusText }));
       console.error('send-email failed:', err);
-      openMailto(payload);
       return false;
     }
 
     return true;
   } catch (err) {
     console.error('send-email error:', err);
-    openMailto(payload);
     return false;
   }
 };
 
-function openMailto(payload: EmailPayload) {
-  const a = document.createElement('a');
-  a.href =
-    `mailto:${payload.toEmail}` +
-    `?subject=${encodeURIComponent(payload.subject)}` +
-    `&body=${encodeURIComponent(payload.body)}`;
-  a.click();
+// Used by Contact.tsx form (native POST to formsubmit.co)
+export function buildSubject(name: string, service: string): string {
+  const now = new Date();
+  const datetime = now.toLocaleString('en-MY', {
+    year: 'numeric', month: 'short', day: 'numeric',
+    hour: '2-digit', minute: '2-digit',
+  });
+  return `Enquiry from ${name} about ${service} on ${datetime}`;
 }

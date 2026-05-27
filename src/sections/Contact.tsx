@@ -1,53 +1,28 @@
-import { useState } from 'react';
-import { Mail, CalendarDays, CheckCircle, AlertCircle } from 'lucide-react';
+import { useRef } from 'react';
+import { Mail, CalendarDays } from 'lucide-react';
 import { useLeadStore } from '../store/leadStore';
-import { sendEmail } from '../services/emailService';
+import { buildSubject } from '../services/emailService';
 import './Contact.css';
 
 export const Contact = () => {
-  const [status, setStatus] = useState<'idle' | 'sending' | 'success' | 'error'>('idle');
+  const subjectRef = useRef<HTMLInputElement>(null);
+  const ccRef      = useRef<HTMLInputElement>(null);
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setStatus('sending');
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    const form     = e.currentTarget;
+    const name     = (form.elements.namedItem('name')    as HTMLInputElement).value;
+    const email    = (form.elements.namedItem('email')   as HTMLInputElement).value;
+    const phone    = (form.elements.namedItem('phone')   as HTMLInputElement).value;
+    const service  = (form.elements.namedItem('service') as HTMLSelectElement).value;
+    const details  = (form.elements.namedItem('details') as HTMLTextAreaElement).value;
 
-    const formData = new FormData(e.currentTarget);
-    const name    = formData.get('name')    as string;
-    const email   = formData.get('email')   as string;
-    const phone   = formData.get('phone')   as string;
-    const service = formData.get('service') as string;
-    const details = formData.get('details') as string;
-    const today   = new Date().toLocaleString();
+    // Set dynamic hidden fields (same pattern as tested HTML)
+    if (subjectRef.current) subjectRef.current.value = buildSubject(name, service);
+    if (ccRef.current)      ccRef.current.value      = email;
 
+    // Save lead to store before navigation
+    const today         = new Date().toLocaleString();
     const summarySnippet = details.length > 120 ? details.substring(0, 120) + '...' : details;
-
-    let requestBody = `Dear Kuvanta Tech Sales Support Team,\n\n`;
-    requestBody += `Please find the details of a new business inquiry submitted via the web portal on ${today}.\n\n`;
-    requestBody += `EXECUTIVE SUMMARY\n`;
-    requestBody += `-------------------------------------------------------\n`;
-    requestBody += `The client is requesting assistance with ${service}. They provided the following requirement: "${summarySnippet}".\n\n`;
-    requestBody += `CLIENT CONTACT DETAILS\n`;
-    requestBody += `-------------------------------------------------------\n`;
-    requestBody += `Name:          ${name}\n`;
-    requestBody += `Email:         ${email}\n`;
-    requestBody += `Phone:         ${phone}\n`;
-    requestBody += `Service Type:  ${service}\n`;
-    requestBody += `Date/Time:     ${today}\n\n`;
-    requestBody += `RECOMMENDED ACTION ITEMS\n`;
-    requestBody += `-------------------------------------------------------\n`;
-    requestBody += `1. Review the verbatim inquiry constraints.\n`;
-    requestBody += `2. Contact ${name} within 24 hours to schedule a deep-dive consultation.\n\n`;
-    requestBody += `VERBATIM INQUIRY DETAILS\n`;
-    requestBody += `-------------------------------------------------------\n`;
-    requestBody += `${details}\n`;
-
-    const ok = await sendEmail({
-      toEmail: 'letsdothis@kuvanta.tech',
-      ccEmail: email,
-      subject: `New Inquiry: ${service} - ${name}`,
-      body: requestBody,
-    });
-
     useLeadStore.getState().addLead({
       source: 'Contact Form',
       name,
@@ -55,14 +30,10 @@ export const Contact = () => {
       phone,
       serviceType: service,
       summary: summarySnippet,
-      fullTranscript: requestBody,
+      fullTranscript: `Submitted on ${today}\n\n${details}`,
     });
 
-    setStatus(ok ? 'success' : 'error');
-    if (ok) {
-      (e.target as HTMLFormElement).reset();
-      setTimeout(() => setStatus('idle'), 5000);
-    }
+    // Allow native form POST to proceed (no preventDefault)
   };
 
   return (
@@ -105,7 +76,19 @@ export const Contact = () => {
         {/* Right Side: Form */}
         <div className="contact-right">
           <div className="contact-form-card">
-            <form className="contact-form" onSubmit={handleSubmit}>
+            <form
+              className="contact-form"
+              action="https://formsubmit.co/letsdothis@kuvanta.tech"
+              method="POST"
+              target="_blank"
+              onSubmit={handleSubmit}
+            >
+              {/* formsubmit.co hidden config — mirrors tested HTML exactly */}
+              <input ref={ccRef}      type="hidden" name="_cc"       defaultValue="" />
+              <input                  type="hidden" name="_captcha"  value="false" />
+              <input                  type="hidden" name="_template" value="table" />
+              <input ref={subjectRef} type="hidden" name="_subject"  defaultValue="New Enquiry from Kuvanta Website" />
+
               <div className="contact-form-row">
                 <div className="form-field">
                   <label className="contact-label">NAME</label>
@@ -126,11 +109,11 @@ export const Contact = () => {
                   <label className="contact-label">TYPE OF SERVICE</label>
                   <select name="service" className="contact-input" required style={{ appearance: 'auto', backgroundColor: 'transparent' }}>
                     <option value="" disabled style={{ color: '#000' }}>Select a service...</option>
-                    <option value="App Development" style={{ color: '#000' }}>App Development</option>
-                    <option value="Web Portal Development" style={{ color: '#000' }}>Web Portal Development</option>
-                    <option value="AI Automation" style={{ color: '#000' }}>AI Automation</option>
-                    <option value="PM Advisory" style={{ color: '#000' }}>PM Advisory</option>
-                    <option value="Consultation" style={{ color: '#000' }}>Consultation</option>
+                    <option value="App Development"          style={{ color: '#000' }}>App Development</option>
+                    <option value="Web Portal Development"   style={{ color: '#000' }}>Web Portal Development</option>
+                    <option value="AI Automation"            style={{ color: '#000' }}>AI Automation</option>
+                    <option value="PM Advisory"              style={{ color: '#000' }}>PM Advisory</option>
+                    <option value="Consultation"             style={{ color: '#000' }}>Consultation</option>
                   </select>
                 </div>
               </div>
@@ -140,27 +123,8 @@ export const Contact = () => {
                 <textarea name="details" className="contact-input" rows={4} placeholder="Tell us about your requirements..." required />
               </div>
 
-              {/* Status feedback */}
-              {status === 'success' && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '12px 16px', borderRadius: '10px', background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.25)', color: '#10b981', fontSize: '14px', fontWeight: 500 }}>
-                  <CheckCircle size={16} />
-                  Inquiry sent! We'll be in touch within 24 hours.
-                </div>
-              )}
-              {status === 'error' && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '12px 16px', borderRadius: '10px', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.25)', color: '#f87171', fontSize: '14px', fontWeight: 500 }}>
-                  <AlertCircle size={16} />
-                  Couldn't send via email — your mail client has been opened as a fallback.
-                </div>
-              )}
-
-              <button
-                type="submit"
-                className="contact-submit-btn"
-                disabled={status === 'sending'}
-                style={{ opacity: status === 'sending' ? 0.7 : 1, cursor: status === 'sending' ? 'not-allowed' : 'pointer' }}
-              >
-                {status === 'sending' ? 'Sending…' : 'Send Inquiry'}
+              <button type="submit" className="contact-submit-btn">
+                Send Inquiry
               </button>
             </form>
           </div>
