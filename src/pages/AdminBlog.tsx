@@ -175,16 +175,22 @@ export function AdminBlog() {
 
   useEffect(() => { fetchPosts(); }, [fetchPosts]);
 
+  const scrollToEditor = () => {
+    setTimeout(() => editorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
+  };
+
   const openCreate = () => {
     setForm(EMPTY_FORM);
     setEditingId(null);
     setIsCreating(true);
+    scrollToEditor();
   };
 
   const openEdit = (post: DbPost) => {
     setForm(postToForm(post));
     setEditingId(post.id);
     setIsCreating(false);
+    scrollToEditor();
   };
 
   const closeEditor = () => {
@@ -244,6 +250,7 @@ export function AdminBlog() {
     }
   };
 
+  const editorRef = useRef<HTMLDivElement>(null);
   const editorOpen   = isCreating || editingId !== null;
   const anyUploading = imgUploading || vidUploading;
 
@@ -300,11 +307,23 @@ export function AdminBlog() {
 
         {/* Editor panel */}
         {editorOpen && (
-          <div style={{ background: '#0a1628', border: '1px solid rgba(59,130,246,0.3)', borderRadius: '16px', padding: '28px', marginBottom: '28px' }}>
+          <div ref={editorRef} style={{ background: '#0a1628', border: '1px solid rgba(59,130,246,0.3)', borderRadius: '16px', padding: '28px', marginBottom: '28px' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
-              <h2 style={{ fontSize: '16px', fontWeight: 700, color: '#f1f5f9' }}>
-                {isCreating ? 'New Post' : 'Edit Post'}
-              </h2>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <h2 style={{ fontSize: '16px', fontWeight: 700, color: '#f1f5f9' }}>
+                  {isCreating ? 'New Post' : 'Edit Post'}
+                </h2>
+                {editingId !== null && form.published && !form.draft && (
+                  <a
+                    href={`/blog/${form.slug}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', fontSize: '12px', fontWeight: 600, color: '#10b981', background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.25)', borderRadius: '6px', padding: '3px 10px', textDecoration: 'none' }}
+                  >
+                    <ExternalLink size={12} /> View Live
+                  </a>
+                )}
+              </div>
               <button onClick={closeEditor} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b' }}>
                 <X size={18} />
               </button>
