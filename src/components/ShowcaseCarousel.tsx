@@ -51,7 +51,7 @@ const screens = [
   },
 ];
 
-const TiltCard = ({ children, isActive, title, description, category, videoUrl }: { children: string, isActive: boolean, title: string, description: string, category: string, videoUrl?: string }) => {
+const TiltCard = ({ children, isActive, title, description, category, videoUrl, onEnquire }: { children: string, isActive: boolean, title: string, description: string, category: string, videoUrl?: string, onEnquire?: () => void }) => {
   const x = useMotionValue(0);
   const y = useMotionValue(0);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -135,8 +135,11 @@ const TiltCard = ({ children, isActive, title, description, category, videoUrl }
 
       {isActive && (
         <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-black/40 rounded-[24px] z-20">
-          <span className="text-white font-semibold text-sm bg-indigo-600 hover:bg-indigo-500 shadow-[0_0_15px_rgba(79,70,229,0.5)] px-6 py-3 rounded-full transition-all cursor-pointer pointer-events-auto">
-            Explore {category}
+          <span
+            onClick={onEnquire}
+            className="text-white font-semibold text-sm bg-blue-600 hover:bg-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.5)] px-6 py-3 rounded-full transition-all cursor-pointer pointer-events-auto"
+          >
+            Send Enquiry
           </span>
         </div>
       )}
@@ -145,8 +148,11 @@ const TiltCard = ({ children, isActive, title, description, category, videoUrl }
 };
 
 export const ShowcaseCarousel = () => {
-
   const navigate = useNavigate();
+
+  const handleEnquire = () => {
+    navigate('/?service=App+Development#contact');
+  };
 
   return (
     <section className="py-32 relative overflow-hidden showcase-section">
@@ -196,6 +202,7 @@ export const ShowcaseCarousel = () => {
                   description={screen.description}
                   category={screen.category}
                   videoUrl={screen.videoUrl}
+                  onEnquire={handleEnquire}
                 >
                   {screen.imageUrl}
                 </TiltCard>

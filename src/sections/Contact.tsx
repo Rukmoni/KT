@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { useLocation } from 'react-router-dom';
 import { Mail, CalendarDays, CircleCheck as CheckCircle, CircleAlert as AlertCircle } from 'lucide-react';
 import { useLeadStore } from '../store/leadStore';
 import { buildSubject } from '../services/emailService';
@@ -6,6 +7,21 @@ import './Contact.css';
 
 export const Contact = () => {
   const [status, setStatus] = useState<'idle' | 'sending' | 'success' | 'error'>('idle');
+  const [prefilledService, setPrefilledService] = useState('');
+  const location = useLocation();
+  const sectionRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const svc = params.get('service');
+    if (svc) {
+      setPrefilledService(svc);
+      // Scroll to contact section after a short tick so the section has rendered
+      setTimeout(() => {
+        sectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 100);
+    }
+  }, [location.search]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -52,6 +68,7 @@ export const Contact = () => {
         });
 
         setStatus('success');
+        setPrefilledService('');
         form.reset();
         setTimeout(() => setStatus('idle'), 6000);
       } else {
@@ -63,7 +80,7 @@ export const Contact = () => {
   };
 
   return (
-    <section id="contact" className="py-32 contact-section">
+    <section id="contact" ref={sectionRef} className="py-32 contact-section">
       <div className="container mx-auto contact-layout">
 
         {/* Left Side */}
@@ -122,7 +139,15 @@ export const Contact = () => {
                 </div>
                 <div className="form-field">
                   <label className="contact-label">TYPE OF SERVICE</label>
-                  <select name="service" className="contact-input" required style={{ appearance: 'auto', backgroundColor: 'transparent' }}>
+                  <select
+                    name="service"
+                    className="contact-input"
+                    required
+                    style={{ appearance: 'auto', backgroundColor: 'transparent' }}
+                    value={prefilledService || undefined}
+                    defaultValue=""
+                    onChange={e => setPrefilledService(e.target.value)}
+                  >
                     <option value="" disabled style={{ color: '#000' }}>Select a service...</option>
                     <option value="App Development"        style={{ color: '#000' }}>App Development</option>
                     <option value="Web Portal Development" style={{ color: '#000' }}>Web Portal Development</option>

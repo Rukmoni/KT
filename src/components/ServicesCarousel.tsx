@@ -1,9 +1,18 @@
 'use client';
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, ChevronRight, ArrowRight, Check } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import './ServicesCarousel.css';
+
+// Maps carousel service names to Contact form option values
+const SERVICE_TO_ENQUIRY: Record<string, string> = {
+  'PM Advisory':      'PM Advisory',
+  'App Development':  'App Development',
+  'Web Development':  'Web Portal Development',
+  'AI Consulting':    'AI Automation',
+};
 
 interface ServiceSlide {
   id: number;
@@ -899,6 +908,7 @@ const visualVariants = {
 };
 
 export default function ServicesCarousel() {
+  const navigate = useNavigate();
   const [activeIndex, setActiveIndex] = useState(0);
   const [direction, setDirection]     = useState(1);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -994,7 +1004,14 @@ export default function ServicesCarousel() {
                   </li>
                 ))}
               </ul>
-              <button className="svc-cta-btn" style={{ background: current.accentGradient }}>
+              <button
+                className="svc-cta-btn"
+                style={{ background: current.accentGradient }}
+                onClick={() => {
+                  const svc = encodeURIComponent(SERVICE_TO_ENQUIRY[current.service] ?? 'Consultation');
+                  navigate(`/?service=${svc}#contact`);
+                }}
+              >
                 {current.ctaText} <ArrowRight size={15} />
               </button>
             </motion.div>
