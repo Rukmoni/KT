@@ -171,8 +171,9 @@ export function BlogPost() {
 
   if (!post || !data) return <Navigate to="/blog" replace />;
 
-  const youtubeId = post.video ? getYouTubeId(post.video) : null;
-  const bodyHtml  = formatBody(post.body);
+  const youtubeId   = post.video ? getYouTubeId(post.video) : null;
+  const isDirectVid = post.video && !youtubeId;
+  const bodyHtml    = formatBody(post.body);
 
   const related = allPosts
     .filter(p => p.published && !p.draft && p.category === post.category && p.slug !== post.slug)
@@ -226,6 +227,17 @@ export function BlogPost() {
               title={post.title}
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               allowFullScreen
+            />
+          </div>
+        )}
+
+        {isDirectVid && (
+          <div className="mb-8 rounded-2xl overflow-hidden border" style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
+            <video
+              src={post.video!}
+              controls
+              className="w-full"
+              style={{ display: 'block', maxHeight: '480px', background: '#000' }}
             />
           </div>
         )}
