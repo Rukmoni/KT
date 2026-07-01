@@ -65,6 +65,46 @@ function toGeminiContents(messages: Array<{ role: string; content: string }>) {
   }));
 }
 
+const FALLBACK_MODEL = "gemini-2.0-flash";
+
+async function callGemini(
+  apiKey: string,
+  model: string,
+  systemText: string,
+  contents: unknown[],
+  maxOutputTokens: number,
+  retries = 2
+): Promise<{ res: Response; model: string }> {
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    const res = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          system_instruction: { parts: [{ text: systemText }] },
+          contents,
+          generationConfig: { maxOutputTokens },
+        }),
+      }
+    );
+
+    if (res.status !== 503) return { res, model };
+
+    // On last retry with primary model, switch to fallback
+    if (attempt === retries && model !== FALLBACK_MODEL) {
+      model = FALLBACK_MODEL;
+      attempt = -1; // reset loop for fallback model
+      retries = 1;
+      continue;
+    }
+
+    if (attempt < retries) await new Promise((r) => setTimeout(r, 1000 * (attempt + 1)));
+  }
+  // Unreachable but satisfies TS
+  throw new Error("Gemini unreachable");
+}
+
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { status: 200, headers: corsHeaders });
@@ -141,17 +181,12 @@ Deno.serve(async (req: Request) => {
     if (subjectKnowledge) systemText += `\n\n## SUBJECT KNOWLEDGE BASE\n\n${subjectKnowledge}`;
     if (pyqContext) systemText += `\n\n## PYQ PATTERN ANALYSIS\n\n${pyqContext}`;
 
-    const geminiRes = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          system_instruction: { parts: [{ text: systemText }] },
-          contents: toGeminiContents(messages),
-          generationConfig: { maxOutputTokens: max_tokens },
-        }),
-      }
+    const { res: geminiRes, model: usedModel } = await callGemini(
+      apiKey,
+      model,
+      systemText,
+      toGeminiContents(messages),
+      max_tokens
     );
 
     if (!geminiRes.ok) {
@@ -168,12 +203,12 @@ Deno.serve(async (req: Request) => {
     const usageMeta = geminiData.usageMetadata ?? {};
     const inputTokens = usageMeta.promptTokenCount ?? 0;
     const outputTokens = usageMeta.candidatesTokenCount ?? 0;
-    const costEstimate = estimateCost(model, inputTokens, outputTokens);
+    const costEstimate = estimateCost(usedModel, inputTokens, outputTokens);
 
     // Shadow token logging (fire-and-forget)
     supabase.from("mentor_token_usage").insert({
       session_token,
-      model,
+      model: usedModel,
       input_tokens: inputTokens,
       output_tokens: outputTokens,
       cache_read_tokens: 0,
@@ -187,7 +222,7 @@ Deno.serve(async (req: Request) => {
     return new Response(
       JSON.stringify({
         message: responseText,
-        model,
+        model: usedModel,
         usage: {
           input_tokens: inputTokens,
           output_tokens: outputTokens,
