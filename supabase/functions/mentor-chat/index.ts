@@ -38,34 +38,31 @@ Reframe every wrong answer as a learning opportunity.`;
 
 // Model routing by mode
 function selectModel(mode: string): string {
-  const haiku_modes = ["flashcard", "rapidfire", "navigation", "menu"];
-  const opus_modes = ["grade_long_answer"];
-  if (haiku_modes.includes(mode)) return "claude-haiku-4-5";
-  if (opus_modes.includes(mode)) return "claude-opus-4-8";
-  return "claude-sonnet-5"; // default: teach, test, revise, strengthen, pyq, research
+  const flash_lite_modes = ["flashcard", "rapidfire", "navigation", "menu"];
+  const pro_modes = ["grade_long_answer"];
+  if (flash_lite_modes.includes(mode)) return "gemini-2.0-flash";
+  if (pro_modes.includes(mode)) return "gemini-2.5-pro";
+  return "gemini-2.5-flash"; // default: teach, test, revise, strengthen, pyq, research
 }
 
 // Cost estimate per 1M tokens (USD)
-const MODEL_COSTS: Record<string, { input: number; output: number; cache_read: number; cache_write: number }> = {
-  "claude-haiku-4-5": { input: 1.00, output: 5.00, cache_read: 0.10, cache_write: 1.25 },
-  "claude-sonnet-5":  { input: 3.00, output: 15.00, cache_read: 0.30, cache_write: 3.75 },
-  "claude-opus-4-8":  { input: 5.00, output: 25.00, cache_read: 0.50, cache_write: 6.25 },
+const MODEL_COSTS: Record<string, { input: number; output: number }> = {
+  "gemini-2.0-flash":  { input: 0.10,  output: 0.40  },
+  "gemini-2.5-flash":  { input: 0.30,  output: 2.50  },
+  "gemini-2.5-pro":    { input: 1.25,  output: 10.00 },
 };
 
-function estimateCost(
-  model: string,
-  inputTokens: number,
-  outputTokens: number,
-  cacheReadTokens: number,
-  cacheCreationTokens: number
-): number {
-  const costs = MODEL_COSTS[model] ?? MODEL_COSTS["claude-sonnet-4-5"];
-  return (
-    (inputTokens / 1_000_000) * costs.input +
-    (outputTokens / 1_000_000) * costs.output +
-    (cacheReadTokens / 1_000_000) * costs.cache_read +
-    (cacheCreationTokens / 1_000_000) * costs.cache_write
-  );
+function estimateCost(model: string, inputTokens: number, outputTokens: number): number {
+  const costs = MODEL_COSTS[model] ?? MODEL_COSTS["gemini-2.5-flash"];
+  return (inputTokens / 1_000_000) * costs.input + (outputTokens / 1_000_000) * costs.output;
+}
+
+// Convert Anthropic-style messages to Gemini contents format
+function toGeminiContents(messages: Array<{ role: string; content: string }>) {
+  return messages.map((m) => ({
+    role: m.role === "assistant" ? "model" : "user",
+    parts: [{ text: m.content }],
+  }));
 }
 
 Deno.serve(async (req: Request) => {
@@ -73,10 +70,10 @@ Deno.serve(async (req: Request) => {
     return new Response(null, { status: 200, headers: corsHeaders });
   }
 
-  const apiKey = Deno.env.get("ANTHROPIC_API_KEY");
+  const apiKey = Deno.env.get("GEMINI_API_KEY");
   if (!apiKey) {
     return new Response(
-      JSON.stringify({ error: "ANTHROPIC_API_KEY not configured. Please add it in Supabase Edge Function secrets." }),
+      JSON.stringify({ error: "GEMINI_API_KEY not configured. Please add it in Supabase Edge Function secrets." }),
       { status: 503, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
@@ -139,64 +136,39 @@ Deno.serve(async (req: Request) => {
 
     const model = selectModel(mode);
 
-    // Build system blocks with prompt caching
-    const systemBlocks: Array<{ type: string; text: string; cache_control?: { type: string } }> = [
+    // Build full system instruction text
+    let systemText = SYSTEM_PROMPT_CORE;
+    if (subjectKnowledge) systemText += `\n\n## SUBJECT KNOWLEDGE BASE\n\n${subjectKnowledge}`;
+    if (pyqContext) systemText += `\n\n## PYQ PATTERN ANALYSIS\n\n${pyqContext}`;
+
+    const geminiRes = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
       {
-        type: "text",
-        text: SYSTEM_PROMPT_CORE,
-        cache_control: { type: "ephemeral" },
-      },
-    ];
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          system_instruction: { parts: [{ text: systemText }] },
+          contents: toGeminiContents(messages),
+          generationConfig: { maxOutputTokens: max_tokens },
+        }),
+      }
+    );
 
-    if (subjectKnowledge) {
-      systemBlocks.push({
-        type: "text",
-        text: `## SUBJECT KNOWLEDGE BASE\n\n${subjectKnowledge}`,
-        cache_control: { type: "ephemeral" },
-      });
-    }
-
-    if (pyqContext) {
-      systemBlocks.push({
-        type: "text",
-        text: `## PYQ PATTERN ANALYSIS\n\n${pyqContext}`,
-        cache_control: { type: "ephemeral" },
-      });
-    }
-
-    const anthropicRes = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: {
-        "x-api-key": apiKey,
-        "anthropic-version": "2023-06-01",
-        "content-type": "application/json",
-      },
-      body: JSON.stringify({
-        model,
-        max_tokens,
-        system: systemBlocks,
-        messages,
-      }),
-    });
-
-    if (!anthropicRes.ok) {
-      const errText = await anthropicRes.text();
+    if (!geminiRes.ok) {
+      const errText = await geminiRes.text();
       return new Response(
-        JSON.stringify({ error: `Anthropic API error: ${anthropicRes.status}`, detail: errText }),
-        { status: anthropicRes.status, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        JSON.stringify({ error: `Gemini API error: ${geminiRes.status}`, detail: errText }),
+        { status: geminiRes.status, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    const anthropicData = await anthropicRes.json();
+    const geminiData = await geminiRes.json();
 
-    // Extract token usage
-    const usage = anthropicData.usage ?? {};
-    const inputTokens = usage.input_tokens ?? 0;
-    const outputTokens = usage.output_tokens ?? 0;
-    const cacheReadTokens = usage.cache_read_input_tokens ?? 0;
-    const cacheCreationTokens = usage.cache_creation_input_tokens ?? 0;
-    const cacheHit = cacheReadTokens > 0;
-    const costEstimate = estimateCost(model, inputTokens, outputTokens, cacheReadTokens, cacheCreationTokens);
+    const responseText = geminiData.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
+    const usageMeta = geminiData.usageMetadata ?? {};
+    const inputTokens = usageMeta.promptTokenCount ?? 0;
+    const outputTokens = usageMeta.candidatesTokenCount ?? 0;
+    const costEstimate = estimateCost(model, inputTokens, outputTokens);
 
     // Shadow token logging (fire-and-forget)
     supabase.from("mentor_token_usage").insert({
@@ -204,15 +176,13 @@ Deno.serve(async (req: Request) => {
       model,
       input_tokens: inputTokens,
       output_tokens: outputTokens,
-      cache_read_tokens: cacheReadTokens,
-      cache_creation_tokens: cacheCreationTokens,
-      cache_hit: cacheHit,
+      cache_read_tokens: 0,
+      cache_creation_tokens: 0,
+      cache_hit: false,
       event_type: mode,
       subject_code: subject_code ?? null,
       cost_usd_estimate: costEstimate,
     }).then(() => {});
-
-    const responseText = anthropicData.content?.[0]?.text ?? "";
 
     return new Response(
       JSON.stringify({
@@ -221,9 +191,9 @@ Deno.serve(async (req: Request) => {
         usage: {
           input_tokens: inputTokens,
           output_tokens: outputTokens,
-          cache_read_tokens: cacheReadTokens,
-          cache_creation_tokens: cacheCreationTokens,
-          cache_hit: cacheHit,
+          cache_read_tokens: 0,
+          cache_creation_tokens: 0,
+          cache_hit: false,
           cost_usd_estimate: costEstimate,
         },
       }),
