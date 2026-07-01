@@ -48,7 +48,8 @@ export function useMentorChat({ sessionToken, subjectCode }: UseMentorChatOption
 
         if (!res.ok) {
           const errData = await res.json().catch(() => ({ error: `HTTP ${res.status}` }));
-          throw new Error(errData.error ?? `Request failed: ${res.status}`);
+          const detail = errData.detail ? ` — ${errData.detail}` : '';
+          throw new Error((errData.error ?? `Request failed: ${res.status}`) + detail);
         }
 
         const data = await res.json();
