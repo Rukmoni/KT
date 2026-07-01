@@ -1,0 +1,97 @@
+import { useState, useCallback, useRef } from 'react';
+import type { ChatMessage, StudyMode, TokenUsage, SubjectCode } from '../types';
+import { MENTOR_FUNCTION_URL, SUPABASE_ANON_KEY } from '../constants';
+
+interface UseMentorChatOptions {
+  sessionToken: string;
+  subjectCode: SubjectCode | null;
+}
+
+export function useMentorChat({ sessionToken, subjectCode }: UseMentorChatOptions) {
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [mode, setMode] = useState<StudyMode>('chat');
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [lastUsage, setLastUsage] = useState<TokenUsage | null>(null);
+  const [totalCost, setTotalCost] = useState(0);
+  const [totalTokens, setTotalTokens] = useState(0);
+  const abortRef = useRef<AbortController | null>(null);
+
+  const sendMessage = useCallback(
+    async (userText: string, overrideMode?: StudyMode) => {
+      if (!userText.trim()) return;
+      setError(null);
+
+      const userMsg: ChatMessage = { role: 'user', content: userText };
+      const updatedMessages = [...messages, userMsg];
+      setMessages(updatedMessages);
+      setIsLoading(true);
+
+      abortRef.current = new AbortController();
+
+      try {
+        const res = await fetch(MENTOR_FUNCTION_URL, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+            Apikey: SUPABASE_ANON_KEY,
+          },
+          body: JSON.stringify({
+            session_token: sessionToken,
+            subject_code: subjectCode,
+            mode: overrideMode ?? mode,
+            messages: updatedMessages,
+          }),
+          signal: abortRef.current.signal,
+        });
+
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({ error: `HTTP ${res.status}` }));
+          throw new Error(errData.error ?? `Request failed: ${res.status}`);
+        }
+
+        const data = await res.json();
+        const assistantMsg: ChatMessage = { role: 'assistant', content: data.message };
+        setMessages((prev) => [...prev, assistantMsg]);
+
+        if (data.usage) {
+          setLastUsage(data.usage);
+          setTotalCost((c) => c + (data.usage.cost_usd_estimate ?? 0));
+          setTotalTokens(
+            (t) => t + (data.usage.input_tokens ?? 0) + (data.usage.output_tokens ?? 0)
+          );
+        }
+      } catch (err) {
+        if ((err as Error).name === 'AbortError') return;
+        setError((err as Error).message);
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [messages, mode, sessionToken, subjectCode]
+  );
+
+  const clearMessages = useCallback(() => {
+    setMessages([]);
+    setError(null);
+  }, []);
+
+  const stopGeneration = useCallback(() => {
+    abortRef.current?.abort();
+  }, []);
+
+  return {
+    messages,
+    mode,
+    setMode,
+    isLoading,
+    error,
+    lastUsage,
+    totalCost,
+    totalTokens,
+    sendMessage,
+    clearMessages,
+    stopGeneration,
+  };
+}

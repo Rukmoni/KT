@@ -7,6 +7,34 @@ export default {
   theme: {
     extend: {
       colors: {
+        mentor: {
+          cream:    '#FAF7F2',
+          'cream-dark': '#F0EBE1',
+          navy:     '#1A2744',
+          'navy-light': '#2D3F6B',
+          'navy-dim': '#0F1A30',
+          amber:    '#D97706',
+          'amber-light': '#F59E0B',
+          'amber-pale': '#FEF3C7',
+          sage:     '#4D7C5E',
+          'sage-light': '#6EAD82',
+          'sage-pale': '#D1FAE5',
+          mint:     '#0D9488',
+          'mint-pale': '#CCFBF1',
+          red:      '#DC2626',
+          'red-pale': '#FEE2E2',
+          tan:      '#8B7355',
+          'tan-light': '#BFA98A',
+          surface:  '#FFFFFF',
+          border:   '#E5DDD0',
+          text:     '#1A2744',
+          muted:    '#6B7280',
+          physics:  '#3B82F6',
+          chemistry:'#8B5CF6',
+          maths:    '#059669',
+          cs:       '#F59E0B',
+          english:  '#EC4899',
+        },
         brand: {
           bg: '#0A0A0F',
           surface: '#12121A',
@@ -22,6 +50,7 @@ export default {
       },
       fontFamily: {
         sans: ['Inter', 'DM Sans', 'system-ui', 'sans-serif'],
+        serif: ['Source Serif 4', 'Georgia', 'serif'],
         mono: ['JetBrains Mono', 'Space Grotesk', 'monospace'],
       },
       animation: {
@@ -40,5 +69,5 @@ export default {
       },
     },
   },
-  plugins: [],
+  plugins: [require('@tailwindcss/typography')],
 }

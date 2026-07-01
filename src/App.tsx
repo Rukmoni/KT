@@ -17,6 +17,7 @@ import { PMAdvisory } from './pages/PMAdvisory/PMAdvisory';
 import { PortfolioPage } from './portfolio/PortfolioPage';
 import { BlogIndex } from './pages/blog/BlogIndex';
 import { BlogPost } from './pages/blog/BlogPost';
+import { MentorApp } from './pages/Mentor/MentorApp';
 
 const FULLSCREEN_PATHS = ['/demo/note2task', '/demo/KT_omnichannel_demo'];
 
@@ -30,6 +31,7 @@ const AnimatedRoutes = () => {
   return (
     <AnimatePresence mode="wait">
       <Routes location={location} key={location.pathname}>
+        <Route path="/mentor/*" element={<MentorApp />} />
         <Route path="/" element={<Home />} />
         <Route path="/demos" element={<DemoListPage />} />
         <Route path="/demo/note2task" element={<Note2TaskGuard />} />
@@ -52,7 +54,8 @@ const AnimatedRoutes = () => {
 
 const AppShell = () => {
   const location = useLocation();
-  const isFullscreen = FULLSCREEN_PATHS.includes(location.pathname);
+  const isFullscreen =
+    FULLSCREEN_PATHS.includes(location.pathname) || location.pathname.startsWith('/mentor');
 
   if (isFullscreen) {
     return <AnimatedRoutes />;
