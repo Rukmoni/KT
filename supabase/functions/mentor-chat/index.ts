@@ -41,15 +41,15 @@ function selectModel(mode: string): string {
   const haiku_modes = ["flashcard", "rapidfire", "navigation", "menu"];
   const opus_modes = ["grade_long_answer"];
   if (haiku_modes.includes(mode)) return "claude-haiku-4-5";
-  if (opus_modes.includes(mode)) return "claude-opus-4-5";
-  return "claude-sonnet-4-5"; // default: teach, test, revise, strengthen, pyq, research
+  if (opus_modes.includes(mode)) return "claude-opus-4-8";
+  return "claude-sonnet-5"; // default: teach, test, revise, strengthen, pyq, research
 }
 
 // Cost estimate per 1M tokens (USD)
 const MODEL_COSTS: Record<string, { input: number; output: number; cache_read: number; cache_write: number }> = {
-  "claude-haiku-4-5": { input: 0.80, output: 4.00, cache_read: 0.08, cache_write: 1.00 },
-  "claude-sonnet-4-5": { input: 3.00, output: 15.00, cache_read: 0.30, cache_write: 3.75 },
-  "claude-opus-4-5": { input: 15.00, output: 75.00, cache_read: 1.50, cache_write: 18.75 },
+  "claude-haiku-4-5": { input: 1.00, output: 5.00, cache_read: 0.10, cache_write: 1.25 },
+  "claude-sonnet-5":  { input: 3.00, output: 15.00, cache_read: 0.30, cache_write: 3.75 },
+  "claude-opus-4-8":  { input: 5.00, output: 25.00, cache_read: 0.50, cache_write: 6.25 },
 };
 
 function estimateCost(
