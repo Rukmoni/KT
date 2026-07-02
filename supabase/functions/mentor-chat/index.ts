@@ -36,20 +36,48 @@ Never end without a navigation menu.
 Celebrate correct answers every single time.
 Reframe every wrong answer as a learning opportunity.`;
 
-// Model routing by mode
-function selectModel(mode: string): string {
-  const flash_lite_modes = ["flashcard", "rapidfire", "navigation", "menu"];
-  const pro_modes = ["grade_long_answer"];
-  if (flash_lite_modes.includes(mode)) return "gemini-2.0-flash";
-  if (pro_modes.includes(mode)) return "gemini-2.5-pro";
-  return "gemini-2.5-flash"; // default: teach, test, revise, strengthen, pyq, research
+interface Config {
+  model_primary: string;
+  model_lite: string;
+  model_pro: string;
+  api_key_override: string | null;
+  max_history_messages: number;
 }
 
-// Cost estimate per 1M tokens (USD)
+const DEFAULT_CONFIG: Config = {
+  model_primary: "gemini-2.5-flash",
+  model_lite: "gemini-2.0-flash",
+  model_pro: "gemini-2.5-pro",
+  api_key_override: null,
+  max_history_messages: 20,
+};
+
+async function loadConfig(supabase: ReturnType<typeof createClient>): Promise<Config> {
+  const { data } = await supabase.from("mentor_config").select("*").eq("id", 1).maybeSingle();
+  if (!data) return DEFAULT_CONFIG;
+  return {
+    model_primary: data.model_primary ?? DEFAULT_CONFIG.model_primary,
+    model_lite: data.model_lite ?? DEFAULT_CONFIG.model_lite,
+    model_pro: data.model_pro ?? DEFAULT_CONFIG.model_pro,
+    api_key_override: data.api_key_override ?? null,
+    max_history_messages: data.max_history_messages ?? DEFAULT_CONFIG.max_history_messages,
+  };
+}
+
+function selectModel(mode: string, cfg: Config): string {
+  const lite_modes = ["flashcard", "rapidfire", "navigation", "menu"];
+  const pro_modes = ["grade_long_answer"];
+  if (lite_modes.includes(mode)) return cfg.model_lite;
+  if (pro_modes.includes(mode)) return cfg.model_pro;
+  return cfg.model_primary;
+}
+
 const MODEL_COSTS: Record<string, { input: number; output: number }> = {
-  "gemini-2.0-flash":  { input: 0.10,  output: 0.40  },
-  "gemini-2.5-flash":  { input: 0.30,  output: 2.50  },
-  "gemini-2.5-pro":    { input: 1.25,  output: 10.00 },
+  "gemini-2.0-flash":       { input: 0.10,  output: 0.40  },
+  "gemini-2.0-flash-lite":  { input: 0.075, output: 0.30  },
+  "gemini-2.5-flash":       { input: 0.30,  output: 2.50  },
+  "gemini-2.5-flash-lite":  { input: 0.10,  output: 0.40  },
+  "gemini-2.5-pro":         { input: 1.25,  output: 10.00 },
 };
 
 function estimateCost(model: string, inputTokens: number, outputTokens: number): number {
@@ -57,7 +85,6 @@ function estimateCost(model: string, inputTokens: number, outputTokens: number):
   return (inputTokens / 1_000_000) * costs.input + (outputTokens / 1_000_000) * costs.output;
 }
 
-// Convert Anthropic-style messages to Gemini contents format
 function toGeminiContents(messages: Array<{ role: string; content: string }>) {
   return messages.map((m) => ({
     role: m.role === "assistant" ? "model" : "user",
@@ -91,17 +118,15 @@ async function callGemini(
 
     if (res.status !== 503) return { res, model };
 
-    // On last retry with primary model, switch to fallback
     if (attempt === retries && model !== FALLBACK_MODEL) {
       model = FALLBACK_MODEL;
-      attempt = -1; // reset loop for fallback model
+      attempt = -1;
       retries = 1;
       continue;
     }
 
     if (attempt < retries) await new Promise((r) => setTimeout(r, 1000 * (attempt + 1)));
   }
-  // Unreachable but satisfies TS
   throw new Error("Gemini unreachable");
 }
 
@@ -110,17 +135,20 @@ Deno.serve(async (req: Request) => {
     return new Response(null, { status: 200, headers: corsHeaders });
   }
 
-  const apiKey = Deno.env.get("GEMINI_API_KEY");
-  if (!apiKey) {
-    return new Response(
-      JSON.stringify({ error: "GEMINI_API_KEY not configured. Please add it in Supabase Edge Function secrets." }),
-      { status: 503, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
-  }
-
   const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
   const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
   const supabase = createClient(supabaseUrl, supabaseKey);
+
+  // Load config first (api_key_override, model names, history limit)
+  const config = await loadConfig(supabase);
+  const apiKey = config.api_key_override || Deno.env.get("GEMINI_API_KEY");
+
+  if (!apiKey) {
+    return new Response(
+      JSON.stringify({ error: "GEMINI_API_KEY not configured. Add it in Supabase Edge Function secrets or via the Config page." }),
+      { status: 503, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
+  }
 
   try {
     const body = await req.json();
@@ -139,13 +167,17 @@ Deno.serve(async (req: Request) => {
       );
     }
 
+    // Trim conversation history on server side as well (belt-and-suspenders)
+    const trimmedMessages = messages.slice(-config.max_history_messages);
+
     // Upsert session
     await supabase.from("mentor_sessions").upsert(
       { session_token, last_active: new Date().toISOString() },
       { onConflict: "session_token" }
     );
 
-    // Fetch subject knowledge
+    // Fetch subject knowledge — MD files first (higher quality, structured),
+    // then fall back to PDF-derived text if no MD content found.
     let subjectKnowledge = "";
     if (subject_code && subject_code !== "ALL") {
       const subjectFileKeys: Record<string, string> = {
@@ -157,12 +189,47 @@ Deno.serve(async (req: Request) => {
       };
       const fileKey = subjectFileKeys[subject_code];
       if (fileKey) {
-        const { data: kbData } = await supabase
+        // Try MD first
+        const { data: mdData } = await supabase
           .from("mentor_knowledge")
-          .select("chunk_text")
+          .select("chunk_text, file_type")
           .eq("file_key", fileKey)
-          .single();
-        if (kbData) subjectKnowledge = kbData.chunk_text;
+          .eq("file_type", "md")
+          .maybeSingle();
+
+        if (mdData?.chunk_text) {
+          subjectKnowledge = mdData.chunk_text;
+        } else {
+          // Fall back to any file_type for this subject
+          const { data: kbData } = await supabase
+            .from("mentor_knowledge")
+            .select("chunk_text")
+            .eq("file_key", fileKey)
+            .maybeSingle();
+          if (kbData) subjectKnowledge = kbData.chunk_text;
+        }
+
+        // Also check for uploaded files for this subject (uploaded via Config page)
+        // These have keys like "042_filename.md" — fetch all and concatenate
+        if (!subjectKnowledge) {
+          const { data: uploadedFiles } = await supabase
+            .from("mentor_knowledge")
+            .select("chunk_text, file_type, source_filename")
+            .ilike("file_key", `${subject_code}_%`)
+            .order("file_type", { ascending: true }); // md sorts before pdf alphabetically
+
+          if (uploadedFiles?.length) {
+            // MD files first, then PDF
+            const sorted = [...uploadedFiles].sort((a, b) => {
+              if (a.file_type === "md" && b.file_type !== "md") return -1;
+              if (a.file_type !== "md" && b.file_type === "md") return 1;
+              return 0;
+            });
+            subjectKnowledge = sorted
+              .map((f) => `### ${f.source_filename ?? "Knowledge"}\n${f.chunk_text}`)
+              .join("\n\n");
+          }
+        }
       }
     }
 
@@ -171,12 +238,12 @@ Deno.serve(async (req: Request) => {
       .from("mentor_knowledge")
       .select("chunk_text")
       .eq("file_key", "pyq_analysis")
-      .single();
+      .maybeSingle();
     const pyqContext = pyqData?.chunk_text ?? "";
 
-    const model = selectModel(mode);
+    const model = selectModel(mode, config);
 
-    // Build full system instruction text
+    // Build system instruction — MD knowledge inline, PDF as supplementary note
     let systemText = SYSTEM_PROMPT_CORE;
     if (subjectKnowledge) systemText += `\n\n## SUBJECT KNOWLEDGE BASE\n\n${subjectKnowledge}`;
     if (pyqContext) systemText += `\n\n## PYQ PATTERN ANALYSIS\n\n${pyqContext}`;
@@ -185,7 +252,7 @@ Deno.serve(async (req: Request) => {
       apiKey,
       model,
       systemText,
-      toGeminiContents(messages),
+      toGeminiContents(trimmedMessages),
       max_tokens
     );
 
@@ -198,14 +265,12 @@ Deno.serve(async (req: Request) => {
     }
 
     const geminiData = await geminiRes.json();
-
     const responseText = geminiData.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
     const usageMeta = geminiData.usageMetadata ?? {};
     const inputTokens = usageMeta.promptTokenCount ?? 0;
     const outputTokens = usageMeta.candidatesTokenCount ?? 0;
     const costEstimate = estimateCost(usedModel, inputTokens, outputTokens);
 
-    // Shadow token logging (fire-and-forget)
     supabase.from("mentor_token_usage").insert({
       session_token,
       model: usedModel,

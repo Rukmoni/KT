@@ -1,6 +1,8 @@
+import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { SUBJECTS } from '../constants';
 import { OptionCard } from '../components/OptionCard';
+import { useConversations } from '../hooks/useConversations';
 import type { Subject } from '../types';
 
 interface MentorLandingProps {
@@ -20,8 +22,13 @@ const STUDY_MODES = [
   { icon: '🔬', label: 'Innovation Research', prompt: 'Give me the innovation research update.' },
 ];
 
-export function MentorLanding({ sessionToken: _ }: MentorLandingProps) {
+export function MentorLanding({ sessionToken }: MentorLandingProps) {
   const navigate = useNavigate();
+  const { conversations, loadConversations } = useConversations(sessionToken);
+
+  useEffect(() => {
+    loadConversations();
+  }, [loadConversations]);
 
   function startSession(subject: Subject) {
     navigate(`/mentor/session/${subject.code}`);
@@ -30,6 +37,8 @@ export function MentorLanding({ sessionToken: _ }: MentorLandingProps) {
   function startWithPrompt(prompt: string) {
     navigate('/mentor/session', { state: { initialPrompt: prompt } });
   }
+
+  const recentConvs = conversations.slice(0, 3);
 
   return (
     <div className="min-h-screen bg-mentor-cream">
@@ -44,17 +53,33 @@ export function MentorLanding({ sessionToken: _ }: MentorLandingProps) {
             <p className="text-mentor-tan-light text-xs">CBSE Class 12 | Sahana's Study Partner</p>
           </div>
         </div>
-        <button
-          onClick={() => navigate('/mentor/telemetry')}
-          className="text-xs text-mentor-tan-light hover:text-mentor-cream transition-colors"
-        >
-          📊 Telemetry
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => navigate('/mentor/history')}
+            className="text-xs text-mentor-tan-light hover:text-mentor-cream transition-colors"
+          >
+            📚 History
+          </button>
+          <span className="text-mentor-border">|</span>
+          <button
+            onClick={() => navigate('/mentor/telemetry')}
+            className="text-xs text-mentor-tan-light hover:text-mentor-cream transition-colors"
+          >
+            📊 Telemetry
+          </button>
+          <span className="text-mentor-border">|</span>
+          <button
+            onClick={() => navigate('/mentor/config')}
+            className="text-xs text-mentor-tan-light hover:text-mentor-cream transition-colors"
+          >
+            ⚙ Config
+          </button>
+        </div>
       </header>
 
       <div className="max-w-3xl mx-auto px-4 py-8">
         {/* Hero */}
-        <div className="text-center mb-10">
+        <div className="text-center mb-8">
           <p className="text-3xl mb-3">🎓</p>
           <h2 className="text-2xl font-bold text-mentor-navy mb-2">
             Welcome back, Sahana! 🌟
@@ -64,14 +89,54 @@ export function MentorLanding({ sessionToken: _ }: MentorLandingProps) {
           </p>
         </div>
 
-        {/* Quick Start — Chat without subject */}
+        {/* Recent Conversations */}
+        {recentConvs.length > 0 && (
+          <section className="mb-8">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-sm font-semibold text-mentor-muted uppercase tracking-wider">
+                Continue Where You Left Off
+              </h3>
+              <button
+                onClick={() => navigate('/mentor/history')}
+                className="text-xs text-mentor-navy hover:underline"
+              >
+                View all →
+              </button>
+            </div>
+            <div className="space-y-2">
+              {recentConvs.map((conv) => (
+                <button
+                  key={conv.id}
+                  onClick={() => {
+                    const path = conv.subject_code
+                      ? `/mentor/session/${conv.subject_code}`
+                      : '/mentor/session';
+                    navigate(path, { state: { conversationId: conv.id } });
+                  }}
+                  className="w-full text-left flex items-center gap-3 bg-mentor-surface border border-mentor-border rounded-xl px-4 py-3 hover:border-mentor-navy transition-colors"
+                >
+                  <span className="text-base">💬</span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-mentor-text truncate">{conv.title}</p>
+                    <p className="text-xs text-mentor-muted">
+                      {conv.message_count} messages · {new Date(conv.updated_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
+                    </p>
+                  </div>
+                  <span className="text-mentor-muted text-sm flex-shrink-0">→</span>
+                </button>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* Quick Start */}
         <div className="mb-8">
           <button
             onClick={() => navigate('/mentor/session')}
             className="w-full flex items-center justify-center gap-3 py-4 px-6 bg-mentor-navy text-mentor-cream rounded-2xl font-semibold text-base hover:bg-mentor-navy-light transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5"
           >
             <span className="text-xl">💬</span>
-            Start a Session
+            Start a New Session
           </button>
         </div>
 

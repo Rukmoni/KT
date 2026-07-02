@@ -1,8 +1,9 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import { useMentorChat } from '../hooks/useMentorChat';
+import { useConversations } from '../hooks/useConversations';
 import { useActivityLog } from '../hooks/useActivityLog';
-import { ChatMessage } from '../components/ChatMessage';
+import { ChatMessage as ChatMessageComp } from '../components/ChatMessage';
 import { StatusPill } from '../components/StatusPill';
 import { TokenMeterShadow } from '../components/TokenMeterShadow';
 import { EmptyState } from '../components/EmptyState';
@@ -22,23 +23,52 @@ export function SessionPage({ sessionToken }: SessionPageProps) {
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
+  const locationState = location.state as { initialPrompt?: string; conversationId?: string } | null;
   const resolvedCode = (subjectCode as SubjectCode) ?? null;
   const subject = resolvedCode ? SUBJECT_MAP[resolvedCode] : null;
 
-  const { messages, mode, isLoading, error, lastUsage, totalCost, totalTokens, sendMessage, clearMessages } =
-    useMentorChat({ sessionToken, subjectCode: resolvedCode });
+  // Conversation state
+  const [conversationId, setConversationId] = useState<string | null>(
+    locationState?.conversationId ?? null
+  );
+  const [msgCountRef, setMsgCountRef] = useState(0);
 
+  const {
+    messages,
+    mode,
+    isLoading,
+    error,
+    lastUsage,
+    totalCost,
+    totalTokens,
+    sendMessage,
+    loadMessages,
+    clearMessages,
+  } = useMentorChat({ sessionToken, subjectCode: resolvedCode });
+
+  const { createConversation, updateConversation, loadMessages: loadDbMessages, saveMessages } =
+    useConversations(sessionToken);
   const { logEvent } = useActivityLog(sessionToken);
 
-  // Initial prompt from state (from landing page) or welcome
+  // Load existing conversation on mount
   useEffect(() => {
-    const state = location.state as { initialPrompt?: string } | null;
-    if (state?.initialPrompt) {
-      sendMessage(state.initialPrompt);
+    const convId = locationState?.conversationId;
+    if (!convId) return;
+    loadDbMessages(convId).then((msgs) => {
+      if (msgs.length) {
+        loadMessages(msgs);
+        setMsgCountRef(msgs.length);
+      }
+    });
+    window.history.replaceState({}, '');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Initial prompt from landing page
+  useEffect(() => {
+    if (locationState?.initialPrompt && !locationState.conversationId) {
+      handleSendText(locationState.initialPrompt);
       window.history.replaceState({}, '');
-    } else if (messages.length === 0) {
-      // Show welcome message as first assistant message without API call
-      // We inject it locally so no token cost
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -48,13 +78,64 @@ export function SessionPage({ sessionToken }: SessionPageProps) {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isLoading]);
 
+  const handleSendText = useCallback(
+    async (text: string) => {
+      if (!text.trim() || isLoading) return;
+      setShowMenu(false);
+
+      const userMsgIndex = messages.length;
+      const assistantMsg = await sendMessage(text);
+
+      if (!assistantMsg) return;
+
+      const userMsg = { role: 'user' as const, content: text };
+      const newPair = [userMsg, assistantMsg];
+
+      // Create conversation on first message
+      let convId = conversationId;
+      if (!convId) {
+        const title = text.slice(0, 60) + (text.length > 60 ? '…' : '');
+        convId = await createConversation(title, resolvedCode, mode);
+        if (convId) {
+          setConversationId(convId);
+          // Save all messages so far (including this pair)
+          const allMsgs = messages.slice(0, userMsgIndex).concat(newPair);
+          await saveMessages(convId, allMsgs);
+          setMsgCountRef(allMsgs.length);
+        }
+      } else {
+        // Append new pair
+        await saveMessages(convId, newPair);
+        const newCount = msgCountRef + 2;
+        setMsgCountRef(newCount);
+        await updateConversation(convId, {
+          last_mode: mode,
+          message_count: newCount,
+        });
+      }
+
+      await logEvent({ event_type: 'message', subject_code: resolvedCode });
+    },
+    [
+      messages,
+      isLoading,
+      sendMessage,
+      conversationId,
+      mode,
+      resolvedCode,
+      createConversation,
+      saveMessages,
+      updateConversation,
+      logEvent,
+      msgCountRef,
+    ]
+  );
+
   async function handleSend() {
     const text = input.trim();
-    if (!text || isLoading) return;
+    if (!text) return;
     setInput('');
-    setShowMenu(false);
-    await sendMessage(text);
-    await logEvent({ event_type: 'message', subject_code: resolvedCode });
+    await handleSendText(text);
   }
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
@@ -64,10 +145,10 @@ export function SessionPage({ sessionToken }: SessionPageProps) {
     }
   }
 
-  function handleQuickSend(text: string) {
-    setInput('');
-    setShowMenu(false);
-    sendMessage(text);
+  function handleNewConversation() {
+    clearMessages();
+    setConversationId(null);
+    setMsgCountRef(0);
   }
 
   const QUICK_ACTIONS = [
@@ -88,7 +169,6 @@ export function SessionPage({ sessionToken }: SessionPageProps) {
           <button
             onClick={() => navigate('/mentor')}
             className="text-mentor-tan-light hover:text-mentor-cream transition-colors text-lg flex-shrink-0"
-            aria-label="Back to home"
           >
             ←
           </button>
@@ -99,19 +179,23 @@ export function SessionPage({ sessionToken }: SessionPageProps) {
             <h1 className="text-mentor-cream font-semibold text-sm leading-tight truncate">
               {subject ? `${subject.icon} ${subject.name}` : 'Board Exam Mentor'}
             </h1>
-            <p className="text-mentor-tan-light text-xs">Sahana's Study Partner</p>
+            <p className="text-mentor-tan-light text-xs">
+              {conversationId ? 'Saved thread' : 'Sahana\'s Study Partner'}
+            </p>
           </div>
         </div>
 
         <div className="flex items-center gap-2 flex-shrink-0">
           <StatusPill mode={mode} />
-          <button
-            onClick={clearMessages}
-            className="text-xs text-mentor-tan-light hover:text-mentor-cream transition-colors ml-1"
-            title="Clear chat"
-          >
-            ✕
-          </button>
+          {messages.length > 0 && (
+            <button
+              onClick={handleNewConversation}
+              className="text-xs text-mentor-tan-light hover:text-mentor-cream transition-colors ml-1 px-2 py-1 rounded border border-mentor-border hover:border-mentor-cream"
+              title="New conversation"
+            >
+              + New
+            </button>
+          )}
         </div>
       </header>
 
@@ -134,15 +218,11 @@ export function SessionPage({ sessionToken }: SessionPageProps) {
             icon="🎓"
             title="Ready to study, Sahana!"
             description="Ask me anything — a topic, a test, flashcards, PYQ analysis, or just say 'hi'."
-            action={{ label: 'Show Main Menu', onClick: () => handleQuickSend('Show me the main menu') }}
+            action={{ label: 'Show Main Menu', onClick: () => handleSendText('Show me the main menu') }}
           />
         ) : (
           messages.map((msg, i) => (
-            <ChatMessage
-              key={i}
-              message={msg}
-              isLatest={i === messages.length - 1}
-            />
+            <ChatMessageComp key={i} message={msg} isLatest={i === messages.length - 1} />
           ))
         )}
 
@@ -164,11 +244,6 @@ export function SessionPage({ sessionToken }: SessionPageProps) {
         {error && (
           <div className="mx-auto max-w-md p-4 bg-mentor-red-pale border border-red-200 rounded-xl text-sm text-mentor-red">
             <span className="font-medium">⚠ Error: </span>{error}
-            {error.includes('ANTHROPIC_API_KEY') && (
-              <p className="mt-2 text-xs">
-                Add your <code className="bg-red-100 px-1 rounded">ANTHROPIC_API_KEY</code> in Supabase Edge Function secrets to activate the mentor.
-              </p>
-            )}
           </div>
         )}
 
@@ -182,7 +257,7 @@ export function SessionPage({ sessionToken }: SessionPageProps) {
             {QUICK_ACTIONS.map((a) => (
               <button
                 key={a.text}
-                onClick={() => handleQuickSend(a.text)}
+                onClick={() => { setInput(''); setShowMenu(false); handleSendText(a.text); }}
                 className="text-xs px-3 py-1.5 rounded-full bg-mentor-cream border border-mentor-border text-mentor-text hover:bg-mentor-cream-dark hover:border-mentor-navy transition-colors"
               >
                 {a.label}
@@ -212,7 +287,7 @@ export function SessionPage({ sessionToken }: SessionPageProps) {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Ask me anything — topic, test, flashcards, PYQ..."
+            placeholder="Ask me anything — topic, test, flashcards, PYQ…"
             rows={1}
             className="flex-1 resize-none rounded-xl border border-mentor-border bg-mentor-cream px-4 py-2.5 text-sm text-mentor-text placeholder-mentor-muted focus:outline-none focus:border-mentor-navy transition-colors leading-relaxed max-h-32 overflow-y-auto"
             style={{ minHeight: '42px' }}
@@ -234,7 +309,6 @@ export function SessionPage({ sessionToken }: SessionPageProps) {
             </svg>
           </button>
         </div>
-
         <p className="text-xs text-mentor-muted text-center mt-2">
           Enter to send · Shift+Enter for new line
         </p>

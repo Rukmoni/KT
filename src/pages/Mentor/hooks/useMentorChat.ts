@@ -5,10 +5,17 @@ import { MENTOR_FUNCTION_URL, SUPABASE_ANON_KEY } from '../constants';
 interface UseMentorChatOptions {
   sessionToken: string;
   subjectCode: SubjectCode | null;
+  initialMessages?: ChatMessage[];
+  maxApiMessages?: number;
 }
 
-export function useMentorChat({ sessionToken, subjectCode }: UseMentorChatOptions) {
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+export function useMentorChat({
+  sessionToken,
+  subjectCode,
+  initialMessages = [],
+  maxApiMessages = 20,
+}: UseMentorChatOptions) {
+  const [messages, setMessages] = useState<ChatMessage[]>(initialMessages);
   const [mode, setMode] = useState<StudyMode>('chat');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -18,8 +25,8 @@ export function useMentorChat({ sessionToken, subjectCode }: UseMentorChatOption
   const abortRef = useRef<AbortController | null>(null);
 
   const sendMessage = useCallback(
-    async (userText: string, overrideMode?: StudyMode) => {
-      if (!userText.trim()) return;
+    async (userText: string, overrideMode?: StudyMode): Promise<ChatMessage | null> => {
+      if (!userText.trim()) return null;
       setError(null);
 
       const userMsg: ChatMessage = { role: 'user', content: userText };
@@ -28,6 +35,9 @@ export function useMentorChat({ sessionToken, subjectCode }: UseMentorChatOption
       setIsLoading(true);
 
       abortRef.current = new AbortController();
+
+      // Trim to last N messages for API efficiency
+      const apiMessages = updatedMessages.slice(-maxApiMessages);
 
       try {
         const res = await fetch(MENTOR_FUNCTION_URL, {
@@ -41,7 +51,7 @@ export function useMentorChat({ sessionToken, subjectCode }: UseMentorChatOption
             session_token: sessionToken,
             subject_code: subjectCode,
             mode: overrideMode ?? mode,
-            messages: updatedMessages,
+            messages: apiMessages,
           }),
           signal: abortRef.current.signal,
         });
@@ -63,15 +73,21 @@ export function useMentorChat({ sessionToken, subjectCode }: UseMentorChatOption
             (t) => t + (data.usage.input_tokens ?? 0) + (data.usage.output_tokens ?? 0)
           );
         }
+        return assistantMsg;
       } catch (err) {
-        if ((err as Error).name === 'AbortError') return;
+        if ((err as Error).name === 'AbortError') return null;
         setError((err as Error).message);
+        return null;
       } finally {
         setIsLoading(false);
       }
     },
-    [messages, mode, sessionToken, subjectCode]
+    [messages, mode, sessionToken, subjectCode, maxApiMessages]
   );
+
+  const loadMessages = useCallback((msgs: ChatMessage[]) => {
+    setMessages(msgs);
+  }, []);
 
   const clearMessages = useCallback(() => {
     setMessages([]);
@@ -92,6 +108,7 @@ export function useMentorChat({ sessionToken, subjectCode }: UseMentorChatOption
     totalCost,
     totalTokens,
     sendMessage,
+    loadMessages,
     clearMessages,
     stopGeneration,
   };

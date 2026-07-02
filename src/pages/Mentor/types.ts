@@ -61,3 +61,31 @@ export interface ActivityEvent {
   score?: number;
   metadata?: Record<string, unknown>;
 }
+
+export interface Conversation {
+  id: string;
+  session_token: string;
+  title: string;
+  subject_code: string | null;
+  last_mode: string;
+  message_count: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface MentorConfigData {
+  model_primary: string;
+  model_lite: string;
+  model_pro: string;
+  api_key_override: string | null;
+  max_history_messages: number;
+}
+
+export interface KnowledgeFile {
+  id: string;
+  file_key: string;
+  source_filename: string | null;
+  file_type: string;
+  chunk_text: string;
+  created_at: string;
+}
