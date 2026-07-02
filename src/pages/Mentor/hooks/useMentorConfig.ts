@@ -1,9 +1,8 @@
 import { useState, useCallback } from 'react';
-import { createClient } from '@supabase/supabase-js';
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from '../constants';
 import type { MentorConfigData } from '../types';
 
-const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const CONFIG_FUNCTION_URL = `${SUPABASE_URL}/functions/v1/mentor-config`;
 
 const DEFAULTS: MentorConfigData = {
   model_primary: 'gemini-2.5-flash',
@@ -13,6 +12,14 @@ const DEFAULTS: MentorConfigData = {
   max_history_messages: 20,
 };
 
+function authHeaders() {
+  return {
+    'Content-Type': 'application/json',
+    Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+    Apikey: SUPABASE_ANON_KEY,
+  };
+}
+
 export function useMentorConfig() {
   const [config, setConfig] = useState<MentorConfigData>(DEFAULTS);
   const [loading, setLoading] = useState(false);
@@ -20,28 +27,40 @@ export function useMentorConfig() {
 
   const loadConfig = useCallback(async () => {
     setLoading(true);
-    const { data } = await supabase.from('mentor_config').select('*').eq('id', 1).maybeSingle();
-    if (data) {
-      setConfig({
-        model_primary: data.model_primary ?? DEFAULTS.model_primary,
-        model_lite: data.model_lite ?? DEFAULTS.model_lite,
-        model_pro: data.model_pro ?? DEFAULTS.model_pro,
-        api_key_override: data.api_key_override ?? null,
-        max_history_messages: data.max_history_messages ?? DEFAULTS.max_history_messages,
+    try {
+      const res = await fetch(CONFIG_FUNCTION_URL, {
+        method: 'GET',
+        headers: authHeaders(),
       });
+      if (res.ok) {
+        const data = await res.json();
+        setConfig({
+          model_primary: data.model_primary ?? DEFAULTS.model_primary,
+          model_lite: data.model_lite ?? DEFAULTS.model_lite,
+          model_pro: data.model_pro ?? DEFAULTS.model_pro,
+          api_key_override: data.api_key_override ?? null,
+          max_history_messages: data.max_history_messages ?? DEFAULTS.max_history_messages,
+        });
+      }
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   }, []);
 
   const saveConfig = useCallback(async (updates: Partial<MentorConfigData>): Promise<boolean> => {
     setSaving(true);
-    const { error } = await supabase
-      .from('mentor_config')
-      .update({ ...updates, updated_at: new Date().toISOString() })
-      .eq('id', 1);
-    setSaving(false);
-    if (!error) setConfig((prev) => ({ ...prev, ...updates }));
-    return !error;
+    try {
+      const res = await fetch(CONFIG_FUNCTION_URL, {
+        method: 'POST',
+        headers: authHeaders(),
+        body: JSON.stringify(updates),
+      });
+      const ok = res.ok;
+      if (ok) setConfig((prev) => ({ ...prev, ...updates }));
+      return ok;
+    } finally {
+      setSaving(false);
+    }
   }, []);
 
   return { config, loading, saving, loadConfig, saveConfig };
