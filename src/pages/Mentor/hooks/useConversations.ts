@@ -4,6 +4,15 @@ import { SUPABASE_URL, SUPABASE_ANON_KEY } from '../constants';
 import type { Conversation, ChatMessage } from '../types';
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const CONV_FUNCTION_URL = `${SUPABASE_URL}/functions/v1/mentor-conversations`;
+
+function authHeaders() {
+  return {
+    'Content-Type': 'application/json',
+    Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+    Apikey: SUPABASE_ANON_KEY,
+  };
+}
 
 export function useConversations(sessionToken: string) {
   const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -35,18 +44,26 @@ export function useConversations(sessionToken: string) {
 
   const updateConversation = useCallback(
     async (id: string, updates: Partial<Pick<Conversation, 'title' | 'last_mode' | 'message_count'>>) => {
-      await supabase
-        .from('mentor_conversations')
-        .update({ ...updates, updated_at: new Date().toISOString() })
-        .eq('id', id);
+      await fetch(`${CONV_FUNCTION_URL}/${id}`, {
+        method: 'PATCH',
+        headers: authHeaders(),
+        body: JSON.stringify({ ...updates, session_token: sessionToken }),
+      });
     },
-    []
+    [sessionToken]
   );
 
-  const deleteConversation = useCallback(async (id: string) => {
-    await supabase.from('mentor_conversations').delete().eq('id', id);
-    setConversations((prev) => prev.filter((c) => c.id !== id));
-  }, []);
+  const deleteConversation = useCallback(
+    async (id: string) => {
+      const params = new URLSearchParams({ session_token: sessionToken });
+      await fetch(`${CONV_FUNCTION_URL}/${id}?${params}`, {
+        method: 'DELETE',
+        headers: authHeaders(),
+      });
+      setConversations((prev) => prev.filter((c) => c.id !== id));
+    },
+    [sessionToken]
+  );
 
   const saveMessages = useCallback(async (conversationId: string, msgs: ChatMessage[]) => {
     if (!msgs.length) return;
