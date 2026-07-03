@@ -3,6 +3,7 @@ import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import { useMentorChat } from '../hooks/useMentorChat';
 import { useConversations } from '../hooks/useConversations';
 import { useActivityLog } from '../hooks/useActivityLog';
+import { useMentorContext } from '../MentorContext';
 import { ChatMessage as ChatMessageComp } from '../components/ChatMessage';
 import { StatusPill } from '../components/StatusPill';
 import { TokenMeterShadow } from '../components/TokenMeterShadow';
@@ -10,11 +11,7 @@ import { EmptyState } from '../components/EmptyState';
 import { SUBJECT_MAP } from '../constants';
 import type { SubjectCode } from '../types';
 
-interface SessionPageProps {
-  sessionToken: string;
-}
-
-export function SessionPage({ sessionToken }: SessionPageProps) {
+export function SessionPage() {
   const { subjectCode } = useParams<{ subjectCode?: string }>();
   const location = useLocation();
   const navigate = useNavigate();
@@ -23,11 +20,12 @@ export function SessionPage({ sessionToken }: SessionPageProps) {
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
+  const { appUserId, setActiveConversationId, refreshConversations, openSidebar } = useMentorContext();
+
   const locationState = location.state as { initialPrompt?: string; conversationId?: string } | null;
   const resolvedCode = (subjectCode as SubjectCode) ?? null;
   const subject = resolvedCode ? SUBJECT_MAP[resolvedCode] : null;
 
-  // Conversation state
   const [conversationId, setConversationId] = useState<string | null>(
     locationState?.conversationId ?? null
   );
@@ -44,11 +42,16 @@ export function SessionPage({ sessionToken }: SessionPageProps) {
     sendMessage,
     loadMessages,
     clearMessages,
-  } = useMentorChat({ sessionToken, subjectCode: resolvedCode });
+  } = useMentorChat({ sessionToken: appUserId, subjectCode: resolvedCode });
 
   const { createConversation, updateConversation, loadMessages: loadDbMessages, saveMessages } =
-    useConversations(sessionToken);
-  const { logEvent } = useActivityLog(sessionToken);
+    useConversations(appUserId);
+  const { logEvent } = useActivityLog(appUserId);
+
+  // Sync active conversation into context so sidebar highlights it
+  useEffect(() => {
+    setActiveConversationId(conversationId);
+  }, [conversationId, setActiveConversationId]);
 
   // Load existing conversation on mount
   useEffect(() => {
@@ -85,33 +88,28 @@ export function SessionPage({ sessionToken }: SessionPageProps) {
 
       const userMsgIndex = messages.length;
       const assistantMsg = await sendMessage(text);
-
       if (!assistantMsg) return;
 
       const userMsg = { role: 'user' as const, content: text };
       const newPair = [userMsg, assistantMsg];
 
-      // Create conversation on first message
       let convId = conversationId;
       if (!convId) {
         const title = text.slice(0, 60) + (text.length > 60 ? '…' : '');
         convId = await createConversation(title, resolvedCode, mode);
         if (convId) {
           setConversationId(convId);
-          // Save all messages so far (including this pair)
           const allMsgs = messages.slice(0, userMsgIndex).concat(newPair);
           await saveMessages(convId, allMsgs);
           setMsgCountRef(allMsgs.length);
+          refreshConversations();
         }
       } else {
-        // Append new pair
         await saveMessages(convId, newPair);
         const newCount = msgCountRef + 2;
         setMsgCountRef(newCount);
-        await updateConversation(convId, {
-          last_mode: mode,
-          message_count: newCount,
-        });
+        await updateConversation(convId, { last_mode: mode, message_count: newCount });
+        refreshConversations();
       }
 
       await logEvent({ event_type: 'message', subject_code: resolvedCode });
@@ -128,6 +126,7 @@ export function SessionPage({ sessionToken }: SessionPageProps) {
       updateConversation,
       logEvent,
       msgCountRef,
+      refreshConversations,
     ]
   );
 
@@ -162,13 +161,23 @@ export function SessionPage({ sessionToken }: SessionPageProps) {
   ];
 
   return (
-    <div className="flex flex-col h-screen bg-mentor-cream">
+    <div className="flex flex-col h-full bg-mentor-cream">
       {/* Header */}
       <header className="flex-shrink-0 bg-mentor-navy px-4 py-3 flex items-center justify-between shadow-md">
         <div className="flex items-center gap-3 min-w-0">
+          {/* Mobile: open sidebar */}
+          <button
+            onClick={openSidebar}
+            className="md:hidden text-mentor-tan-light hover:text-mentor-cream transition-colors text-xl leading-none flex-shrink-0"
+            aria-label="Open history"
+          >
+            ☰
+          </button>
+          {/* Desktop: back to home */}
           <button
             onClick={() => navigate('/mentor')}
-            className="text-mentor-tan-light hover:text-mentor-cream transition-colors text-lg flex-shrink-0"
+            className="hidden md:block text-mentor-tan-light hover:text-mentor-cream transition-colors text-lg flex-shrink-0"
+            aria-label="Home"
           >
             ←
           </button>
@@ -180,7 +189,7 @@ export function SessionPage({ sessionToken }: SessionPageProps) {
               {subject ? `${subject.icon} ${subject.name}` : 'Board Exam Mentor'}
             </h1>
             <p className="text-mentor-tan-light text-xs">
-              {conversationId ? 'Saved thread' : 'Sahana\'s Study Partner'}
+              {conversationId ? 'Saved thread' : "Sahana's Study Partner"}
             </p>
           </div>
         </div>

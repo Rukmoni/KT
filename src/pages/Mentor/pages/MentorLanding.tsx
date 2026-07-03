@@ -1,13 +1,8 @@
-import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { SUBJECTS } from '../constants';
 import { OptionCard } from '../components/OptionCard';
-import { useConversations } from '../hooks/useConversations';
+import { useMentorContext } from '../MentorContext';
 import type { Subject } from '../types';
-
-interface MentorLandingProps {
-  sessionToken: string;
-}
 
 const STUDY_MODES = [
   { icon: '📖', label: 'Learn a New Chapter', prompt: 'I want to learn a new chapter. Please show me the subjects.' },
@@ -22,13 +17,9 @@ const STUDY_MODES = [
   { icon: '🔬', label: 'Innovation Research', prompt: 'Give me the innovation research update.' },
 ];
 
-export function MentorLanding({ sessionToken }: MentorLandingProps) {
+export function MentorLanding() {
   const navigate = useNavigate();
-  const { conversations, loadConversations } = useConversations(sessionToken);
-
-  useEffect(() => {
-    loadConversations();
-  }, [loadConversations]);
+  const { openSidebar } = useMentorContext();
 
   function startSession(subject: Subject) {
     navigate(`/mentor/session/${subject.code}`);
@@ -38,145 +29,75 @@ export function MentorLanding({ sessionToken }: MentorLandingProps) {
     navigate('/mentor/session', { state: { initialPrompt: prompt } });
   }
 
-  const recentConvs = conversations.slice(0, 3);
-
   return (
-    <div className="min-h-screen bg-mentor-cream">
+    <div className="h-full overflow-y-auto bg-mentor-cream">
       {/* Header */}
-      <header className="bg-mentor-navy px-6 py-4 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-full bg-mentor-amber flex items-center justify-center text-white font-bold text-sm">
-            M
-          </div>
-          <div>
-            <h1 className="text-mentor-cream font-semibold text-base leading-tight">AI Board-Exam Mentor</h1>
-            <p className="text-mentor-tan-light text-xs">CBSE Class 12 | Sahana's Study Partner</p>
-          </div>
+      <header className="bg-mentor-navy px-4 py-4 flex items-center gap-3 sticky top-0 z-10">
+        <button
+          onClick={openSidebar}
+          className="md:hidden text-mentor-tan-light hover:text-mentor-cream transition-colors text-xl leading-none flex-shrink-0"
+          aria-label="Open history"
+        >
+          ☰
+        </button>
+        <div className="w-8 h-8 rounded-full bg-mentor-amber flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+          M
         </div>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => navigate('/mentor/history')}
-            className="text-xs text-mentor-tan-light hover:text-mentor-cream transition-colors"
-          >
-            📚 History
-          </button>
-          <span className="text-mentor-border">|</span>
-          <button
-            onClick={() => navigate('/mentor/telemetry')}
-            className="text-xs text-mentor-tan-light hover:text-mentor-cream transition-colors"
-          >
-            📊 Telemetry
-          </button>
-          <span className="text-mentor-border">|</span>
-          <button
-            onClick={() => navigate('/mentor/config')}
-            className="text-xs text-mentor-tan-light hover:text-mentor-cream transition-colors"
-          >
-            ⚙ Config
-          </button>
+        <div>
+          <h1 className="text-mentor-cream font-bold text-base leading-tight">Board Exam Mentor</h1>
+          <p className="text-mentor-tan-light text-xs">Hello, Sahana! Ready to ace your boards?</p>
         </div>
       </header>
 
-      <div className="max-w-3xl mx-auto px-4 py-8">
-        {/* Hero */}
-        <div className="text-center mb-8">
-          <p className="text-3xl mb-3">🎓</p>
-          <h2 className="text-2xl font-bold text-mentor-navy mb-2">
-            Welcome back, Sahana! 🌟
-          </h2>
-          <p className="text-mentor-muted text-sm max-w-md mx-auto">
-            Your CBSE 12th Board Exam mentor is ready. What would you like to work on today?
-          </p>
-        </div>
-
-        {/* Recent Conversations */}
-        {recentConvs.length > 0 && (
-          <section className="mb-8">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-semibold text-mentor-muted uppercase tracking-wider">
-                Continue Where You Left Off
-              </h3>
-              <button
-                onClick={() => navigate('/mentor/history')}
-                className="text-xs text-mentor-navy hover:underline"
-              >
-                View all →
-              </button>
-            </div>
-            <div className="space-y-2">
-              {recentConvs.map((conv) => (
-                <button
-                  key={conv.id}
-                  onClick={() => {
-                    const path = conv.subject_code
-                      ? `/mentor/session/${conv.subject_code}`
-                      : '/mentor/session';
-                    navigate(path, { state: { conversationId: conv.id } });
-                  }}
-                  className="w-full text-left flex items-center gap-3 bg-mentor-surface border border-mentor-border rounded-xl px-4 py-3 hover:border-mentor-navy transition-colors"
-                >
-                  <span className="text-base">💬</span>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-mentor-text truncate">{conv.title}</p>
-                    <p className="text-xs text-mentor-muted">
-                      {conv.message_count} messages · {new Date(conv.updated_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
-                    </p>
-                  </div>
-                  <span className="text-mentor-muted text-sm flex-shrink-0">→</span>
-                </button>
-              ))}
-            </div>
-          </section>
-        )}
-
-        {/* Quick Start */}
-        <div className="mb-8">
-          <button
-            onClick={() => navigate('/mentor/session')}
-            className="w-full flex items-center justify-center gap-3 py-4 px-6 bg-mentor-navy text-mentor-cream rounded-2xl font-semibold text-base hover:bg-mentor-navy-light transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5"
-          >
-            <span className="text-xl">💬</span>
-            Start a New Session
-          </button>
-        </div>
-
-        {/* Select Subject */}
-        <section className="mb-8">
-          <h3 className="text-sm font-semibold text-mentor-muted uppercase tracking-wider mb-3">
+      <div className="max-w-2xl mx-auto px-4 py-6 space-y-8">
+        {/* Subject Quick Start */}
+        <section>
+          <h2 className="text-xs font-semibold text-mentor-muted uppercase tracking-wider mb-3">
             Jump to a Subject
-          </h3>
+          </h2>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
             {SUBJECTS.map((subject) => (
-              <OptionCard
+              <button
                 key={subject.code}
-                icon={subject.icon}
-                label={subject.name}
-                description={`${subject.theoryMarks + subject.practicalMarks} marks`}
                 onClick={() => startSession(subject)}
-                variant="subject"
-                color={subject.color}
+                className="flex items-center gap-3 px-4 py-3 rounded-xl border border-mentor-border bg-mentor-surface hover:border-mentor-navy hover:shadow-sm transition-all text-left"
+              >
+                <span className={`w-8 h-8 rounded-full flex items-center justify-center text-base flex-shrink-0 ${subject.bgColor}`}>
+                  {subject.icon}
+                </span>
+                <div className="min-w-0">
+                  <p className={`text-xs font-semibold ${subject.color}`}>{subject.shortName}</p>
+                  <p className="text-mentor-text text-xs truncate">{subject.name}</p>
+                </div>
+              </button>
+            ))}
+          </div>
+        </section>
+
+        {/* Study Modes */}
+        <section>
+          <h2 className="text-xs font-semibold text-mentor-muted uppercase tracking-wider mb-3">
+            What would you like to do?
+          </h2>
+          <div className="grid grid-cols-2 gap-2">
+            {STUDY_MODES.map((m) => (
+              <OptionCard
+                key={m.label}
+                icon={m.icon}
+                label={m.label}
+                onClick={() => startWithPrompt(m.prompt)}
               />
             ))}
           </div>
         </section>
 
-        {/* Study Mode Quick Launch */}
-        <section>
-          <h3 className="text-sm font-semibold text-mentor-muted uppercase tracking-wider mb-3">
-            Study Modes
-          </h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            {STUDY_MODES.map((m, i) => (
-              <OptionCard
-                key={i}
-                number={i + 1}
-                icon={m.icon}
-                label={m.label}
-                onClick={() => startWithPrompt(m.prompt)}
-                variant="mode"
-              />
-            ))}
-          </div>
+        <section className="pb-4">
+          <button
+            onClick={() => navigate('/mentor/session')}
+            className="w-full py-3 rounded-xl bg-mentor-navy text-mentor-cream font-semibold text-sm hover:bg-mentor-navy-light transition-colors"
+          >
+            + Start a New Session
+          </button>
         </section>
       </div>
     </div>
