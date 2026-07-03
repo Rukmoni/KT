@@ -76,6 +76,7 @@ export const MODE_LABELS: Record<string, string> = {
 };
 
 export const SESSION_TOKEN_KEY = 'mentor_session_token';
+export const IDENTITY_KEY = 'sahana_app_identity';
 
 export const WELCOME_MESSAGE = `👋 Welcome back, Sahana! Great to see you showing up — that's what toppers do! 🌟
 

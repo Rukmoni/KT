@@ -2,12 +2,9 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createClient } from '@supabase/supabase-js';
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from '../constants';
+import { useMentorContext } from '../MentorContext';
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-interface TelemetryPageProps {
-  sessionToken: string;
-}
 
 interface UsageRow {
   id: number;
@@ -23,8 +20,9 @@ interface UsageRow {
   created_at: string;
 }
 
-export function TelemetryPage({ sessionToken }: TelemetryPageProps) {
+export function TelemetryPage() {
   const navigate = useNavigate();
+  const { appUserId: sessionToken, openSidebar } = useMentorContext();
   const [rows, setRows] = useState<UsageRow[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -51,7 +49,14 @@ export function TelemetryPage({ sessionToken }: TelemetryPageProps) {
   return (
     <div className="min-h-screen bg-mentor-cream">
       <header className="bg-mentor-navy px-4 py-3 flex items-center gap-3">
-        <button onClick={() => navigate('/mentor')} className="text-mentor-tan-light hover:text-mentor-cream transition-colors text-lg">
+        <button
+          onClick={openSidebar}
+          className="md:hidden text-mentor-tan-light hover:text-mentor-cream transition-colors text-xl leading-none"
+          aria-label="Open history"
+        >
+          ☰
+        </button>
+        <button onClick={() => navigate('/mentor')} className="hidden md:block text-mentor-tan-light hover:text-mentor-cream transition-colors text-lg">
           ←
         </button>
         <h1 className="text-mentor-cream font-semibold text-base">Token Telemetry</h1>
