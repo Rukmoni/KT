@@ -3,6 +3,17 @@
   publish = "dist"
 
 [[redirects]]
+  from = "/Gantt-Studio"
+  to = "/Gantt-Studio/"
+  status = 302
+  force = true
+
+[[redirects]]
+  from = "/Gantt-Studio/*"
+  to = "/Gantt-Studio/index.html"
+  status = 200
+
+[[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
