@@ -1,6 +1,8 @@
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowRight, Zap, FileText, ChartBar as BarChart2, Bot, MessageSquare, CalendarRange } from 'lucide-react';
+import { ArrowRight, Zap, FileText, ChartBar as BarChart2, Bot, MessageSquare, CalendarRange, Users } from 'lucide-react';
+import { supabase } from '../lib/supabase';
 import './DemoListPage.css';
 
 const DEMOS = [
@@ -69,6 +71,44 @@ const DEMOS = [
 
 export const DemoListPage = () => {
   const navigate = useNavigate();
+  const [ganttVisits, setGanttVisits] = useState<number | null>(null);
+
+  const fetchGanttVisits = useCallback(async () => {
+    const { count, error } = await supabase
+      .from('demo_visits')
+      .select('*', { count: 'exact', head: true })
+      .eq('demo_id', 'gantt-studio');
+
+    if (error) {
+      console.error('Failed to fetch visit count:', error.message);
+      return;
+    }
+    setGanttVisits(count ?? 0);
+  }, []);
+
+  useEffect(() => {
+    fetchGanttVisits();
+  }, [fetchGanttVisits]);
+
+  const recordVisit = async (demoId: string) => {
+    const { error } = await supabase
+      .from('demo_visits')
+      .insert({ demo_id: demoId });
+
+    if (error) {
+      console.error('Failed to record visit:', error.message);
+    }
+  };
+
+  const handleDemoClick = (demo: typeof DEMOS[number]) => {
+    if (!demo.path) return;
+    if (demo.id === 'gantt-studio') {
+      recordVisit('gantt-studio').then(() => fetchGanttVisits());
+      window.open(demo.path, '_blank');
+    } else {
+      navigate(demo.path);
+    }
+  };
 
   return (
     <motion.main
@@ -131,20 +171,22 @@ export const DemoListPage = () => {
 
                 <div className="demo-card__footer">
                   {demo.path ? (
-                    <button
-                      className="demo-card__cta"
-                      style={{ background: demo.accent }}
-                      onClick={() => {
-                        if (demo.external) {
-                          window.open(demo.path!, '_blank');
-                        } else {
-                          navigate(demo.path!);
-                        }
-                      }}
-                    >
-                      Open Demo
-                      <ArrowRight size={15} />
-                    </button>
+                    <>
+                      <button
+                        className="demo-card__cta"
+                        style={{ background: demo.accent }}
+                        onClick={() => handleDemoClick(demo)}
+                      >
+                        Open Demo
+                        <ArrowRight size={15} />
+                      </button>
+                      {demo.id === 'gantt-studio' && (
+                        <span className="demo-card__visits">
+                          <Users size={13} />
+                          {ganttVisits !== null ? `${ganttVisits} ${ganttVisits === 1 ? 'visit' : 'visits'}` : '—'}
+                        </span>
+                      )}
+                    </>
                   ) : (
                     <button className="demo-card__cta demo-card__cta--disabled" disabled>
                       Coming Soon
