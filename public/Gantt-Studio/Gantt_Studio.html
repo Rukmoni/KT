@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Gantt Studio</title>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#EDF0F3;--panel:#fff;--ink:#17212B;--mute:#5E6B78;--line:#D8DEE4;--acc:#2F5BEA;--on:#fff;color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#11161C;--panel:#1A212A;--ink:#E7ECF1;--mute:#93A0AD;--line:#2A333D;--acc:#7E9BFF;--on:#0E1420;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#11161C;--panel:#1A212A;--ink:#E7ECF1;--mute:#93A0AD;--line:#2A333D;--acc:#7E9BFF;--on:#0E1420;color-scheme:dark}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 'Bricolage Grotesque',system-ui,sans-serif}
+header{display:flex;align-items:center;gap:10px;padding:14px 20px;flex-wrap:wrap}
+header h1{font-size:19px;margin:0 auto 0 0;font-weight:700;letter-spacing:-.01em}
+button,select,input{font:inherit;color:inherit}
+.btn{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:7px 12px;cursor:pointer}
+.btn.pri{background:var(--acc);color:var(--on);border-color:var(--acc);font-weight:600}
+.btn:focus-visible,input:focus-visible,select:focus-visible,.tab:focus-visible{outline:2px solid var(--acc);outline-offset:1px}
+main{display:grid;grid-template-columns:400px minmax(0,1fr);gap:16px;padding:0 20px 24px;align-items:start}
+@media(max-width:960px){main{grid-template-columns:1fr}}
+aside,.stage{background:var(--panel);border:1px solid var(--line);border-radius:12px}
+.tabs{display:flex;border-bottom:1px solid var(--line)}
+.tab{flex:1;padding:11px;background:none;border:0;border-bottom:2px solid transparent;cursor:pointer;color:var(--mute);font-weight:600}
+.tab[aria-selected=true]{color:var(--ink);border-bottom-color:var(--acc)}
+.pane{padding:14px;display:none}.pane.on{display:block}
+h3{font-size:13px;margin:16px 0 8px;color:var(--mute);font-weight:600}h3:first-child{margin-top:0}
+.tr{display:grid;grid-template-columns:1fr 124px 54px 54px;gap:5px;margin-bottom:10px;padding-bottom:10px;border-bottom:1px dashed var(--line);position:relative}
+.tr .nm{grid-column:1/-1;font-weight:600}
+.tr select{grid-column:1/4}
+input[type=text],input:not([type]),input[type=date],input[type=number],select,textarea{background:transparent;border:1px solid var(--line);border-radius:7px;padding:6px 8px;min-width:0;width:100%}
+textarea{height:150px;font:12px ui-monospace,Menlo,monospace;resize:vertical}
+.x{border:0;background:none;color:var(--mute);font-size:20px;cursor:pointer;border-radius:6px}.x:hover{color:#E5484D}
+.cat{display:flex;gap:6px;margin-bottom:6px;align-items:center}
+input[type=color]{width:36px;height:32px;padding:2px;border:1px solid var(--line);border-radius:7px;background:none;cursor:pointer;flex:none}
+.row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:9px}
+.row label{flex:1}.row input[type=range]{width:55%;accent-color:var(--acc)}.row select{width:55%}
+.presets{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.pz{border:2px solid var(--line);border-radius:9px;padding:0;height:46px;cursor:pointer;overflow:hidden;display:flex;flex-direction:column}
+.pz[aria-pressed=true]{border-color:var(--acc)}
+.pz i{flex:1;display:block}.pz span{display:flex;height:12px}.pz span b{flex:1}
+.stage{padding:0;overflow:hidden}
+#meta{padding:11px 16px;color:var(--mute);border-bottom:1px solid var(--line);display:flex;gap:18px;flex-wrap:wrap}
+#meta b{color:var(--ink)}
+#chart{overflow:auto;max-height:78vh}
+#chart svg{display:block}
+.empty{padding:60px 20px;text-align:center;color:var(--mute)}
+dialog{border:1px solid var(--line);border-radius:12px;background:var(--panel);color:var(--ink);max-width:min(1100px,94vw);padding:14px}
+dialog img{max-width:100%;display:block;border-radius:8px;margin:10px 0}
+.hint{color:var(--mute);font-size:12px;margin:6px 0 0}
+</style>
+</head>
+<body>
+<header>
+  <h1>Gantt Studio</h1>
+  <button class="btn" id="snap">Snapshot image</button>
+  <button class="btn" id="reset">Reset sample</button>
+  <button class="btn" id="mode" aria-label="Toggle light or dark interface">Light / dark</button>
+</header>
+<main>
+  <aside>
+    <div class="tabs" role="tablist">
+      <button class="tab" role="tab" aria-selected="true" data-p="p1">Tasks</button>
+      <button class="tab" role="tab" aria-selected="false" data-p="p2">Style</button>
+      <button class="tab" role="tab" aria-selected="false" data-p="p3">CSV</button>
+    </div>
+    <div class="pane on" id="p1">
+      <h3>Project title</h3><input id="title" aria-label="Project title">
+      <h3>Activities (name, start, days, % done, category)</h3>
+      <div id="tasks"></div>
+      <button class="btn pri" id="addT">Add task</button>
+      <h3>Categories</h3><div id="cats"></div>
+      <button class="btn" id="addC">Add category</button>
+    </div>
+    <div class="pane" id="p2"></div>
+    <div class="pane" id="p3">
+      <h3>Paste or edit CSV</h3>
+      <textarea id="csv" spellcheck="false" aria-label="CSV data"></textarea>
+      <p class="hint">Columns: Task, Start (YYYY-MM-DD), Days, Progress, Category. New categories are created automatically.</p>
+      <div class="row" style="margin-top:10px"><button class="btn" id="exp">Load current data</button><button class="btn" id="cp">Copy</button><button class="btn pri" id="imp">Import CSV</button></div>
+    </div>
+  </aside>
+  <section class="stage"><div id="meta"></div><div id="chart"></div></section>
+</main>
+<dialog id="dlg"><b>Chart snapshot</b><p class="hint">Right-click or long-press the image to save it.</p><img id="out" alt="Gantt chart snapshot"><button class="btn" id="cl">Close</button></dialog>
+<script>
+const $=s=>document.querySelector(s),DAY=864e5,MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const toN=d=>{const[y,m,x]=d.split('-').map(Number);return Date.UTC(y,m-1,x)/DAY},fromN=n=>new Date(n*DAY),iso=n=>fromN(n).toISOString().slice(0,10);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const mix=(h,t,a)=>{const n=parseInt(h.slice(1),16),m=(c,x)=>Math.round(c+(x-c)*a);return'#'+[n>>16,n>>8&255,n&255].map(v=>m(v,t).toString(16).padStart(2,'0')).join('')};
+const PRE=[
+{n:'Studio',bg:'#FFFFFF',tx:'#17212B',gr:'#E6EAEE',td:'#E5484D',pal:['#2F5BEA','#12A594','#F5A524','#D6409F','#8E4EC6','#E5484D']},
+{n:'Midnight',bg:'#0F1720',tx:'#DDE5EE',gr:'#223041',td:'#FF7AB6',pal:['#6E9BFF','#3DD6B0','#FFB84D','#FF7AB6','#B794F6','#FF6B6B']},
+{n:'Harbor',bg:'#F2F7F5',tx:'#26413C',gr:'#D3E2DD',td:'#C9604A',pal:['#5FA8A0','#8FB9E3','#E8B96B','#D98C9F','#A59BD6','#7CC49B']},
+{n:'Blueprint',bg:'#0B3A8C',tx:'#EAF2FF',gr:'#2D5BB5',td:'#FFD84D',pal:['#FFFFFF','#FFD84D','#7FE7FF','#FF9EC0','#B6FF9E','#FFB27A']},
+{n:'Ink',bg:'#FAFAFA',tx:'#111111',gr:'#E3E3E3',td:'#E5484D',pal:['#111111','#4D4D4D','#808080','#A8A8A8','#2B2B2B','#6B6B6B']}];
+const FONTS={Grotesk:"'Bricolage Grotesque',system-ui,sans-serif",Serif:"Georgia,'Times New Roman',serif",Mono:"ui-monospace,Menlo,Consolas,monospace"};
+const def=()=>{const b=Math.floor(Date.now()/DAY)-2,p=PRE[0].pal,cats=[{n:'Planning',c:p[0]},{n:'Design',c:p[3]},{n:'Build',c:p[1]},{n:'Launch',c:p[2]}];
+ const rows=[['Kickoff & scope',0,5,100,'Planning'],['User research',3,10,80,'Planning'],['Wireframes',10,8,60,'Design'],['Visual design',16,14,35,'Design'],['Frontend build',26,20,10,'Build'],['CMS & content migration',30,18,0,'Build'],['QA & accessibility',46,9,0,'Build'],['Go-live',55,4,0,'Launch']];
+ return{title:'Website relaunch',cats,tasks:rows.map(r=>({name:r[0],start:iso(b+r[1]),dur:r[2],prog:r[3],cat:r[4]})),
+ o:{pre:0,bg:PRE[0].bg,tx:PRE[0].tx,gr:PRE[0].gr,td:PRE[0].td,single:p[0],row:44,bar:24,rad:8,px:20,labelW:210,fill:'solid',by:'cat',grid:1,wk:1,today:1,prog:1,lab:1,title:1,font:'Grotesk'}}};
+let S;try{S=JSON.parse(localStorage.getItem('gantt-studio')||'null')}catch(e){}
+S=S&&S.o&&S.tasks?S:def();
+const save=()=>{try{localStorage.setItem('gantt-studio',JSON.stringify(S))}catch(e){}};
+
+function colorOf(t){const o=S.o;if(o.by==='single')return o.single;const c=S.cats.find(c=>c.n===t.cat);return c?c.c:PRE[o.pre].pal[0]}
+
+function render(){
+ const o=S.o,T=S.tasks.filter(t=>t.start&&+t.dur>0),box=$('#chart');
+ if(!T.length){box.innerHTML='<p class="empty">Add a task with a start date and a duration to see your chart.</p>';$('#meta').innerHTML='';return}
+ const st=T.map(t=>toN(t.start)),en=T.map((t,i)=>st[i]+ +t.dur),min=Math.min(...st)-1,max=Math.max(...en)+3,n=max-min;
+ const TH=o.title?54:12,HH=52,top=TH+HH,LW=+o.labelW,px=+o.px,W=LW+n*px+16,H=top+T.length*o.row+12,X=d=>LW+(d-min)*px,wide=px>=24;
+ let defs='',g='',h='',b='';
+ for(let d=min;d<max;d++){const dt=fromN(d),dow=dt.getUTCDay(),x=X(d);
+  if(o.wk&&(dow===0||dow===6))g+=`<rect x="${x}" y="${top}" width="${px}" height="${H-top}" fill="${o.tx}" opacity=".05"/>`;
+  if(o.grid&&(wide||dow===1))g+=`<line x1="${x}" x2="${x}" y1="${top-22}" y2="${H}" stroke="${o.gr}" stroke-width="${dow===1?1.5:1}"/>`;
+  if(dt.getUTCDate()===1||d===min)h+=`<line x1="${X(d)}" x2="${X(d)}" y1="${TH+2}" y2="${top}" stroke="${o.gr}" stroke-width="1.5"/><text x="${X(d)+7}" y="${TH+20}" font-size="12" font-weight="700" fill="${o.tx}">${MON[dt.getUTCMonth()]} ${dt.getUTCFullYear()}</text>`;
+  if(wide||dow===1)h+=`<text x="${x+(wide?px/2:4)}" y="${top-7}" font-size="11" fill="${o.tx}" opacity=".6" text-anchor="${wide?'middle':'start'}">${dt.getUTCDate()}</text>`}
+ h+=`<line x1="0" x2="${W}" y1="${top}" y2="${top}" stroke="${o.gr}" stroke-width="1.5"/>`;
+ const mc=Math.floor((LW-40)/7);
+ T.forEach((t,i)=>{
+  const y=top+i*o.row,by=y+(o.row-o.bar)/2,x=X(st[i]),w=(en[i]-st[i])*px,c=colorOf(t),p=Math.min(100,Math.max(0,+t.prog||0)),r=Math.min(+o.rad,o.bar/2,w/2),mid=y+o.row/2;
+  b+=`<line x1="0" x2="${W}" y1="${y+o.row}" y2="${y+o.row}" stroke="${o.gr}" opacity=".55"/><circle cx="18" cy="${mid}" r="4.5" fill="${c}"/><text x="30" y="${mid+4.5}" font-size="13" fill="${o.tx}">${esc(t.name.length>mc?t.name.slice(0,mc-1)+'…':t.name)}</text>`;
+  let f=c;if(o.fill==='gradient'){defs+=`<linearGradient id="g${i}"><stop offset="0" stop-color="${c}"/><stop offset="1" stop-color="${mix(c,255,.45)}"/></linearGradient>`;f=`url(#g${i})`}
+  const R=`x="${x}" y="${by}" width="${w}" height="${o.bar}" rx="${r}"`;
+  defs+=`<clipPath id="k${i}"><rect ${R}/></clipPath>`;
+  const tip=`<title>${esc(t.name)}: ${t.start} → ${iso(en[i])} (${t.dur}d, ${p}%)</title>`;
+  if(o.fill==='outline')b+=`<g>${tip}<rect ${R} fill="${c}" fill-opacity=".14" stroke="${c}" stroke-width="2"/>${o.prog?`<rect x="${x}" y="${by}" width="${w*p/100}" height="${o.bar}" fill="${c}" fill-opacity=".85" clip-path="url(#k${i})"/>`:''}</g>`;
+  else b+=`<g>${tip}<rect ${R} fill="${f}" ${o.prog?'opacity=".3"':''}/>${o.prog?`<rect x="${x}" y="${by}" width="${w*p/100}" height="${o.bar}" fill="${f}" clip-path="url(#k${i})"/>`:''}</g>`;
+  if(o.lab)b+=`<text x="${x+w+8}" y="${mid+4}" font-size="12" fill="${o.tx}" opacity=".75">${t.dur}d${o.prog?' · '+p+'%':''}</text>`});
+ let td='';const tn=Math.floor(Date.now()/DAY);
+ if(o.today&&tn>=min&&tn<max){const x=X(tn)+px/2;td=`<line x1="${x}" x2="${x}" y1="${TH+24}" y2="${H}" stroke="${o.td}" stroke-width="2" stroke-dasharray="5 4"/><rect x="${x-21}" y="${TH+24}" width="42" height="17" rx="8.5" fill="${o.td}"/><text x="${x}" y="${TH+36}" font-size="10.5" font-weight="700" fill="${mix(o.td,parseInt(o.td.slice(1),16)>8388607?0:255,.9)}" text-anchor="middle">Today</text>`}
+ const ttl=o.title?`<text x="16" y="36" font-size="22" font-weight="700" fill="${o.tx}">${esc(S.title)}</text>`:'';
+ box.innerHTML=`<svg xmlns="http://www.w3.org/2000/svg" id="svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" font-family="${FONTS[o.font]}"><defs>${defs}</defs><rect width="${W}" height="${H}" fill="${o.bg}"/>${ttl}${g}${h}${b}${td}</svg>`;
+ const tot=T.reduce((a,t)=>a+ +t.dur,0),done=T.reduce((a,t)=>a+ +t.dur*(Math.min(100,+t.prog||0)/100),0),s0=Math.min(...st),e0=Math.max(...en);
+ $('#meta').innerHTML=`<span><b>${T.length}</b> tasks</span><span><b>${e0-s0}</b> days</span><span><b>${iso(s0)}</b> to <b>${iso(e0)}</b></span><span><b>${Math.round(done/tot*100)}%</b> complete</span>`;
+ save()}
+
+function renderTasks(){
+ $('#title').value=S.title;
+ $('#tasks').innerHTML=S.tasks.map((t,i)=>`<div class="tr" data-i="${i}"><input class="nm" data-k="name" value="${esc(t.name)}" aria-label="Task name"><input type="date" data-k="start" value="${t.start}" aria-label="Start date"><input type="number" min="1" data-k="dur" value="${t.dur}" aria-label="Duration in days" title="Days"><input type="number" min="0" max="100" data-k="prog" value="${t.prog}" aria-label="Progress percent" title="% done"><select data-k="cat" aria-label="Category">${S.cats.map(c=>`<option${c.n===t.cat?' selected':''}>${esc(c.n)}</option>`).join('')}</select><button class="x" data-del="${i}" aria-label="Delete task">×</button></div>`).join('');
+ $('#cats').innerHTML=S.cats.map((c,i)=>`<div class="cat" data-i="${i}"><input type="color" data-c="c" value="${c.c}" aria-label="Colour for ${esc(c.n)}"><input data-c="n" value="${esc(c.n)}" aria-label="Category name"><button class="x" data-delc="${i}" aria-label="Delete category">×</button></div>`).join('')}
+
+const SL=[['row','Row height',32,72],['bar','Bar height',10,44],['rad','Corner radius',0,22],['px','Day width',6,48],['labelW','Label column',120,320]];
+const TG=[['title','Show title'],['grid','Grid lines'],['wk','Weekend shading'],['today','Today marker'],['prog','Progress fill'],['lab','Bar labels']];
+const CL=[['bg','Background'],['tx','Text'],['gr','Grid'],['td','Today marker']];
+function renderStyle(){const o=S.o;
+ $('#p2').innerHTML=`<h3>Presets</h3><div class="presets">${PRE.map((p,i)=>`<button class="pz" data-pre="${i}" aria-pressed="${o.pre===i}" aria-label="${p.n} preset" title="${p.n}"><i style="background:${p.bg}"></i><span>${p.pal.slice(0,4).map(c=>`<b style="background:${c}"></b>`).join('')}</span></button>`).join('')}</div>
+ <h3>Colours</h3>${CL.map(([k,l])=>`<div class="row"><label for="o_${k}">${l}</label><input type="color" id="o_${k}" data-o="${k}" value="${o[k]}"></div>`).join('')}
+ <div class="row"><label for="o_by">Bar colour</label><select id="o_by" data-o="by"><option value="cat"${o.by==='cat'?' selected':''}>By category</option><option value="single"${o.by==='single'?' selected':''}>One colour</option></select></div>
+ <div class="row"><label for="o_single">Single colour</label><input type="color" id="o_single" data-o="single" value="${o.single}"></div>
+ <h3>Bars</h3><div class="row"><label for="o_fill">Fill style</label><select id="o_fill" data-o="fill">${['solid','gradient','outline'].map(v=>`<option${o.fill===v?' selected':''}>${v}</option>`).join('')}</select></div>
+ <div class="row"><label for="o_font">Typeface</label><select id="o_font" data-o="font">${Object.keys(FONTS).map(v=>`<option${o.font===v?' selected':''}>${v}</option>`).join('')}</select></div>
+ ${SL.map(([k,l,a,z])=>`<div class="row"><label for="o_${k}">${l}</label><input type="range" id="o_${k}" data-o="${k}" min="${a}" max="${z}" value="${o[k]}"></div>`).join('')}
+ <h3>Elements</h3>${TG.map(([k,l])=>`<div class="row"><label for="o_${k}">${l}</label><input type="checkbox" id="o_${k}" data-o="${k}"${o[k]?' checked':''}></div>`).join('')}`}
+
+function applyPreset(i){const p=PRE[i],o=S.o;Object.assign(o,{pre:i,bg:p.bg,tx:p.tx,gr:p.gr,td:p.td,single:p.pal[0]});S.cats.forEach((c,k)=>c.c=p.pal[k%p.pal.length])}
+
+document.addEventListener('click',e=>{const t=e.target.closest('button');if(!t)return;
+ if(t.dataset.p){document.querySelectorAll('.tab').forEach(b=>b.setAttribute('aria-selected',b===t));document.querySelectorAll('.pane').forEach(p=>p.classList.toggle('on',p.id===t.dataset.p))}
+ if(t.dataset.del!==undefined){S.tasks.splice(+t.dataset.del,1);renderTasks();render()}
+ if(t.dataset.delc!==undefined&&S.cats.length>1){S.cats.splice(+t.dataset.delc,1);renderTasks();render()}
+ if(t.dataset.pre!==undefined){applyPreset(+t.dataset.pre);renderStyle();renderTasks();render()}});
+$('#addT').onclick=()=>{const l=S.tasks[S.tasks.length-1],s=l?toN(l.start)+ +l.dur:Math.floor(Date.now()/DAY);S.tasks.push({name:'New task',start:iso(s),dur:7,prog:0,cat:S.cats[0].n});renderTasks();render()};
+$('#addC').onclick=()=>{const p=PRE[S.o.pre].pal;S.cats.push({n:'Category '+(S.cats.length+1),c:p[S.cats.length%p.length]});renderTasks();render()};
+$('#title').oninput=e=>{S.title=e.target.value;render()};
+$('#tasks').addEventListener('input',e=>{const r=e.target.closest('.tr'),k=e.target.dataset.k;if(!r||!k)return;S.tasks[+r.dataset.i][k]=(k==='dur'||k==='prog')?+e.target.value:e.target.value;render()});
+$('#cats').addEventListener('input',e=>{const r=e.target.closest('.cat'),k=e.target.dataset.c;if(!r||!k)return;const c=S.cats[+r.dataset.i];if(k==='n'){S.tasks.forEach(t=>{if(t.cat===c.n)t.cat=e.target.value});c.n=e.target.value}else c.c=e.target.value;render()});
+$('#cats').addEventListener('change',e=>{if(e.target.dataset.c==='n')renderTasks()});
+$('#p2').addEventListener('input',e=>{const k=e.target.dataset.o;if(!k)return;const el=e.target;S.o[k]=el.type==='checkbox'?+el.checked:(el.type==='range'?+el.value:el.value);render()});
+$('#reset').onclick=()=>{S=def();renderTasks();renderStyle();render()};
+$('#mode').onclick=()=>{const d=document.documentElement,dark=d.dataset.theme?d.dataset.theme==='dark':matchMedia('(prefers-color-scheme:dark)').matches;d.dataset.theme=dark?'light':'dark'};
+
+$('#exp').onclick=()=>{$('#csv').value='Task,Start,Days,Progress,Category\n'+S.tasks.map(t=>[`"${t.name.replace(/"/g,'""')}"`,t.start,t.dur,t.prog,`"${t.cat}"`].join(',')).join('\n')};
+$('#cp').onclick=async()=>{try{await navigator.clipboard.writeText($('#csv').value);$('#cp').textContent='Copied'}catch(e){$('#csv').select();$('#cp').textContent='Select + copy'}setTimeout(()=>$('#cp').textContent='Copy',1500)};
+$('#imp').onclick=()=>{const rows=$('#csv').value.trim().split(/\r?\n/).map(l=>(l.match(/("([^"]|"")*"|[^,]*)(,|$)/g)||[]).map(c=>c.replace(/,$/,'').replace(/^"|"$/g,'').replace(/""/g,'"').trim()));
+ const out=[];rows.forEach(r=>{if(!/^\d{4}-\d{2}-\d{2}$/.test(r[1]||''))return;out.push({name:r[0]||'Task',start:r[1],dur:Math.max(1,+r[2]||1),prog:Math.min(100,+r[3]||0),cat:r[4]||S.cats[0].n})});
+ if(!out.length){alert('No valid rows found. Use: Task, YYYY-MM-DD, days, progress, category.');return}
+ const pal=PRE[S.o.pre].pal;out.forEach(t=>{if(!S.cats.some(c=>c.n===t.cat))S.cats.push({n:t.cat,c:pal[S.cats.length%pal.length]})});
+ S.tasks=out;renderTasks();render()};
+
+$('#snap').onclick=()=>{const svg=$('#svg');if(!svg)return;const x=new XMLSerializer().serializeToString(svg),w=+svg.getAttribute('width'),h=+svg.getAttribute('height'),im=new Image();
+ im.onload=()=>{const c=document.createElement('canvas');c.width=w*2;c.height=h*2;const k=c.getContext('2d');k.scale(2,2);k.drawImage(im,0,0);$('#out').src=c.toDataURL('image/png');$('#dlg').showModal()};
+ im.src='data:image/svg+xml;base64,'+btoa(unescape(encodeURIComponent(x)))};
+$('#cl').onclick=()=>$('#dlg').close();
+
+renderTasks();renderStyle();render();
+</script>
+</body>
+</html>
