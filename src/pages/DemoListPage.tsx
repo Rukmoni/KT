@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowRight, Zap, FileText, ChartBar as BarChart2, Bot, MessageSquare } from 'lucide-react';
+import { ArrowRight, Zap, FileText, ChartBar as BarChart2, Bot, MessageSquare, CalendarRange } from 'lucide-react';
 import './DemoListPage.css';
 
 const DEMOS = [
@@ -51,6 +51,19 @@ const DEMOS = [
     path: '/chatbot-demo',
     tags: ['AI', 'Support', 'Automation'],
     accent: '#10b981',
+  },
+  {
+    id: 'gantt-studio',
+    label: 'Gantt Studio',
+    icon: CalendarRange,
+    tagline: 'Interactive Gantt chart planner for project scheduling.',
+    description: 'A visual project scheduling tool for creating, editing, and sharing Gantt charts. Drag tasks, set dependencies, and export timelines — no signup required.',
+    badge: 'Live',
+    badgeColor: '#7c3aed',
+    path: '/Gantt-Studio/',
+    external: true,
+    tags: ['Scheduling', 'Project Planning', 'Gantt'],
+    accent: '#7c3aed',
   },
 ];
 
@@ -121,7 +134,13 @@ export const DemoListPage = () => {
                     <button
                       className="demo-card__cta"
                       style={{ background: demo.accent }}
-                      onClick={() => navigate(demo.path!)}
+                      onClick={() => {
+                        if (demo.external) {
+                          window.open(demo.path!, '_blank');
+                        } else {
+                          navigate(demo.path!);
+                        }
+                      }}
                     >
                       Open Demo
                       <ArrowRight size={15} />
