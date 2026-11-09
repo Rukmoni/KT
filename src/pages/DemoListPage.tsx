@@ -90,20 +90,9 @@ export const DemoListPage = () => {
     fetchGanttVisits();
   }, [fetchGanttVisits]);
 
-  const recordVisit = async (demoId: string) => {
-    const { error } = await supabase
-      .from('demo_visits')
-      .insert({ demo_id: demoId });
-
-    if (error) {
-      console.error('Failed to record visit:', error.message);
-    }
-  };
-
   const handleDemoClick = (demo: typeof DEMOS[number]) => {
     if (!demo.path) return;
     if (demo.id === 'gantt-studio') {
-      recordVisit('gantt-studio').then(() => fetchGanttVisits());
       window.open(demo.path, '_blank');
     } else {
       navigate(demo.path);
